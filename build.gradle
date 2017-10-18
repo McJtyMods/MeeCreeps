@@ -1,0 +1,156 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'maven'
+
+repositories {
+    maven { // The repo from which to get waila
+        name "Mobius Repo"
+        url "http://tehnut.info/maven"
+        //url "http://mobiusstrip.eu/maven"
+    }
+    maven { // JEI
+        url "http://dvs1.progwml6.com/files/maven"
+    }
+    maven {
+        name 'OC Repo'
+        url "http://maven.cil.li/"
+    }
+    maven { // TOP
+        name 'tterrag maven'
+        url "http://maven.tterrag.com/"
+    }
+    maven { // McJtyLib
+        url "http://maven.k-4u.nl"
+    }
+    maven { // OC Repo
+        url "http://maven.cil.li/"
+    }
+    maven {
+        name = "sonatype"
+        url = "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+    maven {
+        name = "CoFH Maven"
+        url = "http://maven.covers1624.net"
+    }
+}
+
+version = "1.12-0.0.1"
+def ENV = System.getenv()
+if (ENV.DRONE_BUILD_NUMBER) {
+    version += ".n" + ENV.DRONE_BUILD_NUMBER
+}
+group= "com.github.mcjty" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "meecreeps"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+minecraft {
+    version = "1.12.2-14.23.0.2512"
+    runDir = "run"
+    mappings = "snapshot_20171011"
+    useDepAts = true
+}
+
+task deobfJar(type: Jar) {
+    from sourceSets.main.output
+    classifier = 'dev'
+}
+
+artifacts {
+    archives sourceJar
+    archives deobfJar
+}
+
+
+dependencies {
+    deobfCompile "mezz.jei:jei_1.12:4.7.0.67"
+    deobfCompile "mcp.mobius.waila:Hwyla:1.8.18-B32_1.12:api"
+    deobfCompile "mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.11-5"
+    deobfCompile "cofh:RedstoneFlux:1.12-2.0.0.1:universal"
+    deobfCompile "com.github.mcjty:intwheel:1.12-1.2.7"
+    deobfCompile "com.github.mcjty:xnet:1.12-1.3.4"
+}
+
+processResources
+{
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+                
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
+        
+    // copy everything else, thats not the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+task("uploadJars", dependsOn: "reobf") {
+    description = "uploads JARs"
+    if (System.getenv("local_maven") != null) {
+        apply plugin: 'maven'
+        uploadArchives {
+            repositories {
+                mavenDeployer {
+                    repository(url: "file://" + System.getenv("local_maven"))
+                    pom {
+                        groupId = project.group
+                        version = project.version
+                        artifactId = project.archivesBaseName
+                        project {
+                            name project.archivesBaseName
+                            packaging 'jar'
+                            description 'MeeCreeps'
+                            scm {
+                                url 'https://github.com/McJty/MeeCreeps'
+                                connection 'scm:git:git@github.com:McJty/MeeCreeps.git'
+                                developerConnection 'scm:git:git@github.com:McJty/MeeCreeps.git'
+                            }
+                            issueManagement {
+                                system 'github'
+                                url 'https://github.com/McJty/MeeCreeps/issues'
+                            }
+                            licenses {
+                                license {
+                                    name 'MIT'
+                                    distribution 'repo'
+                                }
+                            }
+                            developers {
+                                developer {
+                                    id 'McJty'
+                                    name 'McJty'
+                                    roles { role 'developer' }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
