@@ -2,9 +2,7 @@ package mcjty.meecreeps.items;
 
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ServerActionManager;
-import mcjty.meecreeps.entities.EntityMeeCreeps;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -35,10 +33,6 @@ public class CreepCubeItem extends Item {
         if (worldIn.isRemote) {
             return EnumActionResult.SUCCESS;
         }
-        Entity entity = new EntityMeeCreeps(worldIn);
-        BlockPos p = pos.up();
-        entity.setLocationAndAngles(p.getX(), p.getY(), p.getZ(), 0, 0);
-        worldIn.spawnEntity(entity);
 
         ServerActionManager.createActionOptions(worldIn, pos, player);
         return EnumActionResult.SUCCESS;

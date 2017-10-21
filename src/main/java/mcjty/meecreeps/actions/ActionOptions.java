@@ -15,14 +15,16 @@ public class ActionOptions {
     private final int dimension;
     private final UUID playerId;
 
-    private int timeout;
+    private int timeout1;
+    private int timeout2;
 
     public ActionOptions(List<MeeCreepActionType> actionOptions, BlockPos pos, int dimension, UUID playerId) {
         this.actionOptions = actionOptions;
         this.pos = pos;
         this.dimension = dimension;
         this.playerId = playerId;
-        timeout = 10;
+        timeout1 = 20;
+        timeout2 = 20;
     }
 
     public ActionOptions(ByteBuf buf) {
@@ -64,8 +66,16 @@ public class ActionOptions {
         return playerId;
     }
 
-    public boolean tick() {
-        timeout--;
-        return timeout <= 0;
+    public boolean tick1() {
+        timeout1--;
+        return timeout1 == 0;
+    }
+
+    public boolean tick2() {
+        if (timeout1 > 0) {
+            return false;
+        }
+        timeout2--;
+        return timeout2 <= 0;
     }
 }

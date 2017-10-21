@@ -1,6 +1,8 @@
 package mcjty.meecreeps.actions;
 
+import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.network.PacketHandler;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
@@ -35,7 +37,18 @@ public class ServerActionManager {
     public static void tick() {
         List<ActionOptions> newlist = new ArrayList<>();
         for (ActionOptions option : options) {
-            if (option.tick()) {
+            if (option.tick1()) {
+                World world = DimensionManager.getWorld(option.getDimension());
+                if (world == null) {
+                    // World is not loaded. Don't do anything and discard option
+                } else {
+                    Entity entity = new EntityMeeCreeps(world);
+                    BlockPos p = option.getPos().up();
+                    entity.setLocationAndAngles(p.getX(), p.getY(), p.getZ(), 0, 0);
+                    world.spawnEntity(entity);
+                    newlist.add(option);
+                }
+            } else if (option.tick2()) {
                 MinecraftServer server = DimensionManager.getWorld(0).getMinecraftServer();
                 EntityPlayerMP player = server.getPlayerList().getPlayerByUUID(option.getPlayerId());
                 if (player == null) {
