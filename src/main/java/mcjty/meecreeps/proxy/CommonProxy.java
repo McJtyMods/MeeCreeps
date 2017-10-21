@@ -1,11 +1,17 @@
 package mcjty.meecreeps.proxy;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.entities.ModEntities;
 import mcjty.meecreeps.items.CreepCubeItem;
+import mcjty.meecreeps.network.PacketHandler;
 import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -16,6 +22,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 
 import java.io.File;
+import java.util.concurrent.Callable;
 
 @Mod.EventBusSubscriber
 public class CommonProxy {
@@ -24,13 +31,13 @@ public class CommonProxy {
     public static Configuration config;
 
     public void preInit(FMLPreInitializationEvent e) {
+        MinecraftForge.EVENT_BUS.register(new ForgeEventHandlers());
+
         File directory = e.getModConfigurationDirectory();
         config = new Configuration(new File(directory.getPath(), "modtut.cfg"));
         Config.readConfig();
 
-        // Initialize our packet handler. Make sure the name is
-        // 20 characters or less!
-//        PacketHandler.registerMessages("modtut");
+        PacketHandler.registerMessages("meecreeps");
 
         // Initialization of blocks and items typically goes here:
         ModEntities.init();
@@ -56,6 +63,22 @@ public class CommonProxy {
     public static void registerItems(RegistryEvent.Register<Item> event) {
         event.getRegistry().register(new CreepCubeItem());
 //        event.getRegistry().register(new ItemBlock(ModBlocks.stateTexturedBlock).setRegistryName(ModBlocks.stateTexturedBlock.getRegistryName()));
+    }
+
+    public World getClientWorld() {
+        throw new IllegalStateException("This should only be called from client side");
+    }
+
+    public EntityPlayer getClientPlayer() {
+        throw new IllegalStateException("This should only be called from client side");
+    }
+
+    public <V> ListenableFuture<V> addScheduledTaskClient(Callable<V> callableToSchedule) {
+        throw new IllegalStateException("This should only be called from client side");
+    }
+
+    public ListenableFuture<Object> addScheduledTaskClient(Runnable runnableToSchedule) {
+        throw new IllegalStateException("This should only be called from client side");
     }
 
 }
