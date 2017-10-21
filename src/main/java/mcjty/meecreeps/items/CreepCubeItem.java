@@ -33,7 +33,6 @@ public class CreepCubeItem extends Item {
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
         if (worldIn.isRemote) {
-//            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_QUESTION, worldIn, pos.getX(), pos.getY(), pos.getZ());
             return EnumActionResult.SUCCESS;
         }
         Entity entity = new EntityMeeCreeps(worldIn);
@@ -41,11 +40,7 @@ public class CreepCubeItem extends Item {
         entity.setLocationAndAngles(p.getX(), p.getY(), p.getZ(), 0, 0);
         worldIn.spawnEntity(entity);
 
-
-
         ServerActionManager.createActionOptions(worldIn, pos, player);
-
-
         return EnumActionResult.SUCCESS;
     }
 
