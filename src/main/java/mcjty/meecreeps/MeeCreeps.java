@@ -1,5 +1,6 @@
 package mcjty.meecreeps;
 
+import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.proxy.CommonProxy;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraftforge.fml.common.Mod;
@@ -7,6 +8,7 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import org.apache.logging.log4j.Logger;
 
 @Mod(modid = MeeCreeps.MODID, name = "MeeCreeps",
@@ -58,4 +60,10 @@ public class MeeCreeps {
     public void postInit(FMLPostInitializationEvent e) {
         this.proxy.postInit(e);
     }
+
+    @Mod.EventHandler
+    public void serverStopped(FMLServerStoppedEvent event) {
+        ServerActionManager.clearInstance();
+    }
+
 }

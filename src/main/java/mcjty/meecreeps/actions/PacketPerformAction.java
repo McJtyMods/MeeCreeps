@@ -39,7 +39,7 @@ public class PacketPerformAction implements IMessage {
         }
 
         private void handle(PacketPerformAction message, MessageContext ctx) {
-            ServerActionManager.performAction(message.options, message.type);
+            ServerActionManager.getManager().performAction(message.options, message.type);
         }
     }
 

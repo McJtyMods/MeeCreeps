@@ -8,6 +8,6 @@ public class ForgeEventHandlers {
 
     @SubscribeEvent
     public void onWorldTick(TickEvent.ServerTickEvent event) {
-        ServerActionManager.tick();
+        ServerActionManager.getManager().tick();
     }
 }

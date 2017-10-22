@@ -35,7 +35,7 @@ public class PacketCancelAction implements IMessage {
         }
 
         private void handle(PacketCancelAction message, MessageContext ctx) {
-            ServerActionManager.cancelAction(message.options);
+            ServerActionManager.getManager().cancelAction(message.options);
         }
     }
 

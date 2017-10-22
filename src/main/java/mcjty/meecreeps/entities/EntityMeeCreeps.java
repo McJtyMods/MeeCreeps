@@ -1,12 +1,14 @@
 package mcjty.meecreeps.entities;
 
 import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.actions.ServerActionManager;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAILookIdle;
 import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.ai.EntityAIWatchClosest;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
@@ -15,6 +17,8 @@ import javax.annotation.Nullable;
 public class EntityMeeCreeps extends EntityCreature {
 
     public static final ResourceLocation LOOT = new ResourceLocation(MeeCreeps.MODID, "entities/meecreeps");
+
+    private int actionId = 0;
 
     public EntityMeeCreeps(World worldIn) {
         super(worldIn);
@@ -49,6 +53,17 @@ public class EntityMeeCreeps extends EntityCreature {
     }
 
     @Override
+    public void onEntityUpdate() {
+        super.onEntityUpdate();
+        ServerActionManager manager = ServerActionManager.getManager();
+        System.out.println("actionId = " + actionId);
+        if (actionId != 0 && manager.getOptions(actionId) == null) {
+            // We should die @todo animation
+            this.setDead();
+        }
+    }
+
+    @Override
     @Nullable
     protected ResourceLocation getLootTable() {
         return LOOT;
@@ -57,5 +72,25 @@ public class EntityMeeCreeps extends EntityCreature {
     @Override
     public int getMaxSpawnedInChunk() {
         return 5;
+    }
+
+    public int getActionId() {
+        return actionId;
+    }
+
+    public void setActionId(int actionId) {
+        this.actionId = actionId;
+    }
+
+    @Override
+    public void readEntityFromNBT(NBTTagCompound compound) {
+        super.readEntityFromNBT(compound);
+        actionId = compound.getInteger("actionId");
+    }
+
+    @Override
+    public void writeEntityToNBT(NBTTagCompound compound) {
+        super.writeEntityToNBT(compound);
+        compound.setInteger("actionId", actionId);
     }
 }

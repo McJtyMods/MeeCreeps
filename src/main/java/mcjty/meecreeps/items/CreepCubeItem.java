@@ -34,7 +34,7 @@ public class CreepCubeItem extends Item {
             return EnumActionResult.SUCCESS;
         }
 
-        ServerActionManager.createActionOptions(worldIn, pos, player);
+        ServerActionManager.getManager().createActionOptions(worldIn, pos, player);
         return EnumActionResult.SUCCESS;
     }
 
