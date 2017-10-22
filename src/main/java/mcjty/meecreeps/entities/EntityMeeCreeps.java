@@ -1,6 +1,7 @@
 package mcjty.meecreeps.entities;
 
 import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.actions.ServerActionManager;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -44,6 +45,7 @@ public class EntityMeeCreeps extends EntityCreature {
         this.tasks.addTask(0, new EntityAISwimming(this));
 //        this.tasks.addTask(5, new EntityAIMoveTowardsRestriction(this, 1.0D));
 //        this.tasks.addTask(7, new EntityAIWander(this, 1.0D));
+        this.tasks.addTask(3, new MeeCreepWorkerTask(this));
         this.tasks.addTask(8, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
         this.tasks.addTask(8, new EntityAILookIdle(this));
         this.applyEntityAI();
@@ -56,10 +58,12 @@ public class EntityMeeCreeps extends EntityCreature {
     public void onEntityUpdate() {
         super.onEntityUpdate();
         ServerActionManager manager = ServerActionManager.getManager();
-        System.out.println("actionId = " + actionId);
-        if (actionId != 0 && manager.getOptions(actionId) == null) {
-            // We should die @todo animation
-            this.setDead();
+        if (actionId != 0) {
+            ActionOptions options = manager.getOptions(actionId);
+            if (options == null) {
+                // We should die @todo animation
+                this.setDead();
+            }
         }
     }
 

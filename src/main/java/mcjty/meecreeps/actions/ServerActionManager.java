@@ -86,6 +86,8 @@ public class ServerActionManager extends WorldSavedData {
         option = getOptions(option.getActionId());
         if (option != null) {
             option.setStage(Stage.WORKING);
+            option.setTask(type);
+            save();
         }
     }
 

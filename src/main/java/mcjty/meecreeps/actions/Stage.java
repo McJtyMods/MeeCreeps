@@ -3,12 +3,12 @@ package mcjty.meecreeps.actions;
 import java.util.HashMap;
 import java.util.Map;
 
-enum Stage {
-    WAITING_FOR_SPAWN("wait"),
-    OPENING_GUI("gui"),
-    WAITING_FOR_PLAYER_INPUT("input"),
-    WORKING("working"),
-    DONE("done");
+public enum Stage {
+    WAITING_FOR_SPAWN("wait", 20),
+    OPENING_GUI("gui", 20),
+    WAITING_FOR_PLAYER_INPUT("input", 20),
+    WORKING("working", 20*30),
+    DONE("done", 20);
 
     private static final Map<String, Stage> TYPE_MAP = new HashMap<>();
 
@@ -19,9 +19,15 @@ enum Stage {
     }
 
     private final String code;
+    private final int timeout;
 
-    Stage(String code) {
+    Stage(String code, int timeout) {
         this.code = code;
+        this.timeout = timeout;
+    }
+
+    public int getTimeout() {
+        return timeout;
     }
 
     public String getCode() {

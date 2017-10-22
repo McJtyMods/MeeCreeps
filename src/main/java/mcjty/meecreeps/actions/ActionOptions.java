@@ -28,6 +28,7 @@ public class ActionOptions {
 
     private int timeout;
     private Stage stage;
+    private MeeCreepActionType task;
 
     public ActionOptions(List<MeeCreepActionType> actionOptions, BlockPos pos, int dimension, UUID playerId, int actionId) {
         this.actionOptions = actionOptions;
@@ -37,6 +38,7 @@ public class ActionOptions {
         this.actionId = actionId;
         timeout = 10;
         stage = Stage.WAITING_FOR_SPAWN;
+        task = null;
     }
 
     public ActionOptions(ByteBuf buf) {
@@ -52,6 +54,9 @@ public class ActionOptions {
         actionId = buf.readInt();
         timeout = buf.readInt();
         stage = Stage.values()[buf.readByte()];
+        if (buf.readBoolean()) {
+            task = MeeCreepActionType.VALUES[buf.readByte()];
+        }
     }
 
     public ActionOptions(NBTTagCompound tagCompound) {
@@ -66,6 +71,9 @@ public class ActionOptions {
         actionId = tagCompound.getInteger("actionId");
         timeout = tagCompound.getInteger("timeout");
         stage = Stage.getByCode(tagCompound.getString("stage"));
+        if (tagCompound.hasKey("task")) {
+            task = MeeCreepActionType.getByCode(tagCompound.getString("task"));
+        }
     }
 
     public void writeToBuf(ByteBuf buf) {
@@ -80,6 +88,12 @@ public class ActionOptions {
         buf.writeInt(actionId);
         buf.writeInt(timeout);
         buf.writeByte(stage.ordinal());
+        if (task != null) {
+            buf.writeBoolean(true);
+            buf.writeByte(task.ordinal());
+        } else {
+            buf.writeBoolean(false);
+        }
     }
 
     public void writeToNBT(NBTTagCompound tagCompound) {
@@ -94,6 +108,9 @@ public class ActionOptions {
         tagCompound.setInteger("actionId", actionId);
         tagCompound.setInteger("timeout", timeout);
         tagCompound.setString("stage", stage.getCode());
+        if (task != null) {
+            tagCompound.setString("task", task.getCode());
+        }
     }
 
     public List<MeeCreepActionType> getActionOptions() {
@@ -122,21 +139,31 @@ public class ActionOptions {
 
     public void setStage(Stage stage) {
         this.stage = stage;
+        this.timeout = stage.getTimeout();
+    }
+
+    public MeeCreepActionType getTask() {
+        return task;
+    }
+
+    public void setTask(MeeCreepActionType task) {
+        this.task = task;
     }
 
     public boolean tick(World world) {
         timeout--;
         if (timeout <= 0) {
+            timeout = 20;
             switch (stage) {
                 case WAITING_FOR_SPAWN:
                     spawn(world);
-                    stage = Stage.OPENING_GUI;
+                    setStage(Stage.OPENING_GUI);
                     break;
                 case OPENING_GUI:
                     if (!openGui()) {
                         return false;
                     }
-                    stage = Stage.WAITING_FOR_PLAYER_INPUT;
+                    setStage(Stage.WAITING_FOR_PLAYER_INPUT);
                     break;
                 case WAITING_FOR_PLAYER_INPUT:
                     // @todo some kind of timeout as well?
@@ -148,12 +175,12 @@ public class ActionOptions {
                     }
                     break;
                 case WORKING:
-                    stage = Stage.DONE;
+                    // It is up to the entity to set stage to DONE when done early
+                    setStage(Stage.DONE);
                     break;
                 case DONE:
                     return false;
             }
-            timeout = 20;
         }
         return true;
     }
