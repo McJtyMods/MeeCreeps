@@ -29,12 +29,17 @@ public class CreepCubeItem extends Item {
     }
 
     @Override
-    public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        if (worldIn.isRemote) {
+    public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
+        if (world.isRemote) {
             return EnumActionResult.SUCCESS;
         }
 
-        ServerActionManager.getManager().createActionOptions(worldIn, pos, player);
+        ServerActionManager.getManager().createActionOptions(world, pos, player);
+        return EnumActionResult.SUCCESS;
+    }
+
+    @Override
+    public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
         return EnumActionResult.SUCCESS;
     }
 

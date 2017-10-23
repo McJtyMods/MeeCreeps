@@ -1,13 +1,8 @@
 package mcjty.meecreeps.actions;
 
-import mcjty.meecreeps.entities.EntityMeeCreeps;
-import mcjty.meecreeps.network.PacketHandler;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -71,11 +66,16 @@ public class ServerActionManager extends WorldSavedData {
 
     public void createActionOptions(World world, BlockPos pos, EntityPlayer player) {
         List<MeeCreepActionType> types = new ArrayList<>();
-        types.add(MeeCreepActionType.ACTION_HARVEST);
-        types.add(MeeCreepActionType.ACTION_PICKUP_ITEMS);
-        types.add(MeeCreepActionType.ACTION_PLACE_TORCHES);
+        List<MeeCreepActionType> maybeTypes = new ArrayList<>();
+        for (MeeCreepActionType type : MeeCreepActionType.VALUES) {
+            if (type.getActionFactory().isPossible(world, pos)) {
+                types.add(type);
+            } else if (type.getActionFactory().isPossibleSecondary(world, pos)) {
+                maybeTypes.add(type);
+            }
+        }
         int actionId = newId();
-        ActionOptions opt = new ActionOptions(types, pos, world.provider.getDimension(), player.getUniqueID(), actionId);
+        ActionOptions opt = new ActionOptions(types, maybeTypes, pos, world.provider.getDimension(), player.getUniqueID(), actionId);
         options.add(opt);
         optionMap.put(actionId, opt);
         save();

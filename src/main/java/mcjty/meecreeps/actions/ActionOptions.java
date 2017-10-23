@@ -21,6 +21,7 @@ import java.util.UUID;
 public class ActionOptions {
 
     private final List<MeeCreepActionType> actionOptions;
+    private final List<MeeCreepActionType> maybeActionOptions;
     private final BlockPos pos;
     private final int dimension;
     private final UUID playerId;
@@ -30,8 +31,9 @@ public class ActionOptions {
     private Stage stage;
     private MeeCreepActionType task;
 
-    public ActionOptions(List<MeeCreepActionType> actionOptions, BlockPos pos, int dimension, UUID playerId, int actionId) {
+    public ActionOptions(List<MeeCreepActionType> actionOptions, List<MeeCreepActionType> maybeActionOptions, BlockPos pos, int dimension, UUID playerId, int actionId) {
         this.actionOptions = actionOptions;
+        this.maybeActionOptions = maybeActionOptions;
         this.pos = pos;
         this.dimension = dimension;
         this.playerId = playerId;
@@ -46,6 +48,12 @@ public class ActionOptions {
         actionOptions = new ArrayList<>();
         while (size > 0) {
             actionOptions.add(MeeCreepActionType.VALUES[buf.readByte()]);
+            size--;
+        }
+        size = buf.readInt();
+        maybeActionOptions = new ArrayList<>();
+        while (size > 0) {
+            maybeActionOptions.add(MeeCreepActionType.VALUES[buf.readByte()]);
             size--;
         }
         pos = NetworkTools.readPos(buf);
@@ -65,6 +73,11 @@ public class ActionOptions {
         for (int i = 0 ; i < list.tagCount() ; i++) {
             actionOptions.add(MeeCreepActionType.getByCode(list.getStringTagAt(i)));
         }
+        list = tagCompound.getTagList("maybe", Constants.NBT.TAG_STRING);
+        maybeActionOptions = new ArrayList<>();
+        for (int i = 0 ; i < list.tagCount() ; i++) {
+            maybeActionOptions.add(MeeCreepActionType.getByCode(list.getStringTagAt(i)));
+        }
         dimension = tagCompound.getInteger("dim");
         pos = BlockPos.fromLong(tagCompound.getLong("pos"));
         playerId = tagCompound.getUniqueId("player");
@@ -79,6 +92,10 @@ public class ActionOptions {
     public void writeToBuf(ByteBuf buf) {
         buf.writeInt(actionOptions.size());
         for (MeeCreepActionType option : actionOptions) {
+            buf.writeByte(option.ordinal());
+        }
+        buf.writeInt(maybeActionOptions.size());
+        for (MeeCreepActionType option : maybeActionOptions) {
             buf.writeByte(option.ordinal());
         }
         NetworkTools.writePos(buf, pos);
@@ -102,6 +119,11 @@ public class ActionOptions {
             list.appendTag(new NBTTagString(option.getCode()));
         }
         tagCompound.setTag("options", list);
+        list = new NBTTagList();
+        for (MeeCreepActionType option : maybeActionOptions) {
+            list.appendTag(new NBTTagString(option.getCode()));
+        }
+        tagCompound.setTag("maybe", list);
         tagCompound.setInteger("dim", dimension);
         tagCompound.setLong("pos", pos.toLong());
         tagCompound.setUniqueId("player", playerId);
@@ -115,6 +137,10 @@ public class ActionOptions {
 
     public List<MeeCreepActionType> getActionOptions() {
         return actionOptions;
+    }
+
+    public List<MeeCreepActionType> getMaybeActionOptions() {
+        return maybeActionOptions;
     }
 
     public BlockPos getPos() {
@@ -156,8 +182,11 @@ public class ActionOptions {
             timeout = 20;
             switch (stage) {
                 case WAITING_FOR_SPAWN:
-                    spawn(world);
-                    setStage(Stage.OPENING_GUI);
+                    if (spawn(world)) {
+                        setStage(Stage.OPENING_GUI);
+                    } else {
+                        return false;
+                    }
                     break;
                 case OPENING_GUI:
                     if (!openGui()) {
@@ -176,7 +205,9 @@ public class ActionOptions {
                     break;
                 case WORKING:
                     // It is up to the entity to set stage to DONE when done early
-                    setStage(Stage.DONE);
+                    setStage(Stage.TIME_IS_UP);
+                    break;
+                case TIME_IS_UP:
                     break;
                 case DONE:
                     return false;
@@ -196,11 +227,29 @@ public class ActionOptions {
         return true;
     }
 
-    private void spawn(World world) {
+    private boolean validSpawnPoint(World world, BlockPos p) {
+        return world.isAirBlock(p) && (!world.isAirBlock(p.down())) && world.isAirBlock(p.up());
+    }
+
+    private boolean spawn(World world) {
+        BlockPos p;
+        if (validSpawnPoint(world, getPos().north())) {
+            p = getPos().north();
+        } else if (validSpawnPoint(world, getPos().south())) {
+            p = getPos().south();
+        } else if (validSpawnPoint(world, getPos().east())) {
+            p = getPos().east();
+        } else if (validSpawnPoint(world, getPos().west())) {
+            p = getPos().west();
+        } else if (validSpawnPoint(world, getPos().up())) {
+            p = getPos().up();
+        } else {
+            return false;
+        }
         EntityMeeCreeps entity = new EntityMeeCreeps(world);
-        BlockPos p = getPos().up();
         entity.setLocationAndAngles(p.getX(), p.getY(), p.getZ(), 0, 0);
         entity.setActionId(getActionId());
         world.spawnEntity(entity);
+        return true;
     }
 }

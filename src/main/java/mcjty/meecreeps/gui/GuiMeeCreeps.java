@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ResourceLocation;
 
 import java.io.IOException;
+import java.util.List;
 
 public class GuiMeeCreeps extends GuiScreen {
 
@@ -21,6 +22,7 @@ public class GuiMeeCreeps extends GuiScreen {
 
     private ActionOptions options;
     private boolean confirmedAction = false;
+    private boolean showingAlternatives = false;
 
     @Override
     public void initGui() {
@@ -30,6 +32,7 @@ public class GuiMeeCreeps extends GuiScreen {
 
         options = ClientActionManager.lastOptions;
         confirmedAction = false;
+        showingAlternatives = false;
     }
 
     @Override
@@ -55,13 +58,31 @@ public class GuiMeeCreeps extends GuiScreen {
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
         if (mouseButton == 0) {
-            int y = (mouseY-guiTop-21) / OPTION_DISTANCE;
-            if (y < 0 || y >= options.getActionOptions().size()) {
+            int y = (mouseY - guiTop - 21) / OPTION_DISTANCE;
+            if (showingAlternatives) {
+                int last = options.getMaybeActionOptions().size();
+                if (y < 0 || y >= last) {
+                    closeThis();
+                } else {
+                    confirmedAction = true;
+                    PacketHandler.INSTANCE.sendToServer(new PacketPerformAction(options, options.getMaybeActionOptions().get(y)));
+                    closeThis();
+                }
             } else {
-                confirmedAction = true;
-                PacketHandler.INSTANCE.sendToServer(new PacketPerformAction(options, options.getActionOptions().get(y)));
+                int last = options.getActionOptions().size();
+                if (hasAlternatives()) {
+                    last++;
+                }
+                if (y < 0 || y >= last) {
+                    closeThis();
+                } else if (y == last - 1 && hasAlternatives()) {
+                    showingAlternatives = true;
+                } else {
+                    confirmedAction = true;
+                    PacketHandler.INSTANCE.sendToServer(new PacketPerformAction(options, options.getActionOptions().get(y)));
+                    closeThis();
+                }
             }
-            closeThis();
         }
     }
 
@@ -72,25 +93,59 @@ public class GuiMeeCreeps extends GuiScreen {
         mc.getTextureManager().bindTexture(gui_top);
         drawTexturedModalRect(guiLeft, guiTop, 0, 0, WIDTH, 10);
         int y = guiTop+10;
-        for (int i = 0 ; i <= options.getActionOptions().size() ; i++) {
+        List<MeeCreepActionType> actionOptions;
+        int size;
+        if (showingAlternatives) {
+            actionOptions = options.getMaybeActionOptions();
+            size = actionOptions.size();
+        } else {
+            actionOptions = options.getActionOptions();
+            size = actionOptions.size();
+            if (hasAlternatives()) {
+                size++;
+            }
+        }
+
+        for (int i = 0; i <= size ; i++) {
             drawTexturedModalRect(guiLeft, y, 0, 10, WIDTH, 15);
             y += OPTION_DISTANCE;
         }
         drawTexturedModalRect(guiLeft, y, 0, 25, WIDTH, 15);
-        mc.fontRenderer.drawString("What can I do for you?", guiLeft+15, guiTop+7, 0);
+        String msg;
+        if (showingAlternatives) {
+            msg = "Any of this suits you then?";
+        } else if (actionOptions.isEmpty()) {
+            msg = "There is not much I can do here";
+        } else {
+            msg = "What can I do for you?";
+        }
+        mc.fontRenderer.drawString(msg, guiLeft+15, guiTop+7, 0);
         y = guiTop+21;
-        for (MeeCreepActionType type : options.getActionOptions()) {
+        for (MeeCreepActionType type : actionOptions) {
             int color = 0xff666600;
-            if (mouseY > y && mouseY < y+ OPTION_DISTANCE) {
+            if (mouseY > y && mouseY < y+OPTION_DISTANCE) {
                 color = 0xff22dd00;
             }
             mc.fontRenderer.drawString(type.getDescription(), guiLeft+40, y, color);
             y += OPTION_DISTANCE;
         }
+        if ((!showingAlternatives) && hasAlternatives()) {
+            int color = 0xff666600;
+            if (mouseY > y && mouseY < y+ OPTION_DISTANCE) {
+                color = 0xff22dd00;
+            }
+            mc.fontRenderer.drawString("Can you do other things?", guiLeft+40, y, color);
+            y += OPTION_DISTANCE;
+        }
+
         int color = 0xff666600;
         if (mouseY > y && mouseY < y+ OPTION_DISTANCE) {
             color = 0xff22dd00;
         }
         mc.fontRenderer.drawString("Never mind...", guiLeft+40, y, color);
+    }
+
+    private boolean hasAlternatives() {
+        return !options.getMaybeActionOptions().isEmpty();
     }
 }

@@ -7,7 +7,8 @@ public enum Stage {
     WAITING_FOR_SPAWN("wait", 20),
     OPENING_GUI("gui", 20),
     WAITING_FOR_PLAYER_INPUT("input", 20),
-    WORKING("working", 20*30),
+    WORKING("working", 20*60),
+    TIME_IS_UP("timeup", 20),
     DONE("done", 20);
 
     private static final Map<String, Stage> TYPE_MAP = new HashMap<>();
