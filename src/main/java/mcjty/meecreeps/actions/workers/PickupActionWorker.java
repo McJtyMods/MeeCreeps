@@ -141,9 +141,9 @@ public class PickupActionWorker implements IActionWorker {
             }
             needsToPutAway = false;
         } else {
-            if (!entity.getNavigator().tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 2.0)) {
+            if (!entity.getNavigator().tryMoveToXYZ(pos.getX()+.5, pos.getY(), pos.getZ()+.5, 2.0)) {
                 // We need to teleport
-                entity.setPositionAndUpdate(pos.getX(), pos.getY(), pos.getZ());
+                entity.setPositionAndUpdate(pos.getX()+.5, pos.getY(), pos.getZ()+.5);
             } else {
                 movingToChest = true;
             }

@@ -22,7 +22,7 @@ public class MeeCreepWorkerTask extends EntityAIBase {
         if (actionId != 0) {
             ActionOptions options = manager.getOptions(actionId);
             if (options != null) {
-                if (options.getStage() == Stage.WORKING) {
+                if (options.getStage() == Stage.WORKING || options.getStage() == Stage.TIME_IS_UP) {
                     return true;
                 }
             }

@@ -159,9 +159,9 @@ public class HarvestActionWorker implements IActionWorker {
             if (d < 2) {
                 harvest(entity, cropPos);
             } else {
-                if (!entity.getNavigator().tryMoveToXYZ(cropPos.getX(), cropPos.getY(), cropPos.getZ(), 2.0)) {
+                if (!entity.getNavigator().tryMoveToXYZ(cropPos.getX()+.5, cropPos.getY(), cropPos.getZ()+.5, 2.0)) {
                     // We need to teleport
-                    entity.setPositionAndUpdate(cropPos.getX(), cropPos.getY(), cropPos.getZ());
+                    entity.setPositionAndUpdate(cropPos.getX()+.5, cropPos.getY(), cropPos.getZ()+.5);
                 }
                 movingToPos = cropPos;
             }
@@ -176,9 +176,9 @@ public class HarvestActionWorker implements IActionWorker {
             harvest(entity, movingToPos);
             movingToPos = null;
         } else if (entity.getNavigator().noPath()) {
-            if (!entity.getNavigator().tryMoveToXYZ(movingToPos.getX(), movingToPos.getY(), movingToPos.getZ(), 2.0)) {
+            if (!entity.getNavigator().tryMoveToXYZ(movingToPos.getX()+.5, movingToPos.getY(), movingToPos.getZ()+.5, 2.0)) {
                 // We need to teleport
-                entity.setPositionAndUpdate(movingToPos.getX(), movingToPos.getY(), movingToPos.getZ());
+                entity.setPositionAndUpdate(movingToPos.getX()+.5, movingToPos.getY(), movingToPos.getZ()+.5);
             }
         }
     }
@@ -247,9 +247,9 @@ public class HarvestActionWorker implements IActionWorker {
             }
             needsToPutAway = false;
         } else {
-            if (!entity.getNavigator().tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 2.0)) {
+            if (!entity.getNavigator().tryMoveToXYZ(pos.getX()+.5, pos.getY(), pos.getZ()+.5, 2.0)) {
                 // We need to teleport
-                entity.setPositionAndUpdate(pos.getX(), pos.getY(), pos.getZ());
+                entity.setPositionAndUpdate(pos.getX()+.5, pos.getY(), pos.getZ()+.5);
             } else {
                 movingToChest = true;
             }

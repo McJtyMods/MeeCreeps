@@ -247,7 +247,7 @@ public class ActionOptions {
             return false;
         }
         EntityMeeCreeps entity = new EntityMeeCreeps(world);
-        entity.setLocationAndAngles(p.getX(), p.getY(), p.getZ(), 0, 0);
+        entity.setLocationAndAngles(p.getX()+.5, p.getY(), p.getZ()+.5, 0, 0);
         entity.setActionId(getActionId());
         world.spawnEntity(entity);
         return true;

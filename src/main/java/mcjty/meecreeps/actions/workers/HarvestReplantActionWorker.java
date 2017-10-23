@@ -13,7 +13,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemSeeds;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -27,7 +26,10 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class HarvestReplantActionWorker implements IActionWorker {
 
@@ -42,6 +44,7 @@ public class HarvestReplantActionWorker implements IActionWorker {
     private int waitABit = 10;
 
     private Map<BlockPos, Block> needToReplant = new HashMap<>();
+    private List<EntityItem> itemsToPickup = new ArrayList<>();
 
     public HarvestReplantActionWorker(ActionOptions options) {
         this.options = options;
@@ -69,11 +72,11 @@ public class HarvestReplantActionWorker implements IActionWorker {
         Block block = needToReplant.get(pos);
         needToReplant.remove(pos);
         for (ItemStack stack : entity.getInventory()) {
-            if (stack.getItem() instanceof ItemSeeds) {
-                IBlockState plant = ((ItemSeeds) stack.getItem()).getPlant(world, pos);
+            if (stack.getItem() instanceof IPlantable) {
+                IBlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
                 if (plant.getBlock() == block) {
                     // This is a valid seed
-                    ItemStack seed = stack.splitStack(1);
+                    stack.splitStack(1);
                     world.setBlockState(pos, plant);
                     break;
                 }
@@ -90,8 +93,8 @@ public class HarvestReplantActionWorker implements IActionWorker {
         entity.getEntityWorld().setBlockToAir(pos);
         boolean replanted = false;
         for (ItemStack stack : drops) {
-            if ((!replanted) && stack.getItem() instanceof ItemSeeds) {
-                IBlockState plant = ((ItemSeeds) stack.getItem()).getPlant(world, pos);
+            if ((!replanted) && stack.getItem() instanceof IPlantable) {
+                IBlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
                 if (plant.getBlock() == state.getBlock()) {
                     // This is a valid seed
                     ItemStack seed = stack.splitStack(1);
@@ -101,7 +104,8 @@ public class HarvestReplantActionWorker implements IActionWorker {
             }
             ItemStack remaining = entity.addStack(stack);
             if (!remaining.isEmpty()) {
-                entity.entityDropItem(remaining, 0.0f);
+                EntityItem entityItem = entity.entityDropItem(remaining, 0.0f);
+                itemsToPickup.add(entityItem);
                 needsToPutAway = true;
             }
         }
@@ -109,8 +113,8 @@ public class HarvestReplantActionWorker implements IActionWorker {
         // If we didn't manage to get a seed from the drops we first check if we don't happen to have
         // a seed in our inventory so we can use that.
         for (ItemStack stack : entity.getInventory()) {
-            if (stack.getItem() instanceof ItemSeeds) {
-                IBlockState plant = ((ItemSeeds) stack.getItem()).getPlant(world, pos);
+            if (stack.getItem() instanceof IPlantable) {
+                IBlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
                 if (plant.getBlock() == state.getBlock()) {
                     // This is a valid seed
                     ItemStack seed = stack.splitStack(1);
@@ -144,8 +148,8 @@ public class HarvestReplantActionWorker implements IActionWorker {
             BlockPos pos = entry.getKey();
             Block block = entry.getValue();
             for (ItemStack stack : entity.getInventory()) {
-                if (stack.getItem() instanceof ItemSeeds) {
-                    IBlockState plant = ((ItemSeeds) stack.getItem()).getPlant(world, pos);
+                if (stack.getItem() instanceof IPlantable) {
+                    IBlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
                     if (plant.getBlock() == block) {
                         // This is a valid seed
                         movingToPosReplant = pos;
@@ -180,12 +184,13 @@ public class HarvestReplantActionWorker implements IActionWorker {
             tryToMoveToPos(entity, position);
         } else if (movingToItem != null && !movingToItem.isDead) {
             tryToMoveToItem(entity, position);
+        } else if (!itemsToPickup.isEmpty()) {
+            tryFindingItemsToPickup(entity, position);
         } else if (lastTask) {
             options.setStage(Stage.DONE);
             ServerActionManager.getManager().save();
         } else {
             tryFindingCropsToHarvest(entity, position);
-//            tryFindingItemsToPickup(entity, position);
         }
     }
 
@@ -232,9 +237,9 @@ public class HarvestReplantActionWorker implements IActionWorker {
             if (d < 2) {
                 harvest(entity, cropPos);
             } else {
-                if (!entity.getNavigator().tryMoveToXYZ(cropPos.getX(), cropPos.getY(), cropPos.getZ(), 2.0)) {
+                if (!entity.getNavigator().tryMoveToXYZ(cropPos.getX()+.5, cropPos.getY(), cropPos.getZ()+.5, 2.0)) {
                     // We need to teleport
-                    entity.setPositionAndUpdate(cropPos.getX(), cropPos.getY(), cropPos.getZ());
+                    entity.setPositionAndUpdate(cropPos.getX()+.5, cropPos.getY(), cropPos.getZ()+.5);
                 }
                 movingToPos = cropPos;
             }
@@ -249,9 +254,9 @@ public class HarvestReplantActionWorker implements IActionWorker {
             replant(entity, movingToPosReplant);
             movingToPosReplant = null;
         } else if (entity.getNavigator().noPath()) {
-            if (!entity.getNavigator().tryMoveToXYZ(movingToPosReplant.getX(), movingToPosReplant.getY(), movingToPosReplant.getZ(), 2.0)) {
+            if (!entity.getNavigator().tryMoveToXYZ(movingToPosReplant.getX()+.5, movingToPosReplant.getY(), movingToPosReplant.getZ()+.5, 2.0)) {
                 // We need to teleport
-                entity.setPositionAndUpdate(movingToPosReplant.getX(), movingToPosReplant.getY(), movingToPosReplant.getZ());
+                entity.setPositionAndUpdate(movingToPosReplant.getX()+.5, movingToPosReplant.getY(), movingToPosReplant.getZ()+.5);
             }
         }
     }
@@ -262,16 +267,16 @@ public class HarvestReplantActionWorker implements IActionWorker {
             harvest(entity, movingToPos);
             movingToPos = null;
         } else if (entity.getNavigator().noPath()) {
-            if (!entity.getNavigator().tryMoveToXYZ(movingToPos.getX(), movingToPos.getY(), movingToPos.getZ(), 2.0)) {
+            if (!entity.getNavigator().tryMoveToXYZ(movingToPos.getX()+.5, movingToPos.getY(), movingToPos.getZ()+.5, 2.0)) {
                 // We need to teleport
-                entity.setPositionAndUpdate(movingToPos.getX(), movingToPos.getY(), movingToPos.getZ());
+                entity.setPositionAndUpdate(movingToPos.getX()+.5, movingToPos.getY(), movingToPos.getZ()+.5);
             }
         }
     }
 
     private void tryFindingItemsToPickup(EntityMeeCreeps entity, BlockPos position) {
         movingToItem = null;
-        List<EntityItem> items = entity.getEntityWorld().getEntitiesWithinAABB(EntityItem.class, getActionBox());
+        List<EntityItem> items = itemsToPickup;
         if (!items.isEmpty()) {
             items.sort((o1, o2) -> {
                 double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
@@ -279,18 +284,17 @@ public class HarvestReplantActionWorker implements IActionWorker {
                 return Double.compare(d1, d2);
             });
             EntityItem entityItem = items.get(0);
+            items.remove(0);
             double d = position.distanceSq(entityItem.posX, entityItem.posY, entityItem.posZ);
             if (d < 2) {
                 pickup(entity, entityItem);
             } else {
                 if (!entity.getNavigator().tryMoveToEntityLiving(entityItem, 2.0)) {
                     // We need to teleport
-                    entity.setPositionAndUpdate(entityItem.posX, entityItem.posY, entityItem.posZ);
+                    entity.setPositionAndUpdate(entityItem.posX+.5, entityItem.posY, entityItem.posZ+.5);
                 }
                 movingToItem = entityItem;
             }
-        } else if (!entity.getInventory().isEmpty()) {
-            needsToPutAway = true;
         }
     }
 
@@ -333,9 +337,9 @@ public class HarvestReplantActionWorker implements IActionWorker {
             }
             needsToPutAway = false;
         } else {
-            if (!entity.getNavigator().tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 2.0)) {
+            if (!entity.getNavigator().tryMoveToXYZ(pos.getX()+.5, pos.getY(), pos.getZ()+.5, 2.0)) {
                 // We need to teleport
-                entity.setPositionAndUpdate(pos.getX(), pos.getY(), pos.getZ());
+                entity.setPositionAndUpdate(pos.getX()+.5, pos.getY(), pos.getZ()+.5);
             } else {
                 movingToChest = true;
             }
