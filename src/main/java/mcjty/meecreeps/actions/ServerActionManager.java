@@ -107,7 +107,7 @@ public class ServerActionManager extends WorldSavedData {
         for (ActionOptions option : options) {
             World world = DimensionManager.getWorld(option.getDimension());
             boolean keep = true;
-            if (world != null) {
+            if (world != null && world.isBlockLoaded(option.getPos())) {
                 if (!option.tick(world)) {
                     keep = false;
                 }
