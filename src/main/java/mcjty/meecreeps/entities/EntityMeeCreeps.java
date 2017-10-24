@@ -131,6 +131,15 @@ public class EntityMeeCreeps extends EntityCreature {
         return inventory;
     }
 
+    public boolean isEmptyInventory() {
+        for (ItemStack stack : inventory) {
+            if (!stack.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void dropInventory() {
         for (int i = 0; i < inventory.size(); i++) {
             ItemStack stack = inventory.get(i);

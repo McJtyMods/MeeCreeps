@@ -33,6 +33,7 @@ import java.util.Map;
 
 public class HarvestReplantActionWorker implements IActionWorker {
 
+    private final EntityMeeCreeps entity;
     private final ActionOptions options;
 
     private AxisAlignedBB actionBox = null;
@@ -46,7 +47,8 @@ public class HarvestReplantActionWorker implements IActionWorker {
     private Map<BlockPos, Block> needToReplant = new HashMap<>();
     private List<EntityItem> itemsToPickup = new ArrayList<>();
 
-    public HarvestReplantActionWorker(ActionOptions options) {
+    public HarvestReplantActionWorker(EntityMeeCreeps entity, ActionOptions options) {
+        this.entity = entity;
         this.options = options;
     }
 
@@ -162,7 +164,7 @@ public class HarvestReplantActionWorker implements IActionWorker {
     }
 
     @Override
-    public void tick(EntityMeeCreeps entity, boolean lastTask) {
+    public void tick(boolean lastTask) {
         waitABit--;
         if (waitABit > 0) {
             return;

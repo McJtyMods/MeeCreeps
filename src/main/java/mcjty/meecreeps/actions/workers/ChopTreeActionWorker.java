@@ -21,13 +21,15 @@ import java.util.List;
 
 public class ChopTreeActionWorker implements IActionWorker {
 
+    private final EntityMeeCreeps entity;
     private final ActionOptions options;
     private static FakePlayer harvester = null;
 
     private AxisAlignedBB actionBox = null;
     private int waitABit = 10;
 
-    public ChopTreeActionWorker(ActionOptions options) {
+    public ChopTreeActionWorker(EntityMeeCreeps entity, ActionOptions options) {
+        this.entity = entity;
         this.options = options;
     }
 
@@ -54,7 +56,7 @@ public class ChopTreeActionWorker implements IActionWorker {
 
 
     @Override
-    public void tick(EntityMeeCreeps entity, boolean lastTask) {
+    public void tick(boolean lastTask) {
         waitABit--;
         if (waitABit > 0) {
             return;

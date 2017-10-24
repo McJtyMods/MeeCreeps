@@ -4,7 +4,7 @@ import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.actions.IActionFactory;
 import mcjty.meecreeps.actions.IActionWorker;
 import mcjty.meecreeps.actions.workers.HarvestActionWorker;
-import mcjty.meecreeps.actions.workers.HarvestReplantActionWorker;
+import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.InventoryTools;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCrops;
@@ -92,7 +92,7 @@ public class HarvestActionFactory implements IActionFactory {
     }
 
     @Override
-    public IActionWorker createWorker(ActionOptions options) {
-        return new HarvestActionWorker(options);
+    public IActionWorker createWorker(EntityMeeCreeps entity, ActionOptions options) {
+        return new HarvestActionWorker(entity, options);
     }
 }

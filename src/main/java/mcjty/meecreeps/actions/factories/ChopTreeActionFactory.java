@@ -4,7 +4,7 @@ import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.actions.IActionFactory;
 import mcjty.meecreeps.actions.IActionWorker;
 import mcjty.meecreeps.actions.workers.ChopTreeActionWorker;
-import mcjty.meecreeps.actions.workers.HarvestReplantActionWorker;
+import mcjty.meecreeps.entities.EntityMeeCreeps;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -27,7 +27,7 @@ public class ChopTreeActionFactory implements IActionFactory {
     }
 
     @Override
-    public IActionWorker createWorker(ActionOptions options) {
-        return new ChopTreeActionWorker(options);
+    public IActionWorker createWorker(EntityMeeCreeps entity, ActionOptions options) {
+        return new ChopTreeActionWorker(entity, options);
     }
 }

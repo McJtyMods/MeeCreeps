@@ -4,6 +4,7 @@ import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.actions.IActionWorker;
 import mcjty.meecreeps.actions.IActionFactory;
 import mcjty.meecreeps.actions.workers.PickupActionWorker;
+import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.InventoryTools;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -29,7 +30,7 @@ public class PickupActionFactory implements IActionFactory {
     }
 
     @Override
-    public IActionWorker createWorker(ActionOptions options) {
-        return new PickupActionWorker(options);
+    public IActionWorker createWorker(EntityMeeCreeps entity, ActionOptions options) {
+        return new PickupActionWorker(entity, options);
     }
 }

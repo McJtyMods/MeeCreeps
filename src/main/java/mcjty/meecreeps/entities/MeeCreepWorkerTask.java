@@ -32,7 +32,7 @@ public class MeeCreepWorkerTask extends EntityAIBase {
 
     private IActionWorker getWorker(ActionOptions options) {
         if (worker == null) {
-            worker = options.getTask().getActionFactory().createWorker(options);
+            worker = options.getTask().getActionFactory().createWorker(meeCreeps, options);
         }
         return worker;
     }
@@ -45,9 +45,9 @@ public class MeeCreepWorkerTask extends EntityAIBase {
             ActionOptions options = manager.getOptions(actionId);
             if (options != null) {
                 if (options.getStage() == Stage.WORKING) {
-                    getWorker(options).tick(meeCreeps, false);
+                    getWorker(options).tick(false);
                 } else if (options.getStage() == Stage.TIME_IS_UP) {
-                    getWorker(options).tick(meeCreeps, true);
+                    getWorker(options).tick(true);
                 }
             }
         }
