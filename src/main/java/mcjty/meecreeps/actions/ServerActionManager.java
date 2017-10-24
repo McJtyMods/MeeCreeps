@@ -81,9 +81,9 @@ public class ServerActionManager extends WorldSavedData {
         save();
     }
 
-    public void performAction(ActionOptions option, MeeCreepActionType type) {
+    public void performAction(int id, MeeCreepActionType type) {
         System.out.println("ServerActionManager.performAction: " + type.getDescription());
-        option = getOptions(option.getActionId());
+        ActionOptions option = getOptions(id);
         if (option != null) {
             option.setStage(Stage.WORKING);
             option.setTask(type);
@@ -91,11 +91,20 @@ public class ServerActionManager extends WorldSavedData {
         }
     }
 
-    public void cancelAction(ActionOptions option) {
+    public void cancelAction(int id) {
         System.out.println("ServerActionManager.cancelAction");
-        option = getOptions(option.getActionId());
+        ActionOptions option = getOptions(id);
         if (option != null) {
             option.setStage(Stage.DONE);
+            option.setPaused(false);
+        }
+    }
+
+    public void resumeAction(int id) {
+        System.out.println("ServerActionManager.resumeAction");
+        ActionOptions option = getOptions(id);
+        if (option != null) {
+            option.setPaused(false);
         }
     }
 

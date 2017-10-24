@@ -2,21 +2,23 @@ package mcjty.meecreeps.entities;
 
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ActionOptions;
+import mcjty.meecreeps.actions.ClientActionManager;
+import mcjty.meecreeps.actions.PacketActionOptionToClient;
 import mcjty.meecreeps.actions.ServerActionManager;
+import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.proxy.GuiProxy;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAILookIdle;
 import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.ai.EntityAIWatchClosest;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.*;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
@@ -58,10 +60,25 @@ public class EntityMeeCreeps extends EntityCreature {
         this.tasks.addTask(3, new MeeCreepWorkerTask(this));
         this.tasks.addTask(8, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
         this.tasks.addTask(8, new EntityAILookIdle(this));
-        this.applyEntityAI();
     }
 
-    private void applyEntityAI() {
+
+    @Override
+    protected boolean processInteract(EntityPlayer player, EnumHand hand) {
+        if (player.getEntityWorld().isRemote) {
+//            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_DISMISS, player.getEntityWorld(), (int) player.posX, (int) player.posY, (int) player.posZ);
+            return true;
+        } else {
+            ServerActionManager manager = ServerActionManager.getManager();
+            if (actionId != 0) {
+                ActionOptions options = manager.getOptions(actionId);
+                if (options != null) {
+                    PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(options, GuiProxy.GUI_MEECREEP_DISMISS), (EntityPlayerMP) player);
+                    options.setPaused(true);
+                }
+            }
+            return true;
+        }
     }
 
     @Override
@@ -71,7 +88,6 @@ public class EntityMeeCreeps extends EntityCreature {
         if (actionId != 0) {
             ActionOptions options = manager.getOptions(actionId);
             if (options == null) {
-                // We should die @todo animation
                 this.setDead();
             }
         }

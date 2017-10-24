@@ -8,18 +8,18 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketPerformAction implements IMessage {
 
-    private ActionOptions options;
+    private int id;
     private MeeCreepActionType type;
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        options = new ActionOptions(buf);
+        id = buf.readInt();
         type = MeeCreepActionType.VALUES[buf.readByte()];
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        options.writeToBuf(buf);
+        buf.writeInt(id);
         buf.writeByte(type.ordinal());
     }
 
@@ -27,7 +27,7 @@ public class PacketPerformAction implements IMessage {
     }
 
     public PacketPerformAction(ActionOptions options, MeeCreepActionType type) {
-        this.options = options;
+        this.id = options.getActionId();
         this.type = type;
     }
 
@@ -39,7 +39,7 @@ public class PacketPerformAction implements IMessage {
         }
 
         private void handle(PacketPerformAction message, MessageContext ctx) {
-            ServerActionManager.getManager().performAction(message.options, message.type);
+            ServerActionManager.getManager().performAction(message.id, message.type);
         }
     }
 

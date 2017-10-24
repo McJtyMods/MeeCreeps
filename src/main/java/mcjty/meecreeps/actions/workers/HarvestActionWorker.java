@@ -25,7 +25,7 @@ import java.util.List;
 public class HarvestActionWorker extends AbstractActionWorker {
 
     private AxisAlignedBB actionBox = null;
-    private List<EntityItem> itemsToPickup = new ArrayList<>();
+    protected List<EntityItem> itemsToPickup = new ArrayList<>();
 
     public HarvestActionWorker(EntityMeeCreeps entity, ActionOptions options) {
         super(entity, options);
@@ -39,7 +39,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
         return actionBox;
     }
 
-    private static boolean allowedToHarvest(IBlockState state, World world, BlockPos pos, EntityPlayer entityPlayer) {
+    protected static boolean allowedToHarvest(IBlockState state, World world, BlockPos pos, EntityPlayer entityPlayer) {
         if (!state.getBlock().canEntityDestroy(state, world, pos, entityPlayer)) {
             return false;
         }
@@ -48,7 +48,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
         return !event.isCanceled();
     }
 
-    private void harvest(BlockPos pos) {
+    protected void harvest(BlockPos pos) {
         World world = entity.getEntityWorld();
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
@@ -79,7 +79,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
         }
     }
 
-    private void tryFindingCropsToHarvest() {
+    protected void tryFindingCropsToHarvest() {
         AxisAlignedBB box = getActionBox();
         World world = entity.getEntityWorld();
         List<BlockPos> positions = new ArrayList<>();
@@ -122,7 +122,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
         }
     }
 
-    private void tryFindingItemsToPickup() {
+    protected void tryFindingItemsToPickup() {
         BlockPos position = entity.getPosition();
         List<EntityItem> items = itemsToPickup;
         if (!items.isEmpty()) {
@@ -137,7 +137,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
         }
     }
 
-    private void findChestToPutItemsIn() {
+    protected void findChestToPutItemsIn() {
         BlockPos pos = options.getPos();
         navigateTo(pos, this::stashItems);
     }

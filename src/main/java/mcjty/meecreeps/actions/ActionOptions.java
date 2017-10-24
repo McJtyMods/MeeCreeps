@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.network.NetworkTools;
 import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.proxy.GuiProxy;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -30,6 +31,7 @@ public class ActionOptions {
     private int timeout;
     private Stage stage;
     private MeeCreepActionType task;
+    private boolean paused;
 
     public ActionOptions(List<MeeCreepActionType> actionOptions, List<MeeCreepActionType> maybeActionOptions, BlockPos pos, int dimension, UUID playerId, int actionId) {
         this.actionOptions = actionOptions;
@@ -41,6 +43,7 @@ public class ActionOptions {
         timeout = 10;
         stage = Stage.WAITING_FOR_SPAWN;
         task = null;
+        paused = false;
     }
 
     public ActionOptions(ByteBuf buf) {
@@ -65,6 +68,7 @@ public class ActionOptions {
         if (buf.readBoolean()) {
             task = MeeCreepActionType.VALUES[buf.readByte()];
         }
+        paused = buf.readBoolean();
     }
 
     public ActionOptions(NBTTagCompound tagCompound) {
@@ -87,6 +91,7 @@ public class ActionOptions {
         if (tagCompound.hasKey("task")) {
             task = MeeCreepActionType.getByCode(tagCompound.getString("task"));
         }
+        paused = tagCompound.getBoolean("paused");
     }
 
     public void writeToBuf(ByteBuf buf) {
@@ -111,6 +116,7 @@ public class ActionOptions {
         } else {
             buf.writeBoolean(false);
         }
+        buf.writeBoolean(paused);
     }
 
     public void writeToNBT(NBTTagCompound tagCompound) {
@@ -133,6 +139,7 @@ public class ActionOptions {
         if (task != null) {
             tagCompound.setString("task", task.getCode());
         }
+        tagCompound.setBoolean("paused", paused);
     }
 
     public List<MeeCreepActionType> getActionOptions() {
@@ -168,6 +175,14 @@ public class ActionOptions {
         this.timeout = stage.getTimeout();
     }
 
+    public boolean isPaused() {
+        return paused;
+    }
+
+    public void setPaused(boolean paused) {
+        this.paused = paused;
+    }
+
     public MeeCreepActionType getTask() {
         return task;
     }
@@ -177,6 +192,9 @@ public class ActionOptions {
     }
 
     public boolean tick(World world) {
+        if (paused) {
+            return true;
+        }
         timeout--;
         if (timeout <= 0) {
             timeout = 20;
@@ -220,7 +238,7 @@ public class ActionOptions {
         MinecraftServer server = DimensionManager.getWorld(0).getMinecraftServer();
         EntityPlayerMP player = server.getPlayerList().getPlayerByUUID(getPlayerId());
         if (player != null) {
-            PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(this), player);
+            PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(this, GuiProxy.GUI_MEECREEP_QUESTION), player);
         } else {
             return false;
         }

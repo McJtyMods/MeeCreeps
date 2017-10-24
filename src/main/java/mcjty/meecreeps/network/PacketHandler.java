@@ -4,6 +4,7 @@ package mcjty.meecreeps.network;
 import mcjty.meecreeps.actions.PacketActionOptionToClient;
 import mcjty.meecreeps.actions.PacketCancelAction;
 import mcjty.meecreeps.actions.PacketPerformAction;
+import mcjty.meecreeps.actions.PacketResumeAction;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
@@ -34,6 +35,7 @@ public class PacketHandler {
         // Server side
         INSTANCE.registerMessage(PacketPerformAction.Handler.class, PacketPerformAction.class, nextID(), Side.SERVER);
         INSTANCE.registerMessage(PacketCancelAction.Handler.class, PacketCancelAction.class, nextID(), Side.SERVER);
+        INSTANCE.registerMessage(PacketResumeAction.Handler.class, PacketResumeAction.class, nextID(), Side.SERVER);
 
         // Client side
         INSTANCE.registerMessage(PacketActionOptionToClient.Handler.class, PacketActionOptionToClient.class, nextID(), Side.CLIENT);
