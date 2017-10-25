@@ -3,6 +3,7 @@ package mcjty.meecreeps.actions.workers;
 import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.GeneralTools;
+import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
@@ -47,6 +48,7 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
         Block block = state.getBlock();
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
         net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
+        SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
         entity.getEntityWorld().setBlockToAir(pos);
         boolean replanted = false;
         for (ItemStack stack : drops) {

@@ -3,6 +3,7 @@ package mcjty.meecreeps.actions.workers;
 import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.GeneralTools;
+import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockNetherWart;
@@ -39,21 +40,13 @@ public class HarvestActionWorker extends AbstractActionWorker {
         return actionBox;
     }
 
-    protected static boolean allowedToHarvest(IBlockState state, World world, BlockPos pos, EntityPlayer entityPlayer) {
-        if (!state.getBlock().canEntityDestroy(state, world, pos, entityPlayer)) {
-            return false;
-        }
-        BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(world, pos, state, entityPlayer);
-        MinecraftForge.EVENT_BUS.post(event);
-        return !event.isCanceled();
-    }
-
     protected void harvest(BlockPos pos) {
         World world = entity.getEntityWorld();
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
         net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
+        SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
         entity.getEntityWorld().setBlockToAir(pos);
         for (ItemStack stack : drops) {
             ItemStack remaining = entity.addStack(stack);

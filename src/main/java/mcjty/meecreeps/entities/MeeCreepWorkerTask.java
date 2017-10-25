@@ -5,6 +5,7 @@ import mcjty.meecreeps.actions.IActionWorker;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.actions.Stage;
 import net.minecraft.entity.ai.EntityAIBase;
+import net.minecraft.nbt.NBTTagCompound;
 
 public class MeeCreepWorkerTask extends EntityAIBase {
 
@@ -43,13 +44,34 @@ public class MeeCreepWorkerTask extends EntityAIBase {
         int actionId = meeCreeps.getActionId();
         if (actionId != 0) {
             ActionOptions options = manager.getOptions(actionId);
-            if (options != null && !options.isPaused()) {
-                if (options.getStage() == Stage.WORKING) {
+            if (options != null) {
+                if (options.isPaused()) {
+                    if (!meeCreeps.getNavigator().noPath()) {
+                        meeCreeps.getNavigator().clearPath();
+                    }
+                } else if (options.getStage() == Stage.WORKING) {
                     getWorker(options).tick(false);
                 } else if (options.getStage() == Stage.TIME_IS_UP) {
                     getWorker(options).tick(true);
                 }
             }
+        }
+    }
+
+    public void readFromNBT(NBTTagCompound tag) {
+        ServerActionManager manager = ServerActionManager.getManager();
+        int actionId = meeCreeps.getActionId();
+        if (actionId != 0) {
+            ActionOptions options = manager.getOptions(actionId);
+            if (options != null) {
+                getWorker(options).readFromNBT(tag);
+            }
+        }
+    }
+
+    public void writeToNBT(NBTTagCompound tag) {
+        if (worker != null) {
+            worker.writeToNBT(tag);
         }
     }
 }

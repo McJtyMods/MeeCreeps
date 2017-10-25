@@ -32,6 +32,7 @@ public class EntityMeeCreeps extends EntityCreature {
 
     private int actionId = 0;
     private NonNullList<ItemStack> inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);
+    private MeeCreepWorkerTask workerTask;
 
     public EntityMeeCreeps(World worldIn) {
         super(worldIn);
@@ -57,7 +58,8 @@ public class EntityMeeCreeps extends EntityCreature {
         this.tasks.addTask(0, new EntityAISwimming(this));
 //        this.tasks.addTask(5, new EntityAIMoveTowardsRestriction(this, 1.0D));
 //        this.tasks.addTask(7, new EntityAIWander(this, 1.0D));
-        this.tasks.addTask(3, new MeeCreepWorkerTask(this));
+        workerTask = new MeeCreepWorkerTask(this);
+        this.tasks.addTask(3, workerTask);
         this.tasks.addTask(8, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
         this.tasks.addTask(8, new EntityAILookIdle(this));
     }
@@ -189,6 +191,9 @@ public class EntityMeeCreeps extends EntityCreature {
                 inventory.set(i, new ItemStack(list.getCompoundTagAt(i)));
             }
         }
+        if (compound.hasKey("worker") && workerTask != null) {
+            workerTask.readFromNBT(compound.getCompoundTag("worker"));
+        }
     }
 
     @Override
@@ -200,6 +205,11 @@ public class EntityMeeCreeps extends EntityCreature {
             list.appendTag(stack.writeToNBT(new NBTTagCompound()));
         }
         compound.setTag("items", list);
+        if (workerTask != null) {
+            NBTTagCompound workerTag = new NBTTagCompound();
+            workerTask.writeToNBT(workerTag);
+            compound.setTag("worker", workerTag);
+        }
     }
 
     private void spawnDeathParticles() {
