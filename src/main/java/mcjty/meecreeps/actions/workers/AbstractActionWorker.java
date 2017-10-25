@@ -5,6 +5,8 @@ import mcjty.meecreeps.actions.IActionWorker;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.actions.Stage;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
+import mcjty.meecreeps.varia.GeneralTools;
+import mcjty.meecreeps.varia.InventoryTools;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
@@ -12,6 +14,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
@@ -21,17 +24,21 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
 
 public abstract class AbstractActionWorker implements IActionWorker {
 
     protected final ActionOptions options;
     protected final EntityMeeCreeps entity;
     protected boolean needsToPutAway = false;
-    private int waitABit = 10;
+    protected int waitABit = 10;
 
     protected BlockPos movingToPos;
     protected Entity movingToEntity;
+    private int pathTries = 0;
     protected Runnable job;
 
     public AbstractActionWorker(EntityMeeCreeps entity, ActionOptions options) {
@@ -51,6 +58,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
         } else {
             this.movingToPos = pos;
             this.movingToEntity = null;
+            pathTries = 1;
             this.job = job;
         }
     }
@@ -67,6 +75,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
         } else {
             this.movingToPos = null;
             this.movingToEntity = dest;
+            pathTries = 1;
             this.job = job;
         }
     }
@@ -91,8 +100,14 @@ public abstract class AbstractActionWorker implements IActionWorker {
                         job.run();
                         job = null;
                     } else if (entity.getNavigator().noPath()) {
-                        // It failed somehow. Try again
-                        entity.getNavigator().tryMoveToEntityLiving(movingToEntity, 2.0);
+                        if (pathTries > 2) {
+                            entity.setPositionAndUpdate(movingToEntity.posX, movingToEntity.posY, movingToEntity.posZ);
+                            job.run();
+                            job = null;
+                        } else {
+                            pathTries++;
+                            entity.getNavigator().tryMoveToEntityLiving(movingToEntity, 2.0);
+                        }
                     }
                 }
             } else {
@@ -101,8 +116,14 @@ public abstract class AbstractActionWorker implements IActionWorker {
                     job.run();
                     job = null;
                 } else if (entity.getNavigator().noPath()) {
-                    // It failed somehow. Try again
-                    entity.getNavigator().tryMoveToXYZ(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5, 2.0);
+                    if (pathTries > 2) {
+                        entity.setPositionAndUpdate(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5);
+                        job.run();
+                        job = null;
+                    } else {
+                        pathTries++;
+                        entity.getNavigator().tryMoveToXYZ(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5, 2.0);
+                    }
                 }
             }
         } else {
@@ -163,4 +184,71 @@ public abstract class AbstractActionWorker implements IActionWorker {
     protected boolean needToFindChest(boolean lastTask) {
         return needsToPutAway || (lastTask && !entity.isEmptyInventory());
     }
+
+    private float calculateScore(int countMatching, int countFreeForMatching) {
+        return 2.0f * countMatching + countFreeForMatching;
+    }
+
+    protected List<BlockPos> findSuitableInventories(AxisAlignedBB box, Predicate<ItemStack> matcher) {
+        World world = entity.getEntityWorld();
+        List<BlockPos> inventories = new ArrayList<>();
+        Map<BlockPos, Float> countMatching = new HashMap<>();
+        GeneralTools.traverseBox(world, box,
+                (pos, state) -> InventoryTools.isInventory(world, pos),
+                (pos, state) -> {
+                    TileEntity te = world.getTileEntity(pos);
+                    IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+                    // @todo config?
+                    if (handler.getSlots() > 8) {
+                        int cnt = 0;
+                        int free = 0;
+                        for (int i = 0 ; i < handler.getSlots() ; i++) {
+                            ItemStack stack = handler.getStackInSlot(i);
+                            if (!stack.isEmpty()) {
+                                if (matcher.test(stack)) {
+                                    cnt += stack.getCount();
+                                    free += handler.getSlotLimit(i) - stack.getCount();
+                                }
+                            } else {
+                                free += handler.getSlotLimit(i);
+                            }
+                        }
+                        if (cnt > 0) {
+                            inventories.add(pos);
+                            countMatching.put(pos, calculateScore(cnt, free));
+                        }
+                    }
+                });
+        // Sort so that highest score goes first
+        inventories.sort((p1, p2) -> Float.compare(countMatching.get(p2), countMatching.get(p1)));
+        return inventories;
+    }
+
+    protected List<BlockPos> findInventoriesWithMostSpace(AxisAlignedBB box) {
+        World world = entity.getEntityWorld();
+        List<BlockPos> inventories = new ArrayList<>();
+        Map<BlockPos, Float> countMatching = new HashMap<>();
+        GeneralTools.traverseBox(world, box,
+                (pos, state) -> InventoryTools.isInventory(world, pos),
+                (pos, state) -> {
+                    TileEntity te = world.getTileEntity(pos);
+                    IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+                    // @todo config?
+                    if (handler.getSlots() > 8) {
+                        int free = 0;
+                        for (int i = 0 ; i < handler.getSlots() ; i++) {
+                            ItemStack stack = handler.getStackInSlot(i);
+                            if (stack.isEmpty()) {
+                                free += handler.getSlotLimit(i);
+                            }
+                        }
+                        inventories.add(pos);
+                        countMatching.put(pos, (float) free);
+                    }
+                });
+        // Sort so that highest score goes first
+        inventories.sort((p1, p2) -> Float.compare(countMatching.get(p2), countMatching.get(p1)));
+        return inventories;
+    }
+
 }

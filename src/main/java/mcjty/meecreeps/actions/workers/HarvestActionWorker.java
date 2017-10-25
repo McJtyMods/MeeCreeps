@@ -9,7 +9,6 @@ import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockNetherWart;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
@@ -17,8 +16,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.BlockEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,37 +73,29 @@ public class HarvestActionWorker extends AbstractActionWorker {
         AxisAlignedBB box = getActionBox();
         World world = entity.getEntityWorld();
         List<BlockPos> positions = new ArrayList<>();
-        for (double x = box.minX ; x <= box.maxX ; x++) {
-            for (double y = box.minY; y <= box.maxY; y++) {
-                for (double z = box.minZ; z <= box.maxZ; z++) {
-                    BlockPos pos = new BlockPos(x, y, z);
-                    IBlockState state = world.getBlockState(pos);
-                    if (allowedToHarvest(state, world, pos, GeneralTools.getHarvester())) {
-                        if (state.getBlock() == Blocks.FARMLAND) {
-                            IBlockState cropState = world.getBlockState(pos.up());
-                            Block cropBlock = cropState.getBlock();
-                            boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(pos), world, pos, EnumFacing.UP, (IPlantable) cropBlock);
-                            if (hasCrops) {
-                                if (cropBlock instanceof BlockCrops) {
-                                    BlockCrops crops = (BlockCrops) cropBlock;
-                                    int age = crops.getAge(cropState);
-                                    int maxAge = crops.getMaxAge();
-                                    if (age >= maxAge) {
-                                        positions.add(pos.up());
-                                    }
-                                } else if (cropBlock instanceof BlockNetherWart) {
-                                    int age = cropState.getValue(BlockNetherWart.AGE);
-                                    int maxAge = 3;
-                                    if (age >= maxAge) {
-                                        positions.add(pos.up());
-                                    }
-                                }
+        GeneralTools.traverseBox(world, box,
+                (pos, state) -> state.getBlock() == Blocks.FARMLAND && allowedToHarvest(state, world, pos, GeneralTools.getHarvester()),
+                (pos, state) -> {
+                    IBlockState cropState = world.getBlockState(pos.up());
+                    Block cropBlock = cropState.getBlock();
+                    boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(pos), world, pos, EnumFacing.UP, (IPlantable) cropBlock);
+                    if (hasCrops) {
+                        if (cropBlock instanceof BlockCrops) {
+                            BlockCrops crops = (BlockCrops) cropBlock;
+                            int age = crops.getAge(cropState);
+                            int maxAge = crops.getMaxAge();
+                            if (age >= maxAge) {
+                                positions.add(pos.up());
+                            }
+                        } else if (cropBlock instanceof BlockNetherWart) {
+                            int age = cropState.getValue(BlockNetherWart.AGE);
+                            int maxAge = 3;
+                            if (age >= maxAge) {
+                                positions.add(pos.up());
                             }
                         }
                     }
-                }
-            }
-        }
+                });
         if (!positions.isEmpty()) {
             BlockPos cropPos = positions.get(0);
             navigateTo(cropPos, () -> harvest(cropPos));
