@@ -9,6 +9,7 @@ import java.util.Map;
 
 public enum MeeCreepActionType {
     ACTION_CHOP_TREE("chop_tree", "Chop this tree", new ChopTreeActionFactory()),
+    ACTION_CHOP_TREE_AND_COLLECT("chop_tree_collect", "Chop this tree and get the drops", new ChopTreeAndCollectActionFactory()),
     ACTION_HARVEST_REPLANT("harvest_replant", "Harvest and replant those crops", new HarvestReplantActionFactory()),
     ACTION_HARVEST("harvest", "Harvest those crops", new HarvestActionFactory()),
     ACTION_PLACE_TORCHES("torches", "Light up the area", new LightupActionFactory()),

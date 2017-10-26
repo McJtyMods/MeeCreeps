@@ -98,7 +98,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
                 });
         if (!positions.isEmpty()) {
             BlockPos cropPos = positions.get(0);
-            navigateTo(cropPos, () -> harvest(cropPos));
+            navigateTo(cropPos, this::harvest);
         } else if (!entity.getInventory().isEmpty()) {
             needsToPutAway = true;
         }
@@ -115,7 +115,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
             });
             EntityItem entityItem = items.get(0);
             items.remove(0);
-            navigateTo(entityItem, () -> pickup(entityItem));
+            navigateTo(entityItem, (p) -> pickup(entityItem));
         }
     }
 

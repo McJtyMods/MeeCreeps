@@ -55,7 +55,7 @@ public class PickupActionWorker extends AbstractActionWorker {
                 return Double.compare(d1, d2);
             });
             EntityItem entityItem = items.get(0);
-            navigateTo(entityItem, () -> pickup(entityItem));
+            navigateTo(entityItem, (pos) -> pickup(entityItem));
         } else if (!entity.getInventory().isEmpty()) {
             needsToPutAway = true;
         }

@@ -114,7 +114,7 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
         if (needToFindChest(lastTask)) {
             findChestToPutItemsIn();
         } else if (!needToReplant.isEmpty() && (pos = hasSuitableSeed()) != null) {
-            navigateTo(pos, () -> replant(pos));
+            navigateTo(pos, this::replant);
         } else if (!itemsToPickup.isEmpty()) {
             tryFindingItemsToPickup();
         } else if (lastTask) {

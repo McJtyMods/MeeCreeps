@@ -11,7 +11,9 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public abstract class AbstractActionWorker implements IActionWorker {
@@ -39,22 +42,22 @@ public abstract class AbstractActionWorker implements IActionWorker {
     protected BlockPos movingToPos;
     protected Entity movingToEntity;
     private int pathTries = 0;
-    protected Runnable job;
+    protected Consumer<BlockPos> job;
 
     public AbstractActionWorker(EntityMeeCreeps entity, ActionOptions options) {
         this.options = options;
         this.entity = entity;
     }
 
-    protected void navigateTo(BlockPos pos, Runnable job) {
+    protected void navigateTo(BlockPos pos, Consumer<BlockPos> job) {
         BlockPos position = entity.getPosition();
         double d = position.distanceSq(pos.getX(), pos.getY(), pos.getZ());
         if (d < 2) {
-            job.run();
+            job.accept(pos);
         } else if (!entity.getNavigator().tryMoveToXYZ(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 2.0)) {
             // We need to teleport
             entity.setPositionAndUpdate(pos.getX() + .5, pos.getY(), pos.getZ() + .5);
-            job.run();
+            job.accept(pos);
         } else {
             this.movingToPos = pos;
             this.movingToEntity = null;
@@ -63,15 +66,15 @@ public abstract class AbstractActionWorker implements IActionWorker {
         }
     }
 
-    protected void navigateTo(Entity dest, Runnable job) {
+    protected void navigateTo(Entity dest, Consumer<BlockPos> job) {
         BlockPos position = entity.getPosition();
         double d = position.distanceSq(dest.posX, dest.posY, dest.posZ);
         if (d < 2) {
-            job.run();
+            job.accept(dest.getPosition());
         } else if (!entity.getNavigator().tryMoveToEntityLiving(dest, 2.0)) {
             // We need to teleport
             entity.setPositionAndUpdate(dest.posX, dest.posY, dest.posZ);
-            job.run();
+            job.accept(dest.getPosition());
         } else {
             this.movingToPos = null;
             this.movingToEntity = dest;
@@ -97,12 +100,12 @@ public abstract class AbstractActionWorker implements IActionWorker {
                 } else {
                     double d = position.distanceSq(movingToEntity.posX, movingToEntity.posY, movingToEntity.posZ);
                     if (d < 2) {
-                        job.run();
+                        job.accept(movingToEntity.getPosition());
                         job = null;
                     } else if (entity.getNavigator().noPath()) {
                         if (pathTries > 2) {
                             entity.setPositionAndUpdate(movingToEntity.posX, movingToEntity.posY, movingToEntity.posZ);
-                            job.run();
+                            job.accept(movingToEntity.getPosition());
                             job = null;
                         } else {
                             pathTries++;
@@ -113,12 +116,12 @@ public abstract class AbstractActionWorker implements IActionWorker {
             } else {
                 double d = position.distanceSq(movingToPos.getX(), movingToPos.getY(), movingToPos.getZ());
                 if (d < 2) {
-                    job.run();
+                    job.accept(movingToPos);
                     job = null;
                 } else if (entity.getNavigator().noPath()) {
                     if (pathTries > 2) {
                         entity.setPositionAndUpdate(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5);
-                        job.run();
+                        job.accept(movingToPos);
                         job = null;
                     } else {
                         pathTries++;
@@ -157,10 +160,70 @@ public abstract class AbstractActionWorker implements IActionWorker {
         ServerActionManager.getManager().save();
     }
 
-    protected void stashItems() {
-        BlockPos pos = options.getPos();
+    // Indicate the task is done and that it is time to do the last task (putting back stuff etc)
+    protected void taskIsDone() {
+        options.setStage(Stage.TIME_IS_UP);
+        ServerActionManager.getManager().save();
+    }
+
+    private void giveToPlayerOrDrop() {
+        World world = entity.getEntityWorld();
+        MinecraftServer server = world.getMinecraftServer();
+        EntityPlayerMP player = server.getPlayerList().getPlayerByUUID(options.getPlayerId());
+        BlockPos position = entity.getPosition();
+        if (player == null || position.distanceSq(player.getPosition()) > 2*2) {
+            entity.dropInventory();
+        } else {
+            List<ItemStack> remaining = new ArrayList<>();
+            for (ItemStack stack : entity.getInventory()) {
+                if (!player.inventory.addItemStackToInventory(stack)) {
+                    remaining.add(stack);
+                }
+            }
+            player.openContainer.detectAndSendChanges();
+            for (ItemStack stack : remaining) {
+                entity.entityDropItem(stack, 0.0f);
+            }
+            entity.getInventory().clear();
+        }
+
+    }
+
+    protected void giveToPlayerIfPossible() {
+        World world = entity.getEntityWorld();
+        MinecraftServer server = world.getMinecraftServer();
+        EntityPlayerMP player = server.getPlayerList().getPlayerByUUID(options.getPlayerId());
+        BlockPos position = entity.getPosition();
+        if (player == null || position.distanceSq(player.getPosition()) > 12*12) {
+            entity.dropInventory();
+        } else {
+            navigateTo(player, (pos) -> giveToPlayerOrDrop());
+        }
+    }
+
+    /**
+     * See if there is a specific item around. If so start navigating to it and return true
+     */
+    protected boolean tryFindingSomeItem(AxisAlignedBB box, Predicate<ItemStack> matcher) {
+        BlockPos position = entity.getPosition();
+        List<EntityItem> items = entity.getEntityWorld().getEntitiesWithinAABB(EntityItem.class, box, input -> matcher.test(input.getItem()));
+        if (!items.isEmpty()) {
+            items.sort((o1, o2) -> {
+                double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
+                double d2 = position.distanceSq(o2.posX, o2.posY, o2.posZ);
+                return Double.compare(d1, d2);
+            });
+            EntityItem entityItem = items.get(0);
+            navigateTo(entityItem, (pos) -> pickup(entityItem));
+            return true;
+        }
+        return false;
+    }
+
+
+    protected void stashItems(BlockPos chestPos) {
         List<ItemStack> remainingItems = new ArrayList<>();
-        TileEntity te = entity.getEntityWorld().getTileEntity(pos);
+        TileEntity te = entity.getEntityWorld().getTileEntity(chestPos);
         if (te != null && te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP)) {
             IItemHandler capability = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
             for (ItemStack stack : entity.getInventory()) {
@@ -188,6 +251,40 @@ public abstract class AbstractActionWorker implements IActionWorker {
     private float calculateScore(int countMatching, int countFreeForMatching) {
         return 2.0f * countMatching + countFreeForMatching;
     }
+
+    protected boolean findInventoryContainingMost(AxisAlignedBB box, Predicate<ItemStack> matcher, Consumer<BlockPos> job) {
+        World world = entity.getEntityWorld();
+        List<BlockPos> inventories = new ArrayList<>();
+        Map<BlockPos, Float> countMatching = new HashMap<>();
+        GeneralTools.traverseBox(world, box,
+                (pos, state) -> InventoryTools.isInventory(world, pos),
+                (pos, state) -> {
+                    TileEntity te = world.getTileEntity(pos);
+                    IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+                    int cnt = 0;
+                    for (int i = 0 ; i < handler.getSlots() ; i++) {
+                        ItemStack stack = handler.getStackInSlot(i);
+                        if (!stack.isEmpty()) {
+                            if (matcher.test(stack)) {
+                                cnt += stack.getCount();
+                            }
+                        }
+                    }
+                    if (cnt > 0) {
+                        inventories.add(pos);
+                        countMatching.put(pos, (float) cnt);
+                    }
+                });
+        // Sort so that highest score goes first
+        inventories.sort((p1, p2) -> Float.compare(countMatching.get(p2), countMatching.get(p1)));
+        if (inventories.isEmpty()) {
+            return false;
+        } else {
+            navigateTo(inventories.get(0), job);
+            return true;
+        }
+    }
+
 
     protected List<BlockPos> findSuitableInventories(AxisAlignedBB box, Predicate<ItemStack> matcher) {
         World world = entity.getEntityWorld();

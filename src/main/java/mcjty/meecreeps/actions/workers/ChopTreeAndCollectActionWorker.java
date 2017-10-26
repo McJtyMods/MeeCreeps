@@ -18,12 +18,12 @@ import net.minecraftforge.common.util.Constants;
 
 import java.util.*;
 
-public class ChopTreeActionWorker extends AbstractActionWorker {
+public class ChopTreeAndCollectActionWorker extends AbstractActionWorker {
 
     private List<BlockPos> blocks = new ArrayList<>();
     private Counter<BlockPos> leavesToTick = new Counter<>();
 
-    public ChopTreeActionWorker(EntityMeeCreeps entity, ActionOptions options) {
+    public ChopTreeAndCollectActionWorker(EntityMeeCreeps entity, ActionOptions options) {
         super(entity, options);
     }
 

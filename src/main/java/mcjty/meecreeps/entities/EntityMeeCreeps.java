@@ -23,6 +23,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nullable;
+import java.util.function.Predicate;
 
 public class EntityMeeCreeps extends EntityCreature {
 
@@ -158,7 +159,7 @@ public class EntityMeeCreeps extends EntityCreature {
         return true;
     }
 
-    private void dropInventory() {
+    public void dropInventory() {
         for (int i = 0; i < inventory.size(); i++) {
             ItemStack stack = inventory.get(i);
             if (!stack.isEmpty()) {
@@ -166,6 +167,15 @@ public class EntityMeeCreeps extends EntityCreature {
             }
             inventory.set(i, ItemStack.EMPTY);
         }
+    }
+
+    public ItemStack consumeItem(Predicate<ItemStack> matcher, int amount) {
+        for (ItemStack stack : inventory) {
+            if (!stack.isEmpty() && matcher.test(stack)) {
+                return stack.splitStack(amount);
+            }
+        }
+        return ItemStack.EMPTY;
     }
 
     @Override
