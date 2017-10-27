@@ -109,15 +109,11 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
     }
 
     @Override
-    protected void performTick(boolean lastTask) {
+    protected void performTick(boolean timeToWrapUp) {
         BlockPos pos;
-        if (needToFindChest(lastTask)) {
-            findChestToPutItemsIn();
-        } else if (!needToReplant.isEmpty() && (pos = hasSuitableSeed()) != null) {
+        if (!needToReplant.isEmpty() && (pos = hasSuitableSeed()) != null) {
             navigateTo(pos, this::replant);
-        } else if (!itemsToPickup.isEmpty()) {
-            tryFindingItemsToPickup();
-        } else if (lastTask) {
+        } else if (timeToWrapUp) {
             done();
         } else {
             tryFindingCropsToHarvest();

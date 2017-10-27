@@ -27,18 +27,11 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
         super(entity, options);
     }
 
-    private void harvest(EntityMeeCreeps entity, BlockPos pos) {
+    private void harvest(BlockPos pos) {
+        harvestAndDrop(pos);
+
         World world = entity.getEntityWorld();
-        IBlockState state = world.getBlockState(pos);
-        BlockPlanks.EnumType woodType = getWoodType(state);
-        Block block = state.getBlock();
-        List<ItemStack> drops = block.getDrops(world, pos, state, 0);
-        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
-        SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
-        entity.getEntityWorld().setBlockToAir(pos);
-        for (ItemStack stack : drops) {
-            entity.entityDropItem(stack, 0.0f);
-        }
+        BlockPlanks.EnumType woodType = getWoodType(world.getBlockState(pos));
         int offs = 4;
         for (int x = -offs; x <= offs; x++) {
             for (int y = -offs; y <= offs; y++) {
@@ -75,7 +68,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
         alreadyDone.add(pos);
         blocks.add(pos);
         // @todo config
-        if (blocks.size() > 100) {
+        if (blocks.size() > 300) {
             return;
         }
         for (EnumFacing facing : EnumFacing.VALUES) {
@@ -105,12 +98,12 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    protected void performTick(boolean lastTask) {
+    protected void performTick(boolean timeToWrapUp) {
         if (blocks.isEmpty()) {
             findTree();
         }
         if (blocks.isEmpty() && leavesToTick.isEmpty()) {
-            // Nothing to do
+            // There is nothing left to do
             done();
             return;
         }
@@ -119,11 +112,10 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
             decayLeaves();
         }
 
-        if (lastTask) {
+        if (timeToWrapUp) {
             done();
         } else if (!blocks.isEmpty()) {
-            BlockPos p = blocks.remove(0);
-            harvest(entity, p);
+            harvest(blocks.remove(0));
             // @todo config
             waitABit = 5;   // Speed up things
         } else {

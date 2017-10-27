@@ -1,18 +1,19 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.actions.ActionOptions;
-import mcjty.meecreeps.actions.IActionWorker;
-import mcjty.meecreeps.actions.ServerActionManager;
-import mcjty.meecreeps.actions.Stage;
+import mcjty.meecreeps.actions.*;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
+import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.InventoryTools;
+import mcjty.meecreeps.varia.SoundTools;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -24,6 +25,7 @@ import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,10 +45,32 @@ public abstract class AbstractActionWorker implements IActionWorker {
     protected Entity movingToEntity;
     private int pathTries = 0;
     protected Consumer<BlockPos> job;
+    protected List<EntityItem> itemsToPickup = new ArrayList<>();
+    private BlockPos materialChest;
+
+    private boolean messageShown = false;
 
     public AbstractActionWorker(EntityMeeCreeps entity, ActionOptions options) {
         this.options = options;
         this.entity = entity;
+    }
+
+    protected AxisAlignedBB getActionBox() {
+        return null;
+    }
+
+    protected void showMessage(String message) {
+        if (!messageShown) {
+            messageShown = true;
+            EntityPlayerMP player = getPlayer();
+            if (player != null) {
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient(message), player);
+            }
+        }
+    }
+
+    protected void clearMessage() {
+        messageShown = false;
     }
 
     protected void navigateTo(BlockPos pos, Consumer<BlockPos> job) {
@@ -66,10 +90,12 @@ public abstract class AbstractActionWorker implements IActionWorker {
         }
     }
 
-    protected void navigateTo(Entity dest, Consumer<BlockPos> job) {
+    protected boolean navigateTo(Entity dest, Consumer<BlockPos> job, double maxDist) {
         BlockPos position = entity.getPosition();
         double d = position.distanceSq(dest.posX, dest.posY, dest.posZ);
-        if (d < 2) {
+        if (d > maxDist*maxDist) {
+            return false;
+        } else if (d < 2) {
             job.accept(dest.getPosition());
         } else if (!entity.getNavigator().tryMoveToEntityLiving(dest, 2.0)) {
             // We need to teleport
@@ -81,10 +107,15 @@ public abstract class AbstractActionWorker implements IActionWorker {
             pathTries = 1;
             this.job = job;
         }
+        return true;
+    }
+
+    protected void navigateTo(Entity dest, Consumer<BlockPos> job) {
+        navigateTo(dest, job, 1000000000);
     }
 
     @Override
-    public void tick(boolean lastTask) {
+    public void tick(boolean timeToWrapUp) {
         waitABit--;
         if (waitABit > 0) {
             return;
@@ -129,10 +160,66 @@ public abstract class AbstractActionWorker implements IActionWorker {
                     }
                 }
             }
+        } else if (!options.getDrops().isEmpty()) {
+            // There are drops we need to collect first.
+            for (Pair<BlockPos, ItemStack> pair : options.getDrops()) {
+                ItemStack drop = pair.getValue();
+                if (!drop.isEmpty()) {
+                    ItemStack remaining = entity.addStack(drop);
+                    if (!remaining.isEmpty()) {
+                        entity.entityDropItem(remaining, 0.0f);
+                        needsToPutAway = true;
+                    }
+                }
+            }
+            options.clearDrops();
+            ServerActionManager.getManager().save();
+            waitABit = 1;   // Process faster
+        } else if (needToFindChest(timeToWrapUp)) {
+            if (!findChestToPutItemsIn()) {
+                if (!navigateTo(getPlayer(), (p) -> giveToPlayerOrDrop(), 12)) {
+                    entity.dropInventory();
+                }
+            }
+            needsToPutAway = false;
+        } else if (!itemsToPickup.isEmpty()) {
+            tryFindingItemsToPickup();
         } else {
-            performTick(lastTask);
+            performTick(timeToWrapUp);
         }
     }
+
+    protected void harvestAndPickup(BlockPos pos) {
+        World world = entity.getEntityWorld();
+        IBlockState state = world.getBlockState(pos);
+        Block block = state.getBlock();
+        List<ItemStack> drops = block.getDrops(world, pos, state, 0);
+        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
+        SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        entity.getEntityWorld().setBlockToAir(pos);
+        for (ItemStack stack : drops) {
+            ItemStack remaining = entity.addStack(stack);
+            if (!remaining.isEmpty()) {
+                itemsToPickup.add(entity.entityDropItem(remaining, 0.0f));
+                needsToPutAway = true;
+            }
+        }
+    }
+
+
+    protected void harvestAndDrop(BlockPos pos) {
+        World world = entity.getEntityWorld();
+        IBlockState state = world.getBlockState(pos);
+        Block block = state.getBlock();
+        List<ItemStack> drops = block.getDrops(world, pos, state, 0);
+        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
+        SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        entity.getEntityWorld().setBlockToAir(pos);
+        for (ItemStack stack : drops) {
+            entity.entityDropItem(stack, 0.0f);
+        }
+    }
+
 
     protected void pickup(EntityItem item) {
         ItemStack remaining = entity.addStack(item.getItem().copy());
@@ -153,7 +240,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
         return !event.isCanceled();
     }
 
-    protected abstract void performTick(boolean lastTask);
+    protected abstract void performTick(boolean timeToWrapUp);
 
     protected void done() {
         options.setStage(Stage.DONE);
@@ -166,10 +253,8 @@ public abstract class AbstractActionWorker implements IActionWorker {
         ServerActionManager.getManager().save();
     }
 
-    private void giveToPlayerOrDrop() {
-        World world = entity.getEntityWorld();
-        MinecraftServer server = world.getMinecraftServer();
-        EntityPlayerMP player = server.getPlayerList().getPlayerByUUID(options.getPlayerId());
+    protected void giveToPlayerOrDrop() {
+        EntityPlayerMP player = getPlayer();
         BlockPos position = entity.getPosition();
         if (player == null || position.distanceSq(player.getPosition()) > 2*2) {
             entity.dropInventory();
@@ -189,22 +274,28 @@ public abstract class AbstractActionWorker implements IActionWorker {
 
     }
 
-    protected void giveToPlayerIfPossible() {
+    protected EntityPlayerMP getPlayer() {
         World world = entity.getEntityWorld();
         MinecraftServer server = world.getMinecraftServer();
-        EntityPlayerMP player = server.getPlayerList().getPlayerByUUID(options.getPlayerId());
-        BlockPos position = entity.getPosition();
-        if (player == null || position.distanceSq(player.getPosition()) > 12*12) {
-            entity.dropInventory();
+        return server.getPlayerList().getPlayerByUUID(options.getPlayerId());
+    }
+
+    protected void findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message) {
+        if (!findItemOnGround(getActionBox(), matcher, this::pickup)) {
+            if (!findInventoryContainingMost(getActionBox(), matcher, p -> fetchFromInventory(p, matcher))) {
+                showMessage(message);
+            } else {
+                clearMessage();
+            }
         } else {
-            navigateTo(player, (pos) -> giveToPlayerOrDrop());
+            clearMessage();
         }
     }
 
     /**
      * See if there is a specific item around. If so start navigating to it and return true
      */
-    protected boolean tryFindingSomeItem(AxisAlignedBB box, Predicate<ItemStack> matcher) {
+    protected boolean findItemOnGround(AxisAlignedBB box, Predicate<ItemStack> matcher, Consumer<EntityItem> job) {
         BlockPos position = entity.getPosition();
         List<EntityItem> items = entity.getEntityWorld().getEntitiesWithinAABB(EntityItem.class, box, input -> matcher.test(input.getItem()));
         if (!items.isEmpty()) {
@@ -214,38 +305,40 @@ public abstract class AbstractActionWorker implements IActionWorker {
                 return Double.compare(d1, d2);
             });
             EntityItem entityItem = items.get(0);
-            navigateTo(entityItem, (pos) -> pickup(entityItem));
+            navigateTo(entityItem, (pos) -> job.accept(entityItem));
             return true;
         }
         return false;
     }
 
-
-    protected void stashItems(BlockPos chestPos) {
-        List<ItemStack> remainingItems = new ArrayList<>();
-        TileEntity te = entity.getEntityWorld().getTileEntity(chestPos);
-        if (te != null && te.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP)) {
-            IItemHandler capability = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
-            for (ItemStack stack : entity.getInventory()) {
-                ItemStack remaining = ItemHandlerHelper.insertItem(capability, stack, false);
+    protected void putInventoryInChest(BlockPos pos) {
+        TileEntity te = entity.getEntityWorld().getTileEntity(pos);
+        IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+        for (ItemStack stack : entity.getInventory()) {
+            if (!stack.isEmpty()) {
+                ItemStack remaining = ItemHandlerHelper.insertItem(handler, stack, false);
                 if (!remaining.isEmpty()) {
-                    remainingItems.add(remaining);
+                    entity.entityDropItem(remaining, 0.0f);
                 }
             }
-            entity.getInventory().clear();
-            for (ItemStack item : remainingItems) {
-                entity.addStack(item);
-            }
         }
-        if (!remainingItems.isEmpty()) {
-            // Can't do anything
-            done();
-        }
-        needsToPutAway = false;
+        entity.getInventory().clear();
     }
 
-    protected boolean needToFindChest(boolean lastTask) {
-        return needsToPutAway || (lastTask && !entity.isEmptyInventory());
+    protected void fetchFromInventory(BlockPos pos, Predicate<ItemStack> matcher) {
+        materialChest = pos;
+        TileEntity te = entity.getEntityWorld().getTileEntity(pos);
+        IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+        for (int i = 0 ; i < handler.getSlots() ; i++) {
+            ItemStack stack = handler.getStackInSlot(i);
+            if (!stack.isEmpty() && matcher.test(stack)) {
+                ItemStack extracted = handler.extractItem(i, stack.getCount(), false);
+                ItemStack remaining = entity.addStack(extracted);
+                if (!remaining.isEmpty()) {
+                    handler.insertItem(i, remaining, false);
+                }
+            }
+        }
     }
 
     private float calculateScore(int countMatching, int countFreeForMatching) {
@@ -275,18 +368,37 @@ public abstract class AbstractActionWorker implements IActionWorker {
                         countMatching.put(pos, (float) cnt);
                     }
                 });
-        // Sort so that highest score goes first
-        inventories.sort((p1, p2) -> Float.compare(countMatching.get(p2), countMatching.get(p1)));
         if (inventories.isEmpty()) {
             return false;
         } else {
+            // Sort so that highest score goes first
+            inventories.sort((p1, p2) -> Float.compare(countMatching.get(p2), countMatching.get(p1)));
             navigateTo(inventories.get(0), job);
             return true;
         }
     }
 
+    // Default implementation checks materialChest first and otherwise assumes the action was centered on the chest. Override if that's not applicable
+    protected boolean findChestToPutItemsIn() {
+        if (materialChest != null) {
+            if (InventoryTools.isInventory(entity.getEntityWorld(), materialChest)) {
+                navigateTo(materialChest, this::putInventoryInChest);
+                return true;
+            }
+        }
+        BlockPos pos = options.getPos();
+        if (InventoryTools.isInventory(entity.getEntityWorld(), pos)) {
+            navigateTo(pos, this::putInventoryInChest);
+            return true;
+        }
+        return false;
+    }
 
-    protected List<BlockPos> findSuitableInventories(AxisAlignedBB box, Predicate<ItemStack> matcher) {
+    protected boolean needToFindChest(boolean timeToWrapUp) {
+        return needsToPutAway || (timeToWrapUp && entity.hasStuffInInventory());
+    }
+
+    protected boolean findSuitableInventory(AxisAlignedBB box, Predicate<ItemStack> matcher, Consumer<BlockPos> job) {
         World world = entity.getEntityWorld();
         List<BlockPos> inventories = new ArrayList<>();
         Map<BlockPos, Float> countMatching = new HashMap<>();
@@ -310,15 +422,20 @@ public abstract class AbstractActionWorker implements IActionWorker {
                                 free += handler.getSlotLimit(i);
                             }
                         }
-                        if (cnt > 0) {
+                        if (cnt >= 0) {
                             inventories.add(pos);
                             countMatching.put(pos, calculateScore(cnt, free));
                         }
                     }
                 });
-        // Sort so that highest score goes first
-        inventories.sort((p1, p2) -> Float.compare(countMatching.get(p2), countMatching.get(p1)));
-        return inventories;
+        if (inventories.isEmpty()) {
+            return false;
+        } else {
+            // Sort so that highest score goes first
+            inventories.sort((p1, p2) -> Float.compare(countMatching.get(p2), countMatching.get(p1)));
+            navigateTo(inventories.get(0), job);
+            return true;
+        }
     }
 
     protected List<BlockPos> findInventoriesWithMostSpace(AxisAlignedBB box) {
@@ -348,4 +465,32 @@ public abstract class AbstractActionWorker implements IActionWorker {
         return inventories;
     }
 
+    protected void tryFindingItemsToPickup() {
+        BlockPos position = entity.getPosition();
+        List<EntityItem> items = itemsToPickup;
+        if (!items.isEmpty()) {
+            items.sort((o1, o2) -> {
+                double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
+                double d2 = position.distanceSq(o2.posX, o2.posY, o2.posZ);
+                return Double.compare(d1, d2);
+            });
+            EntityItem entityItem = items.get(0);
+            items.remove(0);
+            navigateTo(entityItem, (p) -> pickup(entityItem));
+        }
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound tag) {
+        if (tag.hasKey("materialChest")) {
+            materialChest = BlockPos.fromLong(tag.getLong("materialChest"));
+        }
+    }
+
+    @Override
+    public void writeToNBT(NBTTagCompound tag) {
+        if (materialChest != null) {
+            tag.setLong("materialChest", materialChest.toLong());
+        }
+    }
 }

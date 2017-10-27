@@ -1,20 +1,11 @@
 package mcjty.meecreeps.actions.workers;
 
 import mcjty.meecreeps.actions.ActionOptions;
-import mcjty.meecreeps.actions.ServerActionManager;
-import mcjty.meecreeps.actions.Stage;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemHandlerHelper;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class PickupActionWorker extends AbstractActionWorker {
@@ -25,7 +16,8 @@ public class PickupActionWorker extends AbstractActionWorker {
         super(entity, options);
     }
 
-    private AxisAlignedBB getActionBox() {
+    @Override
+    protected AxisAlignedBB getActionBox() {
         if (actionBox == null) {
             // @todo config
             actionBox = new AxisAlignedBB(options.getPos().add(-10, -10, -10), options.getPos().add(10, 10, 10));
@@ -35,17 +27,16 @@ public class PickupActionWorker extends AbstractActionWorker {
 
 
     @Override
-    protected void performTick(boolean lastTask) {
-        if (needToFindChest(lastTask)) {
-            findChestToPutItemsIn();
-        } else if (lastTask) {
+    protected void performTick(boolean timeToWrapUp) {
+        if (timeToWrapUp) {
             done();
         } else {
             tryFindingItemsToPickup();
         }
     }
 
-    private void tryFindingItemsToPickup() {
+    @Override
+    protected void tryFindingItemsToPickup() {
         BlockPos position = entity.getPosition();
         List<EntityItem> items = entity.getEntityWorld().getEntitiesWithinAABB(EntityItem.class, getActionBox());
         if (!items.isEmpty()) {
@@ -59,11 +50,6 @@ public class PickupActionWorker extends AbstractActionWorker {
         } else if (!entity.getInventory().isEmpty()) {
             needsToPutAway = true;
         }
-    }
-
-    private void findChestToPutItemsIn() {
-        BlockPos pos = options.getPos();
-        navigateTo(pos, this::stashItems);
     }
 
 }

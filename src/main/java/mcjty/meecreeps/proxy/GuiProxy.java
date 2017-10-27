@@ -1,5 +1,6 @@
 package mcjty.meecreeps.proxy;
 
+import mcjty.meecreeps.gui.GuiBalloon;
 import mcjty.meecreeps.gui.GuiMeeCreeps;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
@@ -10,6 +11,7 @@ public class GuiProxy implements IGuiHandler {
 
     public static final int GUI_MEECREEP_QUESTION = 1;
     public static final int GUI_MEECREEP_DISMISS = 2;
+    public static final int GUI_MEECREEP_BALLOON = 3;
 
     @Override
     public Object getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
@@ -22,6 +24,8 @@ public class GuiProxy implements IGuiHandler {
             return new GuiMeeCreeps(id);
         } else if (id == GUI_MEECREEP_DISMISS) {
             return new GuiMeeCreeps(id);
+        } else if (id == GUI_MEECREEP_BALLOON) {
+            return new GuiBalloon();
         }
         return null;
     }

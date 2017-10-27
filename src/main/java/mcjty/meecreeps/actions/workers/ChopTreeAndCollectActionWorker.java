@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.Counter;
@@ -12,6 +13,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagLong;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
@@ -22,23 +24,26 @@ public class ChopTreeAndCollectActionWorker extends AbstractActionWorker {
 
     private List<BlockPos> blocks = new ArrayList<>();
     private Counter<BlockPos> leavesToTick = new Counter<>();
+    private AxisAlignedBB actionBox = null;
 
     public ChopTreeAndCollectActionWorker(EntityMeeCreeps entity, ActionOptions options) {
         super(entity, options);
     }
 
-    private void harvest(EntityMeeCreeps entity, BlockPos pos) {
-        World world = entity.getEntityWorld();
-        IBlockState state = world.getBlockState(pos);
-        BlockPlanks.EnumType woodType = getWoodType(state);
-        Block block = state.getBlock();
-        List<ItemStack> drops = block.getDrops(world, pos, state, 0);
-        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
-        SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
-        entity.getEntityWorld().setBlockToAir(pos);
-        for (ItemStack stack : drops) {
-            entity.entityDropItem(stack, 0.0f);
+    @Override
+    protected AxisAlignedBB getActionBox() {
+        if (actionBox == null) {
+            // @todo config
+            actionBox = new AxisAlignedBB(options.getPos().add(-10, -5, -10), options.getPos().add(10, 5, 10));
         }
+        return actionBox;
+    }
+
+    private void harvest(BlockPos pos) {
+        World world = entity.getEntityWorld();
+        BlockPlanks.EnumType woodType = getWoodType(world.getBlockState(pos));
+        harvestAndPickup(pos);
+
         int offs = 4;
         for (int x = -offs; x <= offs; x++) {
             for (int y = -offs; y <= offs; y++) {
@@ -75,7 +80,7 @@ public class ChopTreeAndCollectActionWorker extends AbstractActionWorker {
         alreadyDone.add(pos);
         blocks.add(pos);
         // @todo config
-        if (blocks.size() > 100) {
+        if (blocks.size() > 300) {
             return;
         }
         for (EnumFacing facing : EnumFacing.VALUES) {
@@ -105,12 +110,12 @@ public class ChopTreeAndCollectActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    protected void performTick(boolean lastTask) {
+    protected void performTick(boolean timeToWrapUp) {
         if (blocks.isEmpty()) {
             findTree();
         }
         if (blocks.isEmpty() && leavesToTick.isEmpty()) {
-            // Nothing to do
+            // There is nothing left to do
             done();
             return;
         }
@@ -119,11 +124,19 @@ public class ChopTreeAndCollectActionWorker extends AbstractActionWorker {
             decayLeaves();
         }
 
-        if (lastTask) {
-            done();
+        if (timeToWrapUp) {
+            if (entity.hasStuffInInventory()) {
+                // We need to find a suitable chest
+                if (!findSuitableInventory(getActionBox(), entity.getInventoryMatcher(), this::putInventoryInChest)) {
+                    if (!navigateTo(getPlayer(), (p) -> giveToPlayerOrDrop(), 12)) {
+                        entity.dropInventory();
+                    }
+                }
+            } else {
+                done();
+            }
         } else if (!blocks.isEmpty()) {
-            BlockPos p = blocks.remove(0);
-            harvest(entity, p);
+            harvest(blocks.remove(0));
             // @todo config
             waitABit = 5;   // Speed up things
         } else {
@@ -138,7 +151,9 @@ public class ChopTreeAndCollectActionWorker extends AbstractActionWorker {
             BlockPos pos = entry.getKey();
             if (!world.isAirBlock(pos)) {
                 IBlockState state = world.getBlockState(pos);
+                ForgeEventHandlers.harvestableBlocksToCollect.put(pos, options.getActionId());
                 state.getBlock().updateTick(world, pos, state, entity.getRNG());
+
                 if (!world.isAirBlock(pos)) {
                     Integer counter = entry.getValue();
                     counter--;
@@ -186,5 +201,10 @@ public class ChopTreeAndCollectActionWorker extends AbstractActionWorker {
             int counter = tc.getInteger("c");
             leavesToTick.put(pos, counter);
         }
+    }
+
+    @Override
+    protected boolean findChestToPutItemsIn() {
+        return findSuitableInventory(getActionBox(), entity.getInventoryMatcher(), this::putInventoryInChest);
     }
 }

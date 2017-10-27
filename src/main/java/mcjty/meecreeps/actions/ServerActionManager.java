@@ -1,6 +1,8 @@
 package mcjty.meecreeps.actions;
 
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.BlockPos;
@@ -9,6 +11,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.Constants;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -124,6 +127,17 @@ public class ServerActionManager extends WorldSavedData {
             if (keep) {
                 newlist.add(option);
                 newmap.put(option.getActionId(), option);
+            } else {
+                List<Pair<BlockPos, ItemStack>> drops = option.getDrops();
+                if (!drops.isEmpty()) {
+                    for (Pair<BlockPos, ItemStack> pair : drops) {
+                        EntityItem entityItem = new EntityItem(world);
+                        entityItem.setItem(pair.getValue());
+                        BlockPos pos = pair.getKey();
+                        entityItem.setLocationAndAngles(pos.getX(), pos.getY(), pos.getZ(), 0, 0);
+                        world.spawnEntity(entityItem);
+                    }
+                }
             }
         }
         options = newlist;

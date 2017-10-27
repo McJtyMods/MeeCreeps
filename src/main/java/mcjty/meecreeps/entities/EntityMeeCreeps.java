@@ -150,7 +150,18 @@ public class EntityMeeCreeps extends EntityCreature {
         return inventory;
     }
 
-    public boolean isEmptyInventory() {
+    public Predicate<ItemStack> getInventoryMatcher() {
+        return stack -> {
+            for (ItemStack s : inventory) {
+                if (ItemStack.areItemStacksEqual(s, stack)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+    }
+
+    public boolean hasEmptyInventory() {
         for (ItemStack stack : inventory) {
             if (!stack.isEmpty()) {
                 return false;
@@ -158,6 +169,25 @@ public class EntityMeeCreeps extends EntityCreature {
         }
         return true;
     }
+
+    public boolean hasStuffInInventory() {
+        for (ItemStack stack : inventory) {
+            if (!stack.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasItem(Predicate<ItemStack> matcher) {
+        for (ItemStack stack : inventory) {
+            if (!stack.isEmpty() && matcher.test(stack)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     public void dropInventory() {
         for (int i = 0; i < inventory.size(); i++) {

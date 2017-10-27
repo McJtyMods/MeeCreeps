@@ -23,13 +23,13 @@ import java.util.List;
 public class HarvestActionWorker extends AbstractActionWorker {
 
     private AxisAlignedBB actionBox = null;
-    protected List<EntityItem> itemsToPickup = new ArrayList<>();
 
     public HarvestActionWorker(EntityMeeCreeps entity, ActionOptions options) {
         super(entity, options);
     }
 
-    private AxisAlignedBB getActionBox() {
+    @Override
+    protected AxisAlignedBB getActionBox() {
         if (actionBox == null) {
             // @todo config
             actionBox = new AxisAlignedBB(options.getPos().add(-10, -5, -10), options.getPos().add(10, 5, 10));
@@ -48,8 +48,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
         for (ItemStack stack : drops) {
             ItemStack remaining = entity.addStack(stack);
             if (!remaining.isEmpty()) {
-                EntityItem entityItem = entity.entityDropItem(remaining, 0.0f);
-                itemsToPickup.add(entityItem);
+                itemsToPickup.add(entity.entityDropItem(remaining, 0.0f));
                 needsToPutAway = true;
             }
         }
@@ -57,12 +56,8 @@ public class HarvestActionWorker extends AbstractActionWorker {
 
 
     @Override
-    protected void performTick(boolean lastTask) {
-        if (needToFindChest(lastTask)) {
-            findChestToPutItemsIn();
-        } else if (!itemsToPickup.isEmpty()) {
-            tryFindingItemsToPickup();
-        } else if (lastTask) {
+    protected void performTick(boolean timeToWrapUp) {
+        if (timeToWrapUp) {
             done();
         } else {
             tryFindingCropsToHarvest();
@@ -104,23 +99,4 @@ public class HarvestActionWorker extends AbstractActionWorker {
         }
     }
 
-    protected void tryFindingItemsToPickup() {
-        BlockPos position = entity.getPosition();
-        List<EntityItem> items = itemsToPickup;
-        if (!items.isEmpty()) {
-            items.sort((o1, o2) -> {
-                double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
-                double d2 = position.distanceSq(o2.posX, o2.posY, o2.posZ);
-                return Double.compare(d1, d2);
-            });
-            EntityItem entityItem = items.get(0);
-            items.remove(0);
-            navigateTo(entityItem, (p) -> pickup(entityItem));
-        }
-    }
-
-    protected void findChestToPutItemsIn() {
-        BlockPos pos = options.getPos();
-        navigateTo(pos, this::stashItems);
-    }
 }

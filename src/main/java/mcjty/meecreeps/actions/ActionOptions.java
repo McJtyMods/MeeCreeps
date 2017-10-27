@@ -6,6 +6,7 @@ import mcjty.meecreeps.network.NetworkTools;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
@@ -14,7 +15,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.Constants;
+import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -32,6 +35,7 @@ public class ActionOptions {
     private Stage stage;
     private MeeCreepActionType task;
     private boolean paused;
+    private List<Pair<BlockPos, ItemStack>> drops = new ArrayList<>();
 
     public ActionOptions(List<MeeCreepActionType> actionOptions, List<MeeCreepActionType> maybeActionOptions, BlockPos pos, int dimension, UUID playerId, int actionId) {
         this.actionOptions = actionOptions;
@@ -69,6 +73,8 @@ public class ActionOptions {
             task = MeeCreepActionType.VALUES[buf.readByte()];
         }
         paused = buf.readBoolean();
+
+        // Drops not needed on client so no persistance
     }
 
     public ActionOptions(NBTTagCompound tagCompound) {
@@ -77,11 +83,23 @@ public class ActionOptions {
         for (int i = 0 ; i < list.tagCount() ; i++) {
             actionOptions.add(MeeCreepActionType.getByCode(list.getStringTagAt(i)));
         }
+
         list = tagCompound.getTagList("maybe", Constants.NBT.TAG_STRING);
         maybeActionOptions = new ArrayList<>();
         for (int i = 0 ; i < list.tagCount() ; i++) {
             maybeActionOptions.add(MeeCreepActionType.getByCode(list.getStringTagAt(i)));
         }
+
+        list = tagCompound.getTagList("drops", Constants.NBT.TAG_COMPOUND);
+        drops = new ArrayList<>();
+        for (int i = 0 ; i < list.tagCount() ; i++) {
+            NBTTagCompound tc = list.getCompoundTagAt(i);
+            BlockPos p = BlockPos.fromLong(tc.getLong("p"));
+            NBTTagCompound itemTag = tc.getCompoundTag("i");
+            ItemStack stack = new ItemStack(itemTag);
+            drops.add(Pair.of(p, stack));
+        }
+
         dimension = tagCompound.getInteger("dim");
         pos = BlockPos.fromLong(tagCompound.getLong("pos"));
         playerId = tagCompound.getUniqueId("player");
@@ -117,6 +135,8 @@ public class ActionOptions {
             buf.writeBoolean(false);
         }
         buf.writeBoolean(paused);
+
+        // Drops not needed on client so no persistance
     }
 
     public void writeToNBT(NBTTagCompound tagCompound) {
@@ -125,11 +145,22 @@ public class ActionOptions {
             list.appendTag(new NBTTagString(option.getCode()));
         }
         tagCompound.setTag("options", list);
+
         list = new NBTTagList();
         for (MeeCreepActionType option : maybeActionOptions) {
             list.appendTag(new NBTTagString(option.getCode()));
         }
         tagCompound.setTag("maybe", list);
+
+        list = new NBTTagList();
+        for (Pair<BlockPos, ItemStack> pair : drops) {
+            NBTTagCompound tc = new NBTTagCompound();
+            tc.setLong("p", pair.getKey().toLong());
+            tc.setTag("i", pair.getValue().writeToNBT(new NBTTagCompound()));
+            list.appendTag(tc);
+        }
+        tagCompound.setTag("drops", list);
+
         tagCompound.setInteger("dim", dimension);
         tagCompound.setLong("pos", pos.toLong());
         tagCompound.setUniqueId("player", playerId);
@@ -140,6 +171,23 @@ public class ActionOptions {
             tagCompound.setString("task", task.getCode());
         }
         tagCompound.setBoolean("paused", paused);
+    }
+
+    public void registerDrops(BlockPos pos, @Nonnull List<ItemStack> drops) {
+        for (ItemStack drop : drops) {
+            // Drops can be empty because they can be 'consumed' by the entity
+            if (!drop.isEmpty()) {
+                this.drops.add(Pair.of(pos, drop.copy()));
+            }
+        }
+    }
+
+    public List<Pair<BlockPos, ItemStack>> getDrops() {
+        return drops;
+    }
+
+    public void clearDrops() {
+        drops.clear();
     }
 
     public List<MeeCreepActionType> getActionOptions() {
