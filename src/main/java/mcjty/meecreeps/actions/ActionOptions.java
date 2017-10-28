@@ -1,16 +1,20 @@
 package mcjty.meecreeps.actions;
 
 import io.netty.buffer.ByteBuf;
+import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.network.NetworkTools;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
+import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
@@ -316,6 +320,11 @@ public class ActionOptions {
         entity.setLocationAndAngles(p.getX()+.5, p.getY(), p.getZ()+.5, 0, 0);
         entity.setActionId(getActionId());
         world.spawnEntity(entity);
+
+        SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "intro1"));
+        // @todo config
+        SoundTools.playSound(world, sound, p.getX(), p.getY(), p.getZ(), 1, 1);
+
         return true;
     }
 }

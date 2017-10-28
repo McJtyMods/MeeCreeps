@@ -4,26 +4,16 @@ import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.Counter;
-import mcjty.meecreeps.varia.GeneralTools;
-import mcjty.meecreeps.varia.SoundTools;
-import net.minecraft.block.*;
+import net.minecraft.block.BlockPlanks;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagLong;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.Constants;
 
-import java.util.*;
+import java.util.Map;
 
-public class ChopTreeAndCollectActionWorker extends AbstractActionWorker {
+public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
 
-    private List<BlockPos> blocks = new ArrayList<>();
-    private Counter<BlockPos> leavesToTick = new Counter<>();
     private AxisAlignedBB actionBox = null;
 
     public ChopTreeAndCollectActionWorker(EntityMeeCreeps entity, ActionOptions options) {
@@ -43,70 +33,7 @@ public class ChopTreeAndCollectActionWorker extends AbstractActionWorker {
         World world = entity.getEntityWorld();
         BlockPlanks.EnumType woodType = getWoodType(world.getBlockState(pos));
         harvestAndPickup(pos);
-
-        int offs = 4;
-        for (int x = -offs; x <= offs; x++) {
-            for (int y = -offs; y <= offs; y++) {
-                for (int z = -offs; z <= offs; z++) {
-                    BlockPos p = pos.add(x, y, z);
-                    IBlockState st = world.getBlockState(p);
-                    if (st.getBlock().isLeaves(st, world, p)) {
-                        if (st.getValue(BlockLeaves.DECAYABLE)) {
-                            if (getWoodType(st) == woodType) {
-                                leavesToTick.put(p, 500);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private BlockPlanks.EnumType getWoodType(IBlockState state) {
-        if (state.getBlock() instanceof BlockNewLog) {
-            return state.getValue(BlockNewLog.VARIANT);
-        } else if (state.getBlock() instanceof BlockOldLog) {
-            return state.getValue(BlockOldLog.VARIANT);
-        } else if (state.getBlock() instanceof BlockNewLeaf) {
-            return state.getValue(BlockNewLeaf.VARIANT);
-        } else if (state.getBlock() instanceof BlockOldLeaf) {
-            return state.getValue(BlockOldLeaf.VARIANT);
-        } else {
-            return null;
-        }
-    }
-
-    private void traverseTreeLogs(Set<BlockPos> alreadyDone, BlockPos pos, BlockPlanks.EnumType woodType) {
-        alreadyDone.add(pos);
-        blocks.add(pos);
-        // @todo config
-        if (blocks.size() > 300) {
-            return;
-        }
-        for (EnumFacing facing : EnumFacing.VALUES) {
-            BlockPos p = pos.offset(facing);
-            if (!alreadyDone.contains(p)) {
-                IBlockState log = entity.getEntityWorld().getBlockState(p);
-                if (allowedToHarvest(log, entity.getEntityWorld(), p, GeneralTools.getHarvester())) {
-                    if (log.getBlock() instanceof BlockOldLog || log.getBlock() instanceof BlockNewLog) {
-                        if (woodType == getWoodType(log)) {
-                            traverseTreeLogs(alreadyDone, p, woodType);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void findTree() {
-        BlockPos startPos = options.getPos();
-        if (entity.getEntityWorld().isAirBlock(startPos)) {
-            return;
-        }
-        IBlockState logBase = entity.getEntityWorld().getBlockState(startPos);
-        BlockPlanks.EnumType woodType = getWoodType(logBase);
-        Set<BlockPos> alreadyDone = new HashSet<>();
-        traverseTreeLogs(alreadyDone, startPos, woodType);
+        findLeaves(pos, world, woodType);
     }
 
     @Override
@@ -164,43 +91,6 @@ public class ChopTreeAndCollectActionWorker extends AbstractActionWorker {
             }
         }
         leavesToTick = newmap;
-    }
-
-    @Override
-    public void writeToNBT(NBTTagCompound tag) {
-        NBTTagList list = new NBTTagList();
-        for (BlockPos block : blocks) {
-            list.appendTag(new NBTTagLong(block.toLong()));
-        }
-        tag.setTag("blocks", list);
-
-        list = new NBTTagList();
-        for (Map.Entry<BlockPos, Integer> entry : leavesToTick.entrySet()) {
-            BlockPos block = entry.getKey();
-            Integer counter = entry.getValue();
-            NBTTagCompound tc = new NBTTagCompound();
-            tc.setLong("p", block.toLong());
-            tc.setInteger("c", counter);
-            list.appendTag(tc);
-        }
-        tag.setTag("leaves", list);
-    }
-
-    @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        NBTTagList list = tag.getTagList("blocks", Constants.NBT.TAG_LONG);
-        blocks.clear();
-        for (int i = 0; i < list.tagCount(); i++) {
-            blocks.add(BlockPos.fromLong(((NBTTagLong) list.get(i)).getLong()));
-        }
-        list = tag.getTagList("leaves", Constants.NBT.TAG_COMPOUND);
-        leavesToTick.clear();
-        for (int i = 0; i < list.tagCount(); i++) {
-            NBTTagCompound tc = list.getCompoundTagAt(i);
-            BlockPos pos = BlockPos.fromLong(tc.getLong("p"));
-            int counter = tc.getInteger("c");
-            leavesToTick.put(pos, counter);
-        }
     }
 
     @Override

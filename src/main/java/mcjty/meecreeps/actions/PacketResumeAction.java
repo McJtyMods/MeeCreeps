@@ -35,7 +35,7 @@ public class PacketResumeAction implements IMessage {
         }
 
         private void handle(PacketResumeAction message, MessageContext ctx) {
-            ServerActionManager.getManager().resumeAction(message.id);
+            ServerActionManager.getManager().resumeAction(ctx.getServerHandler().player, message.id);
         }
     }
 

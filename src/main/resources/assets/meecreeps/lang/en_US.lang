@@ -1,5 +1,5 @@
-tile.meecreeps.creepcube.name=Creep Cube
-entity.meecreeps.MeeCreeps.name=MeeCreeps
+item.meecreeps.creepcube.name=Creep Cube
+entity.MeeCreeps.name=MeeCreeps
 
 itemGroup.meecreeps=MeeCreeps
 

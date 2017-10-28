@@ -1,10 +1,15 @@
 package mcjty.meecreeps.actions;
 
+import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -84,17 +89,21 @@ public class ServerActionManager extends WorldSavedData {
         save();
     }
 
-    public void performAction(int id, MeeCreepActionType type) {
+    public void performAction(EntityPlayerMP player, int id, MeeCreepActionType type) {
         System.out.println("ServerActionManager.performAction: " + type.getDescription());
         ActionOptions option = getOptions(id);
         if (option != null) {
             option.setStage(Stage.WORKING);
             option.setTask(type);
             save();
+
+            SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "ok"));
+            // @todo config
+            SoundTools.playSound(player.getEntityWorld(), sound, player.posX, player.posY, player.posZ, 1, 1);
         }
     }
 
-    public void cancelAction(int id) {
+    public void cancelAction(EntityPlayerMP player, int id) {
         System.out.println("ServerActionManager.cancelAction");
         ActionOptions option = getOptions(id);
         if (option != null) {
@@ -103,7 +112,7 @@ public class ServerActionManager extends WorldSavedData {
         }
     }
 
-    public void resumeAction(int id) {
+    public void resumeAction(EntityPlayerMP player, int id) {
         System.out.println("ServerActionManager.resumeAction");
         ActionOptions option = getOptions(id);
         if (option != null) {

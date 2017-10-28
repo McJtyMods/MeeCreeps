@@ -36,6 +36,8 @@ import java.util.function.Predicate;
 
 public abstract class AbstractActionWorker implements IActionWorker {
 
+    private final double DISTANCE_TOLERANCE = 1.4;
+
     protected final ActionOptions options;
     protected final EntityMeeCreeps entity;
     protected boolean needsToPutAway = false;
@@ -76,7 +78,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
     protected void navigateTo(BlockPos pos, Consumer<BlockPos> job) {
         BlockPos position = entity.getPosition();
         double d = position.distanceSq(pos.getX(), pos.getY(), pos.getZ());
-        if (d < 2) {
+        if (d < DISTANCE_TOLERANCE) {
             job.accept(pos);
         } else if (!entity.getNavigator().tryMoveToXYZ(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 2.0)) {
             // We need to teleport
@@ -91,11 +93,14 @@ public abstract class AbstractActionWorker implements IActionWorker {
     }
 
     protected boolean navigateTo(Entity dest, Consumer<BlockPos> job, double maxDist) {
+        if (dest == null) {
+            return false;
+        }
         BlockPos position = entity.getPosition();
         double d = position.distanceSq(dest.posX, dest.posY, dest.posZ);
         if (d > maxDist*maxDist) {
             return false;
-        } else if (d < 2) {
+        } else if (d < DISTANCE_TOLERANCE) {
             job.accept(dest.getPosition());
         } else if (!entity.getNavigator().tryMoveToEntityLiving(dest, 2.0)) {
             // We need to teleport
@@ -130,7 +135,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
                     job = null;
                 } else {
                     double d = position.distanceSq(movingToEntity.posX, movingToEntity.posY, movingToEntity.posZ);
-                    if (d < 2) {
+                    if (d < DISTANCE_TOLERANCE) {
                         job.accept(movingToEntity.getPosition());
                         job = null;
                     } else if (entity.getNavigator().noPath()) {
@@ -146,7 +151,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
                 }
             } else {
                 double d = position.distanceSq(movingToPos.getX(), movingToPos.getY(), movingToPos.getZ());
-                if (d < 2) {
+                if (d < DISTANCE_TOLERANCE) {
                     job.accept(movingToPos);
                     job = null;
                 } else if (entity.getNavigator().noPath()) {
@@ -256,7 +261,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
     protected void giveToPlayerOrDrop() {
         EntityPlayerMP player = getPlayer();
         BlockPos position = entity.getPosition();
-        if (player == null || position.distanceSq(player.getPosition()) > 2*2) {
+        if (player == null || position.distanceSq(player.getPosition()) > 2 * 2) {
             entity.dropInventory();
         } else {
             List<ItemStack> remaining = new ArrayList<>();

@@ -20,18 +20,21 @@ import java.util.*;
 
 public class ChopTreeActionWorker extends AbstractActionWorker {
 
-    private List<BlockPos> blocks = new ArrayList<>();
-    private Counter<BlockPos> leavesToTick = new Counter<>();
+    protected List<BlockPos> blocks = new ArrayList<>();
+    protected Counter<BlockPos> leavesToTick = new Counter<>();
 
     public ChopTreeActionWorker(EntityMeeCreeps entity, ActionOptions options) {
         super(entity, options);
     }
 
     private void harvest(BlockPos pos) {
-        harvestAndDrop(pos);
-
         World world = entity.getEntityWorld();
         BlockPlanks.EnumType woodType = getWoodType(world.getBlockState(pos));
+        harvestAndDrop(pos);
+        findLeaves(pos, world, woodType);
+    }
+
+    protected void findLeaves(BlockPos pos, World world, BlockPlanks.EnumType woodType) {
         int offs = 4;
         for (int x = -offs; x <= offs; x++) {
             for (int y = -offs; y <= offs; y++) {
@@ -50,7 +53,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
         }
     }
 
-    private BlockPlanks.EnumType getWoodType(IBlockState state) {
+    protected BlockPlanks.EnumType getWoodType(IBlockState state) {
         if (state.getBlock() instanceof BlockNewLog) {
             return state.getValue(BlockNewLog.VARIANT);
         } else if (state.getBlock() instanceof BlockOldLog) {
@@ -64,21 +67,27 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
         }
     }
 
-    private void traverseTreeLogs(Set<BlockPos> alreadyDone, BlockPos pos, BlockPlanks.EnumType woodType) {
+    protected void traverseTreeLogs(Set<BlockPos> alreadyDone, BlockPos pos, BlockPlanks.EnumType woodType) {
         alreadyDone.add(pos);
         blocks.add(pos);
         // @todo config
         if (blocks.size() > 300) {
             return;
         }
-        for (EnumFacing facing : EnumFacing.VALUES) {
-            BlockPos p = pos.offset(facing);
-            if (!alreadyDone.contains(p)) {
-                IBlockState log = entity.getEntityWorld().getBlockState(p);
-                if (allowedToHarvest(log, entity.getEntityWorld(), p, GeneralTools.getHarvester())) {
-                    if (log.getBlock() instanceof BlockOldLog || log.getBlock() instanceof BlockNewLog) {
-                        if (woodType == getWoodType(log)) {
-                            traverseTreeLogs(alreadyDone, p, woodType);
+        for (int y = -1 ; y <= 1 ; y++) {
+            for (int x = -1 ; x <= 1 ; x++) {
+                for (int z = -1 ; z <= 1 ; z++) {
+                    if (x != 0 || y != 0 || z != 0) {
+                        BlockPos p = pos.add(x, y, z);
+                        if (!alreadyDone.contains(p)) {
+                            IBlockState log = entity.getEntityWorld().getBlockState(p);
+                            if (allowedToHarvest(log, entity.getEntityWorld(), p, GeneralTools.getHarvester())) {
+                                if (log.getBlock() instanceof BlockOldLog || log.getBlock() instanceof BlockNewLog) {
+                                    if (woodType == getWoodType(log)) {
+                                        traverseTreeLogs(alreadyDone, p, woodType);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -86,7 +95,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
         }
     }
 
-    private void findTree() {
+    protected void findTree() {
         BlockPos startPos = options.getPos();
         if (entity.getEntityWorld().isAirBlock(startPos)) {
             return;
@@ -131,6 +140,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
             if (!world.isAirBlock(pos)) {
                 IBlockState state = world.getBlockState(pos);
                 state.getBlock().updateTick(world, pos, state, entity.getRNG());
+
                 if (!world.isAirBlock(pos)) {
                     Integer counter = entry.getValue();
                     counter--;

@@ -1,6 +1,7 @@
 package mcjty.meecreeps.actions;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -39,7 +40,7 @@ public class PacketPerformAction implements IMessage {
         }
 
         private void handle(PacketPerformAction message, MessageContext ctx) {
-            ServerActionManager.getManager().performAction(message.id, message.type);
+            ServerActionManager.getManager().performAction(ctx.getServerHandler().player, message.id, message.type);
         }
     }
 

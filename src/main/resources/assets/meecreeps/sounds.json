@@ -1,0 +1,6 @@
+{
+    "intro1" : {"category": "entity", "sounds": ["meecreeps:intro1"]},
+    "intro2" : {"category": "entity", "sounds": ["meecreeps:intro2"]},
+    "ok" : {"category": "entity", "sounds": ["meecreeps:ok"]},
+    "ok2" : {"category": "entity", "sounds": ["meecreeps:ok2"]}
+}

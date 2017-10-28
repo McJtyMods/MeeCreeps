@@ -1,7 +1,7 @@
 package mcjty.meecreeps.entities;
 
-import net.minecraft.client.model.ModelCreeper;
-import net.minecraft.client.model.ModelZombie;
+import net.minecraft.client.model.ModelEnderman;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderLiving;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -17,7 +17,12 @@ public class RenderMeeCreeps extends RenderLiving<EntityMeeCreeps> {
     public static final Factory FACTORY = new Factory();
 
     public RenderMeeCreeps(RenderManager rendermanagerIn) {
-        super(rendermanagerIn, new ModelCreeper(), 0.5F);
+        super(rendermanagerIn, new ModelEnderman(0), 0.5F);
+    }
+
+    @Override
+    protected void preRenderCallback(EntityMeeCreeps entitylivingbaseIn, float partialTickTime) {
+        GlStateManager.scale(0.8f, 0.8f, 0.8f);
     }
 
     @Override
