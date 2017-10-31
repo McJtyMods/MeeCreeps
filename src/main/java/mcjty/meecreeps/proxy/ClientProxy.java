@@ -1,6 +1,7 @@
 package mcjty.meecreeps.proxy;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.entities.ModEntities;
 import mcjty.meecreeps.items.ModItems;
 import mcjty.meecreeps.render.BalloonRenderer;
@@ -47,7 +48,7 @@ public class ClientProxy extends CommonProxy {
 
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
-//        ModBlocks.initModels();
+        ModBlocks.initModels();
         ModItems.initModels();
     }
 

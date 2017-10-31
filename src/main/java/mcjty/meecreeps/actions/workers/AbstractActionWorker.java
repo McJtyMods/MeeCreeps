@@ -359,7 +359,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
                 (pos, state) -> {
                     TileEntity te = world.getTileEntity(pos);
                     IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
-                    int cnt = 0;
+                    int cnt  = 0;
                     for (int i = 0 ; i < handler.getSlots() ; i++) {
                         ItemStack stack = handler.getStackInSlot(i);
                         if (!stack.isEmpty()) {

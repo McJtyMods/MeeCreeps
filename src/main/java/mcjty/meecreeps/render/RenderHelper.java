@@ -341,7 +341,24 @@ public class RenderHelper {
         int b1 = brightness >> 16 & 65535;
         int b2 = brightness & 65535;
         GlStateManager.pushMatrix();
-        mcjty.theoneprobe.rendering.RenderHelper.rotateToPlayer();
+        RenderHelper.rotateToPlayer();
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(7, DefaultVertexFormats.POSITION_TEX_LMAP_COLOR);
+        buffer.pos(-scale, -scale, 0.0D).tex(0.0D, 0.0D).lightmap(b1, b2).color(255, 255, 255, 128).endVertex();
+        buffer.pos(-scale, scale, 0.0D).tex(0.0D, 1.0D).lightmap(b1, b2).color(255, 255, 255, 128).endVertex();
+        buffer.pos(scale, scale, 0.0D).tex(1.0D, 1.0D).lightmap(b1, b2).color(255, 255, 255, 128).endVertex();
+        buffer.pos(scale, -scale, 0.0D).tex(1.0D, 0.0D).lightmap(b1, b2).color(255, 255, 255, 128).endVertex();
+        tessellator.draw();
+        GlStateManager.popMatrix();
+    }
+
+    public static void renderQuadBright(double scale) {
+        int brightness = 240;
+        int b1 = brightness >> 16 & 65535;
+        int b2 = brightness & 65535;
+        GlStateManager.pushMatrix();
+        RenderHelper.rotateToPlayer();
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(7, DefaultVertexFormats.POSITION_TEX_LMAP_COLOR);
@@ -362,12 +379,9 @@ public class RenderHelper {
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         buffer.pos(-scale, -scale, 0).tex(0, 0).endVertex();
-        buffer.pos(-scale, +scale, 0).tex(0, 1).endVertex();
-        ;
-        buffer.pos(+scale, +scale, 0).tex(1, 1).endVertex();
-        ;
-        buffer.pos(+scale, -scale, 0).tex(1, 0).endVertex();
-        ;
+        buffer.pos(-scale, +scale, 0).tex(0, 1).endVertex();;
+        buffer.pos(+scale, +scale, 0).tex(1, 1).endVertex();;
+        buffer.pos(+scale, -scale, 0).tex(1, 0).endVertex();;
         tessellator.draw();
         GlStateManager.popMatrix();
     }
@@ -383,12 +397,9 @@ public class RenderHelper {
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         buffer.pos(-scale, -scale, 0).tex(0, 0).endVertex();
-        buffer.pos(-scale, +scale, 0).tex(0, 1).endVertex();
-        ;
-        buffer.pos(+scale, +scale, 0).tex(1, 1).endVertex();
-        ;
-        buffer.pos(+scale, -scale, 0).tex(1, 0).endVertex();
-        ;
+        buffer.pos(-scale, +scale, 0).tex(0, 1).endVertex();;
+        buffer.pos(+scale, +scale, 0).tex(1, 1).endVertex();;
+        buffer.pos(+scale, -scale, 0).tex(1, 0).endVertex();;
         tessellator.draw();
         GlStateManager.popMatrix();
     }

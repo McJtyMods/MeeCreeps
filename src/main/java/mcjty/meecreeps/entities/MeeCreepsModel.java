@@ -16,9 +16,26 @@ public class MeeCreepsModel extends ModelBiped {
     public ModelRenderer hair_4;
 
     public MeeCreepsModel() {
+        this(0);
+    }
+
+    public MeeCreepsModel(int variation) {
 
         this.textureWidth = 64;
         this.textureHeight = 64;
+
+        int u = 0;
+        int v = 0;
+        switch (variation) {
+            case 0: break;
+            case 1: u = -32; v = 80; break;
+            case 2: u = 0; v = 80; break;
+            case 3: u = 32; v = 80; break;
+            case 4: u = -32; v = 112; break;
+            case 5: u = 0; v = 112; break;
+            case 6: u = 32; v = 112; break;
+            case 7: u = 64; v = 112; break;
+        }
 
         this.bipedHead = new ModelRenderer(this, 0, 0);
         this.bipedHead.setRotationPoint(0.0F, -6.0F, -0.0F);
@@ -159,7 +176,7 @@ public class MeeCreepsModel extends ModelBiped {
         this.bipedRightLeg.rotationPointY = 1.0F;
         this.bipedLeftLeg.rotationPointY = 1.0F;
         this.bipedHead.rotationPointZ = -0.0F;
-        this.bipedHead.rotationPointY = 6.0F;
+        this.bipedHead.rotationPointY = -6.0F;
         this.bipedHeadwear.rotationPointX = this.bipedHead.rotationPointX;
         this.bipedHeadwear.rotationPointY = this.bipedHead.rotationPointY;
         this.bipedHeadwear.rotationPointZ = this.bipedHead.rotationPointZ;
