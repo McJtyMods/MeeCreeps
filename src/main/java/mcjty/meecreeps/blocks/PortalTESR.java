@@ -32,13 +32,13 @@ public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
 //        GlStateManager.blendFunc(GL11.GL_ONE, GL11.GL_ONE);
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
-        GlStateManager.translate((float) x + 0.5F, (float) y + 3F, (float) z + 0.5F);
+        GlStateManager.translate((float) x + 0.5F, (float) y + 1F, (float) z + 0.5F);
         this.bindTexture(portal);
         renderQuadBright(1.0f, angle);
         angle += .03;
 
-        GlStateManager.enableBlend();
-        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+//        GlStateManager.enableBlend();
+//        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         GlStateManager.popMatrix();
     }
@@ -52,56 +52,39 @@ public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(7, DefaultVertexFormats.POSITION_TEX_LMAP_COLOR);
+
         double f = 1.75;
+        renderFace(scale/2, scale, angle, b1, b2, buffer, f, 200);
+        renderFace(scale/2, scale, -angle, b1, b2, buffer, f, 60);
+        renderFace(scale/2, -scale, angle, b1, b2, buffer, f, 200);
+        renderFace(scale/2, -scale, -angle, b1, b2, buffer, f, 60);
 
-        double u;
-        double v;
-        double swap;
-
-        int alpha = 200;
-
-        u = (Math.cos(angle)) / f;
-        v = (Math.sin(angle)) / f;
-        buffer.pos(-scale/2, -scale, 0.0D).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
-
-        swap = u;
-        u = -v;
-        v = swap;
-        buffer.pos(-scale/2, scale, 0.0D).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
-
-        swap = u;
-        u = -v;
-        v = swap;
-        buffer.pos(scale/2, scale, 0.0D).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
-
-        swap = u;
-        u = -v;
-        v = swap;
-        buffer.pos(scale/2, -scale, 0.0D).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
-
-
-        int alpha2 = 60;
-
-        u = (Math.cos(-angle)) / f;
-        v = (Math.sin(-angle)) / f;
-        buffer.pos(-scale/2, -scale, 0.0D).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha2).endVertex();
-
-        swap = u;
-        u = -v;
-        v = swap;
-        buffer.pos(-scale/2, scale, 0.0D).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha2).endVertex();
-
-        swap = u;
-        u = -v;
-        v = swap;
-        buffer.pos(scale/2, scale, 0.0D).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha2).endVertex();
-
-        swap = u;
-        u = -v;
-        v = swap;
-        buffer.pos(scale/2, -scale, 0.0D).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha2).endVertex();
 
         tessellator.draw();
         GlStateManager.popMatrix();
+    }
+
+    private static void renderFace(double scale1, double scale2, double angle, int b1, int b2, BufferBuilder buffer, double f, int alpha) {
+        double u;
+        double v;
+        double swap;
+        u = (Math.cos(angle)) / f;
+        v = (Math.sin(angle)) / f;
+        buffer.pos(-scale1, -scale2, 0.0D).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
+
+        swap = u;
+        u = -v;
+        v = swap;
+        buffer.pos(-scale1, scale2, 0.0D).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
+
+        swap = u;
+        u = -v;
+        v = swap;
+        buffer.pos(scale1, scale2, 0.0D).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
+
+        swap = u;
+        u = -v;
+        v = swap;
+        buffer.pos(scale1, -scale2, 0.0D).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
     }
 }

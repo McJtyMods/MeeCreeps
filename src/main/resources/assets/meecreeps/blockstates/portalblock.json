@@ -1,0 +1,10 @@
+{
+  "forge_marker": 1,
+  "defaults": {
+    "model": "meecreeps:empty_model"
+  },
+  "variants": {
+    "normal": [{}],
+    "inventory": [{}]
+  }
+}
