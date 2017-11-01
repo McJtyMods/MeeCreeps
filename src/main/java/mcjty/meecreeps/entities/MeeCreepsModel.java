@@ -9,38 +9,29 @@ import net.minecraft.entity.Entity;
  * Created using Tabula 7.0.0
  */
 public class MeeCreepsModel extends ModelBiped {
-	
-    public ModelRenderer hair_1;
-    public ModelRenderer hair_2;
-    public ModelRenderer hair_3;
-    public ModelRenderer hair_4;
+
+    private ModelRenderer hair_1;
+    private ModelRenderer hair_2;
+    private ModelRenderer hair_3;
+    private ModelRenderer hair_4;
+
+    private ModelRenderer headVariations[] = new ModelRenderer[9];
 
     public MeeCreepsModel() {
-        this(0);
-    }
-
-    public MeeCreepsModel(int variation) {
 
         this.textureWidth = 64;
         this.textureHeight = 256;
 
-        int u = 0;
-        int v = 18;
-        switch (variation) {
-            case 0: break;
-            case 1: v = 38; break;
-            case 2: v = 58; break;
-            case 3: v = 78; break;
-            case 4: v = 98; break;
-            case 5: v = 118; break;
-            case 6: v = 138; break;
-            case 7: v = 158; break;
-            case 8: v = 178; break;
-        }
-
-        this.bipedHead = new ModelRenderer(this, u, v);
+        this.bipedHead = new ModelRenderer(this, 0, 18);
         this.bipedHead.setRotationPoint(0.0F, -6.0F, -0.0F);
         this.bipedHead.addBox(-5.0F, -10.0F, -5.0F, 10, 10, 10, 0.0F);
+
+        for (int i = 0 ; i < 9 ; i++) {
+            this.headVariations[i] = new ModelRenderer(this, 0, getTextureV(i));
+            this.headVariations[i].setRotationPoint(0.0F, -6.0F, -0.0F);
+            this.headVariations[i].addBox(-5.0F, -10.0F, -5.0F, 10, 10, 10, 0.0F);
+        }
+
         this.hair_1 = new ModelRenderer(this, 0, 198);
         this.hair_1.setRotationPoint(0.0F, -10.0F, 0.0F);
         this.hair_1.addBox(-1.0F, -3.0F, 0.0F, 1, 3, 0, 0.0F);
@@ -86,12 +77,30 @@ public class MeeCreepsModel extends ModelBiped {
         this.bipedHead.addChild(this.hair_2);
     }
 
+    private int getTextureV(int variation) {
+        int v = 18;
+        switch (variation) {
+            case 0: break;
+            case 1: v = 38; break;
+            case 2: v = 58; break;
+            case 3: v = 78; break;
+            case 4: v = 98; break;
+            case 5: v = 118; break;
+            case 6: v = 138; break;
+            case 7: v = 158; break;
+            case 8: v = 178; break;
+        }
+        return v;
+    }
+
     @Override
     public void render(Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
+        EntityMeeCreeps meeCreeps = (EntityMeeCreeps) entity;
         this.bipedLeftArm.render(f5);
         this.bipedRightLeg.render(f5);
         this.bipedRightArm.render(f5);
-        this.bipedHead.render(f5);
+//        this.bipedHead.render(f5);
+        this.headVariations[meeCreeps.getVariation()].render(f5);
         this.bipedLeftLeg.render(f5);
         this.bipedBody.render(f5);
     }
@@ -106,8 +115,8 @@ public class MeeCreepsModel extends ModelBiped {
     }
 
     @Override
-    public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netbipedHeadYaw, float bipedHeadPitch, float scaleFactor, Entity entityIn) {
-        super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netbipedHeadYaw, bipedHeadPitch, scaleFactor, entityIn);
+    public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netbipedHeadYaw, float bipedHeadPitch, float scaleFactor, Entity entity) {
+        super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netbipedHeadYaw, bipedHeadPitch, scaleFactor, entity);
 
         this.bipedHead.showModel = true;
         float f = -14.0F;
@@ -184,6 +193,9 @@ public class MeeCreepsModel extends ModelBiped {
         this.bipedHeadwear.rotateAngleX = this.bipedHead.rotateAngleX;
         this.bipedHeadwear.rotateAngleY = this.bipedHead.rotateAngleY;
         this.bipedHeadwear.rotateAngleZ = this.bipedHead.rotateAngleZ;
+
+        EntityMeeCreeps meeCreeps = (EntityMeeCreeps) entity;
+        copyModelAngles(bipedHead, headVariations[meeCreeps.getVariation()]);
     }
 }
 

@@ -21,7 +21,7 @@ public class RenderMeeCreeps extends RenderLiving<EntityMeeCreeps> {
 //        super(rendermanagerIn, new ModelEnderman(0), 0.5F);
 //    }
     public RenderMeeCreeps(RenderManager rendermanagerIn) {
-        super(rendermanagerIn, new MeeCreepsModel(rand.nextInt(9)), 0.5F);
+        super(rendermanagerIn, new MeeCreepsModel(), 0.5F);
     }
 
     @Override

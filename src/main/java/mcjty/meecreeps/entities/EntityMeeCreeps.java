@@ -34,15 +34,21 @@ public class EntityMeeCreeps extends EntityCreature {
     private int actionId = 0;
     private NonNullList<ItemStack> inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);
     private MeeCreepWorkerTask workerTask;
+    private int variation = 0;
 
     public EntityMeeCreeps(World worldIn) {
         super(worldIn);
         setSize(0.6F, 1.95F);
+        variation = worldIn.rand.nextInt(9);
     }
 
     @Override
     protected void entityInit() {
         super.entityInit();
+    }
+
+    public int getVariation() {
+        return variation;
     }
 
     @Override
