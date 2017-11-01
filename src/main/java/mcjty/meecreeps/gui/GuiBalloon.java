@@ -12,7 +12,6 @@ public class GuiBalloon extends GuiScreen {
     private static final int HEIGHT = 200;
 
     private static final ResourceLocation gui_top = new ResourceLocation(MeeCreeps.MODID, "textures/gui/gui_meecreeps_top.png");
-    private final int OPTION_DISTANCE = 14;
 
     private int guiLeft;
     private int guiTop;
@@ -52,10 +51,6 @@ public class GuiBalloon extends GuiScreen {
         drawTexturedModalRect(guiLeft, guiTop, 0, 0, WIDTH, 10);
         int y = guiTop+10;
 
-//        for (int i = 0; i < 1 ; i++) {
-//            drawTexturedModalRect(guiLeft, y, 0, 10, WIDTH, 15);
-//            y += OPTION_DISTANCE;
-//        }
         drawTexturedModalRect(guiLeft, y, 0, 25, WIDTH, 15);
         mc.fontRenderer.drawString(message, guiLeft+15, guiTop+7, 0);
     }
