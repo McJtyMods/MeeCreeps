@@ -13,7 +13,7 @@ public class ModEntities {
     public static void init() {
         // Every entity in our mod has an ID (local to this mod)
         int id = 1;
-        EntityRegistry.registerModEntity(new ResourceLocation(MeeCreeps.MODID, "meecreeps"), EntityMeeCreeps.class, "MeeCreeps", id++, MeeCreeps.instance, 64, 3, true, 0x996600, 0x00ff00);
+        EntityRegistry.registerModEntity(new ResourceLocation(MeeCreeps.MODID, "meecreeps"), EntityMeeCreeps.class, "MeeCreeps", id++, MeeCreeps.instance, 64, 3, true, 0x0CD5F2, 0xFF7300);
 
         // This is the loot table for our mob
         LootTableList.register(EntityMeeCreeps.LOOT);

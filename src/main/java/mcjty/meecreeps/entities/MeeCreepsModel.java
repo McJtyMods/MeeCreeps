@@ -1,6 +1,5 @@
 package mcjty.meecreeps.entities;
 
-import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
@@ -10,6 +9,7 @@ import net.minecraft.entity.Entity;
  * Created using Tabula 7.0.0
  */
 public class MeeCreepsModel extends ModelBiped {
+	
     public ModelRenderer hair_1;
     public ModelRenderer hair_2;
     public ModelRenderer hair_3;
@@ -22,50 +22,51 @@ public class MeeCreepsModel extends ModelBiped {
     public MeeCreepsModel(int variation) {
 
         this.textureWidth = 64;
-        this.textureHeight = 64;
+        this.textureHeight = 256;
 
         int u = 0;
-        int v = 0;
+        int v = 18;
         switch (variation) {
             case 0: break;
-            case 1: u = -32; v = 80; break;
-            case 2: u = 0; v = 80; break;
-            case 3: u = 32; v = 80; break;
-            case 4: u = -32; v = 112; break;
-            case 5: u = 0; v = 112; break;
-            case 6: u = 32; v = 112; break;
-            case 7: u = 64; v = 112; break;
+            case 1: v = 38; break;
+            case 2: v = 58; break;
+            case 3: v = 78; break;
+            case 4: v = 98; break;
+            case 5: v = 118; break;
+            case 6: v = 138; break;
+            case 7: v = 158; break;
+            case 8: v = 178; break;
         }
 
-        this.bipedHead = new ModelRenderer(this, 0, 0);
+        this.bipedHead = new ModelRenderer(this, u, v);
         this.bipedHead.setRotationPoint(0.0F, -6.0F, -0.0F);
         this.bipedHead.addBox(-5.0F, -10.0F, -5.0F, 10, 10, 10, 0.0F);
-        this.hair_1 = new ModelRenderer(this, 32, 0);
+        this.hair_1 = new ModelRenderer(this, 0, 198);
         this.hair_1.setRotationPoint(0.0F, -10.0F, 0.0F);
         this.hair_1.addBox(-1.0F, -3.0F, 0.0F, 1, 3, 0, 0.0F);
         this.setRotateAngle(hair_1, 0.0F, 0.0F, -0.2617993877991494F);
-        this.hair_2 = new ModelRenderer(this, 32, 0);
+        this.hair_2 = new ModelRenderer(this, 0, 198);
         this.hair_2.setRotationPoint(0.0F, -10.0F, 0.0F);
         this.hair_2.addBox(0.0F, -3.0F, 0.0F, 1, 3, 0, 0.0F);
         this.setRotateAngle(hair_2, 0.0F, 0.0F, 0.2617993877991494F);
-        this.hair_3 = new ModelRenderer(this, 32, -1);
+        this.hair_3 = new ModelRenderer(this, 0, 198);
         this.hair_3.setRotationPoint(0.0F, -10.0F, 0.0F);
         this.hair_3.addBox(0.0F, -3.0F, -1.0F, 0, 3, 1, 0.0F);
         this.setRotateAngle(hair_3, 0.2617993877991494F, 0.0F, 0.0F);
-        this.hair_4 = new ModelRenderer(this, 32, -1);
+        this.hair_4 = new ModelRenderer(this, 0, 198);
         this.hair_4.setRotationPoint(0.0F, -10.0F, 0.0F);
         this.hair_4.addBox(0.0F, -3.0F, 0.0F, 0, 3, 1, 0.0F);
         this.setRotateAngle(hair_4, -0.2617993877991494F, 0.0F, 0.0F);
 
-        this.bipedBody = new ModelRenderer(this, 0, 20);
+        this.bipedBody = new ModelRenderer(this, 0, 0);
         this.bipedBody.setRotationPoint(0.0F, -6.0F, -0.0F);
         this.bipedBody.addBox(-4.0F, 0.0F, -2.0F, 8, 14, 4, 0.0F);
 
-        this.bipedRightArm = new ModelRenderer(this, 56, 0);
+        this.bipedRightArm = new ModelRenderer(this, 52, 0);
         this.bipedRightArm.setRotationPoint(-5.0F, -4.0F, 0.0F);
         this.bipedRightArm.addBox(-1.0F, -2.0F, -1.0F, 2, 20, 2, 0.0F);
         this.setRotateAngle(bipedRightArm, 0.0F, 0.0F, 0.08726646259971647F);
-        this.bipedLeftArm = new ModelRenderer(this, 56, 0);
+        this.bipedLeftArm = new ModelRenderer(this, 52, 0);
         this.bipedLeftArm.mirror = true;
         this.bipedLeftArm.setRotationPoint(5.0F, -4.0F, 0.0F);
         this.bipedLeftArm.addBox(-1.0F, -2.0F, -1.0F, 2, 20, 2, 0.0F);
