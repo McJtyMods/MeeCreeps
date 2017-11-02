@@ -2,9 +2,12 @@ package mcjty.meecreeps.items;
 
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ServerActionManager;
+import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.gui.GuiAskName;
 import mcjty.meecreeps.gui.GuiWheel;
+import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
+import mcjty.meecreeps.teleport.PacketCancelPortal;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.entity.player.EntityPlayer;
@@ -58,8 +61,13 @@ public class PortalGunItem extends Item {
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
         if (world.isRemote) {
             if (!player.isSneaking()) {
-                GuiWheel.selectedBlock = pos;
-                player.openGui(MeeCreeps.instance, GuiProxy.GUI_WHEEL, world, pos.getX(), pos.getY(), pos.getZ());
+                if (world.getBlockState(pos).getBlock() == ModBlocks.portalBlock) {
+                    PacketHandler.INSTANCE.sendToServer(new PacketCancelPortal(pos));
+                } else {
+                    GuiWheel.selectedBlock = pos;
+                    GuiWheel.selectedSide = side;
+                    player.openGui(MeeCreeps.instance, GuiProxy.GUI_WHEEL, world, pos.getX(), pos.getY(), pos.getZ());
+                }
             } else {
                 GuiAskName.destination = new TeleportDestination("", world.provider.getDimension(), pos);
                 player.openGui(MeeCreeps.instance, GuiProxy.GUI_ASKNAME, world, pos.getX(), pos.getY(), pos.getZ());

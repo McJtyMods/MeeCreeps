@@ -20,26 +20,27 @@ public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
         super.render(te, x, y, z, partialTicks, destroyStage, alpha);
         GlStateManager.pushMatrix();
 
-//        Minecraft mc = Minecraft.getMinecraft();
-//        EntityPlayerSP p = mc.player;
-//        double doubleX = p.lastTickPosX + (p.posX - p.lastTickPosX) * partialTicks;
-//        double doubleY = p.lastTickPosY + (p.posY - p.lastTickPosY) * partialTicks;
-//        double doubleZ = p.lastTickPosZ + (p.posZ - p.lastTickPosZ) * partialTicks;
-//        GlStateManager.translate(-doubleX, -doubleY, -doubleZ);
-
         GlStateManager.depthMask(true);
         GlStateManager.enableBlend();
         GlStateManager.disableLighting();
-//        GlStateManager.blendFunc(GL11.GL_ONE, GL11.GL_ONE);
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         GlStateManager.translate((float) x + 0.5F, (float) y + 1F, (float) z + 0.5F);
         this.bindTexture(portal);
-        renderQuadBright(1.0f, angle);
-        angle += .03;
 
-//        GlStateManager.enableBlend();
-//        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        long time = System.currentTimeMillis();
+        angle = (time / 400.0) % 360.0;
+        float scale = 1.0f;
+        int start = te.getStart();
+        if (start < 10) {
+            scale = start / 10.0f;
+        } else {
+            int timeout = te.getTimeout();
+            if (timeout < 10) {
+                scale = timeout / 10.0f;
+            }
+        }
+        renderQuadBright(scale, angle);
 
         GlStateManager.popMatrix();
     }

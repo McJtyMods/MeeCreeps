@@ -40,7 +40,7 @@ public class CommonProxy {
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandlers());
 
         File directory = e.getModConfigurationDirectory();
-        config = new Configuration(new File(directory.getPath(), "modtut.cfg"));
+        config = new Configuration(new File(directory.getPath(), "meecreeps.cfg"));
         Config.readConfig();
 
         PacketHandler.registerMessages("meecreeps");

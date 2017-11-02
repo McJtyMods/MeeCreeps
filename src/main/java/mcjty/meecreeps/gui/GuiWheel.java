@@ -11,6 +11,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import org.apache.commons.lang3.tuple.Pair;
@@ -33,6 +34,7 @@ public class GuiWheel extends GuiScreen {
     private static final ResourceLocation hilight = new ResourceLocation(MeeCreeps.MODID, "textures/gui/wheel_hilight.png");
 
     public static BlockPos selectedBlock;
+    public static EnumFacing selectedSide;
 
     public GuiWheel() {
     }
@@ -78,7 +80,7 @@ public class GuiWheel extends GuiScreen {
             if (!heldItem.isEmpty()) {
                 List<TeleportDestination> destinations = PortalGunItem.getDestinations(heldItem);
                 if (destinations.get(q) != null) {
-                    PacketHandler.INSTANCE.sendToServer(new PacketMakePortals(selectedBlock, destinations.get(q)));
+                    PacketHandler.INSTANCE.sendToServer(new PacketMakePortals(selectedBlock, selectedSide, destinations.get(q)));
                 }
             }
             closeThis();
@@ -151,12 +153,16 @@ public class GuiWheel extends GuiScreen {
 //        boolean extended = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
         List<TeleportDestination> destinations = PortalGunItem.getDestinations(PortalGunItem.getGun(Minecraft.getMinecraft().player));
         TeleportDestination destination = destinations.get(q);
-        BlockPos p = destination.getPos();
-        if (destination.getDimension() == Minecraft.getMinecraft().world.provider.getDimension()) {
-            double dist = Math.sqrt(p.distanceSq(Minecraft.getMinecraft().player.getPosition()));
-            renderTooltipText(p.getX() + "," + p.getY() + "," + p.getZ() + " (" + (int) dist + " blocks)");
+        if (destination == null) {
+            renderTooltipText("Destination not set");
         } else {
-            renderTooltipText(p.getX() + "," + p.getY() + "," + p.getZ() + " (dim " + destination.getDimension() + ")");
+            BlockPos p = destination.getPos();
+            if (destination.getDimension() == Minecraft.getMinecraft().world.provider.getDimension()) {
+                double dist = Math.sqrt(p.distanceSq(Minecraft.getMinecraft().player.getPosition()));
+                renderTooltipText(p.getX() + "," + p.getY() + "," + p.getZ() + " (" + (int) dist + " blocks)");
+            } else {
+                renderTooltipText(p.getX() + "," + p.getY() + "," + p.getZ() + " (dim " + destination.getDimension() + ")");
+            }
         }
     }
 

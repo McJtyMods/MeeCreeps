@@ -33,10 +33,10 @@ public class PortalBlock extends Block implements ITileEntityProvider {
         setRegistryName("portalblock");
     }
 
-//    @Override
-//    public RayTraceResult collisionRayTrace(IBlockState blockState, World worldIn, BlockPos pos, Vec3d start, Vec3d end) {
-//        return null;
-//    }
+    @Override
+    public RayTraceResult collisionRayTrace(IBlockState blockState, World worldIn, BlockPos pos, Vec3d start, Vec3d end) {
+        return null;
+    }
 
     @SideOnly(Side.CLIENT)
     @Override

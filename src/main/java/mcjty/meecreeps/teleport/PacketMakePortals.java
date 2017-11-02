@@ -6,6 +6,7 @@ import mcjty.meecreeps.items.PortalGunItem;
 import mcjty.meecreeps.network.NetworkTools;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -17,16 +18,19 @@ public class PacketMakePortals implements IMessage {
 
     private BlockPos selectedBlock;
     private TeleportDestination destination;
+    private EnumFacing selectedSide;
 
     @Override
     public void fromBytes(ByteBuf buf) {
         selectedBlock = BlockPos.fromLong(buf.readLong());
+        selectedSide = EnumFacing.VALUES[buf.readByte()];
         destination = new TeleportDestination(NetworkTools.readStringUTF8(buf), buf.readInt(), BlockPos.fromLong(buf.readLong()));
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
         buf.writeLong(selectedBlock.toLong());
+        buf.writeByte(selectedSide.ordinal());
         NetworkTools.writeStringUTF8(buf, destination.getName());
         buf.writeInt(destination.getDimension());
         buf.writeLong(destination.getPos().toLong());
@@ -35,8 +39,9 @@ public class PacketMakePortals implements IMessage {
     public PacketMakePortals() {
     }
 
-    public PacketMakePortals(BlockPos selectedBlock, TeleportDestination destination) {
+    public PacketMakePortals(BlockPos selectedBlock, EnumFacing selectedSide, TeleportDestination destination) {
         this.selectedBlock = selectedBlock;
+        this.selectedSide = selectedSide;
         this.destination = destination;
     }
 
@@ -52,7 +57,7 @@ public class PacketMakePortals implements IMessage {
             ItemStack heldItem = PortalGunItem.getGun(player);
             if (heldItem.isEmpty()) return; // Something went wrong
 
-            TeleportationTools.makePortalPair(player, message.selectedBlock, message.destination);
+            TeleportationTools.makePortalPair(player, message.selectedBlock, message.selectedSide, message.destination);
 //            PortalGunItem.addDestination(heldItem, message.destination);
         }
     }

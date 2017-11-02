@@ -2,6 +2,7 @@ package mcjty.meecreeps.network;
 
 
 import mcjty.meecreeps.actions.*;
+import mcjty.meecreeps.teleport.PacketCancelPortal;
 import mcjty.meecreeps.teleport.PacketMakePortals;
 import mcjty.meecreeps.teleport.PacketSetDestination;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -37,6 +38,7 @@ public class PacketHandler {
         INSTANCE.registerMessage(PacketResumeAction.Handler.class, PacketResumeAction.class, nextID(), Side.SERVER);
         INSTANCE.registerMessage(PacketSetDestination.Handler.class, PacketSetDestination.class, nextID(), Side.SERVER);
         INSTANCE.registerMessage(PacketMakePortals.Handler.class, PacketMakePortals.class, nextID(), Side.SERVER);
+        INSTANCE.registerMessage(PacketCancelPortal.Handler.class, PacketCancelPortal.class, nextID(), Side.SERVER);
 
         // Client side
         INSTANCE.registerMessage(PacketActionOptionToClient.Handler.class, PacketActionOptionToClient.class, nextID(), Side.CLIENT);

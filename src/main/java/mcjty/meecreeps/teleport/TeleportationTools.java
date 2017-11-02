@@ -1,33 +1,85 @@
 package mcjty.meecreeps.teleport;
 
+import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.blocks.PortalTileEntity;
+import mcjty.meecreeps.config.Config;
+import mcjty.meecreeps.network.PacketHandler;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
 
+import javax.annotation.Nullable;
+
 public class TeleportationTools {
 
-    public static void makePortalPair(EntityPlayer player, BlockPos selectedBlock, TeleportDestination dest) {
+    public static void cancelPortalPair(EntityPlayer player, BlockPos selectedBlock) {
         World sourceWorld = player.getEntityWorld();
-        sourceWorld.setBlockState(selectedBlock.up(), ModBlocks.portalBlock.getDefaultState(), 3);
-        PortalTileEntity source = (PortalTileEntity) sourceWorld.getTileEntity(selectedBlock.up());
+        TileEntity te = sourceWorld.getTileEntity(selectedBlock);
+        if (te instanceof PortalTileEntity) {
+            PortalTileEntity source = (PortalTileEntity) te;
+            source.setTimeout(10);
+        }
+    }
+
+    public static void makePortalPair(EntityPlayer player, BlockPos selectedBlock, EnumFacing selectedSide, TeleportDestination dest) {
+        World sourceWorld = player.getEntityWorld();
+        BlockPos sourcePortalPos = findBestPosition(sourceWorld, selectedBlock, selectedSide);
+        if (sourcePortalPos == null) {
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("Can't find good spot for portal!"), (EntityPlayerMP) player);
+            return;
+        }
 
         World destWorld = getWorldForDimension(dest.getDimension());
-        destWorld.setBlockState(dest.getPos().up(),  ModBlocks.portalBlock.getDefaultState(), 3);
+        if (destWorld.getBlockState(dest.getPos().up()).getBlock() == ModBlocks.portalBlock) {
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("There is already a portal there!"), (EntityPlayerMP) player);
+            return;
+        }
+        if (!destWorld.isAirBlock(dest.getPos().up()) || !destWorld.isAirBlock(dest.getPos().up(2))) {
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("The destination seems obstructed!"), (EntityPlayerMP) player);
+            return;
+        }
+
+        sourceWorld.setBlockState(sourcePortalPos, ModBlocks.portalBlock.getDefaultState(), 3);
+        PortalTileEntity source = (PortalTileEntity) sourceWorld.getTileEntity(sourcePortalPos);
+
+        destWorld.setBlockState(dest.getPos().up(), ModBlocks.portalBlock.getDefaultState(), 3);
         PortalTileEntity destination = (PortalTileEntity) destWorld.getTileEntity(dest.getPos().up());
 
-        source.setTimeout(30*20);
+        source.setTimeout(Config.portalTimeout);
         source.setOther(dest);
 
-        destination.setTimeout(30*20);
+        destination.setTimeout(Config.portalTimeout);
         destination.setOther(new TeleportDestination("", sourceWorld.provider.getDimension(), selectedBlock));
+    }
+
+    @Nullable
+    private static BlockPos findBestPosition(World world, BlockPos selectedBlock, EnumFacing selectedSide) {
+        if (selectedSide == EnumFacing.UP) {
+            if (world.isAirBlock(selectedBlock.up()) && world.isAirBlock(selectedBlock.up(2))) {
+                return selectedBlock.up();
+            }
+        }
+        if (selectedSide == EnumFacing.DOWN) {
+            return null;
+        }
+        selectedBlock = selectedBlock.offset(selectedSide);
+        if (world.isAirBlock(selectedBlock.down())) {
+            selectedBlock = selectedBlock.down();
+        }
+        if (!world.isAirBlock(selectedBlock.down())) {
+            return findBestPosition(world, selectedBlock.down(), EnumFacing.UP);
+        }
+        return null;
     }
 
 
