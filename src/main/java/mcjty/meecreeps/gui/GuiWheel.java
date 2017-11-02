@@ -32,6 +32,8 @@ public class GuiWheel extends GuiScreen {
     private static final ResourceLocation background = new ResourceLocation(MeeCreeps.MODID, "textures/gui/wheel.png");
     private static final ResourceLocation hilight = new ResourceLocation(MeeCreeps.MODID, "textures/gui/wheel_hilight.png");
 
+    public static BlockPos selectedBlock;
+
     public GuiWheel() {
     }
 
@@ -76,7 +78,7 @@ public class GuiWheel extends GuiScreen {
             if (!heldItem.isEmpty()) {
                 List<TeleportDestination> destinations = PortalGunItem.getDestinations(heldItem);
                 if (destinations.get(q) != null) {
-                    PacketHandler.INSTANCE.sendToServer(new PacketMakePortals(destinations.get(q)));
+                    PacketHandler.INSTANCE.sendToServer(new PacketMakePortals(selectedBlock, destinations.get(q)));
                 }
             }
             closeThis();

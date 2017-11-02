@@ -1,7 +1,11 @@
 package mcjty.meecreeps.teleport;
 
+import mcjty.meecreeps.blocks.ModBlocks;
+import mcjty.meecreeps.blocks.PortalTileEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -9,6 +13,23 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
 
 public class TeleportationTools {
+
+    public static void makePortalPair(EntityPlayer player, BlockPos selectedBlock, TeleportDestination dest) {
+        World sourceWorld = player.getEntityWorld();
+        sourceWorld.setBlockState(selectedBlock.up(), ModBlocks.portalBlock.getDefaultState(), 3);
+        PortalTileEntity source = (PortalTileEntity) sourceWorld.getTileEntity(selectedBlock.up());
+
+        World destWorld = getWorldForDimension(dest.getDimension());
+        destWorld.setBlockState(dest.getPos().up(),  ModBlocks.portalBlock.getDefaultState(), 3);
+        PortalTileEntity destination = (PortalTileEntity) destWorld.getTileEntity(dest.getPos().up());
+
+        source.setTimeout(30*20);
+        source.setOther(dest);
+
+        destination.setTimeout(30*20);
+        destination.setOther(new TeleportDestination("", sourceWorld.provider.getDimension(), selectedBlock));
+    }
+
 
     public static void performTeleport(EntityPlayer player, TeleportDestination dest) {
         BlockPos c = dest.getPos();
@@ -37,10 +58,10 @@ public class TeleportationTools {
     /**
      * Get a world for a dimension, possibly loading it from the configuration manager.
      */
-    public static World getWorldForDimension(World world, int id) {
+    public static World getWorldForDimension(int id) {
         World w = DimensionManager.getWorld(id);
         if (w == null) {
-            w = world.getMinecraftServer().getWorld(id);
+            w = DimensionManager.getWorld(0).getMinecraftServer().getWorld(id);
         }
         return w;
     }
@@ -64,4 +85,35 @@ public class TeleportationTools {
             worldServer.updateEntityWithOptionalForce(player, false);
         }
     }
+
+    public static void teleportEntity(Entity entity, World destWorld, double newX, double newY, double newZ) {
+        World world = entity.getEntityWorld();
+        if (entity instanceof EntityPlayer) {
+            if (world.provider.getDimension() != destWorld.provider.getDimension()) {
+                TeleportationTools.teleportToDimension((EntityPlayer) entity, destWorld.provider.getDimension(), newX, newY, newZ);
+            }
+            entity.setPositionAndUpdate(newX, newY, newZ);
+        } else {
+            if (world.provider.getDimension() != destWorld.provider.getDimension()) {
+                NBTTagCompound tagCompound = new NBTTagCompound();
+                float rotationYaw = entity.rotationYaw;
+                float rotationPitch = entity.rotationPitch;
+                entity.writeToNBT(tagCompound);
+                Class<? extends Entity> entityClass = entity.getClass();
+                world.removeEntity(entity);
+
+                try {
+                    Entity newEntity = entityClass.getConstructor(World.class).newInstance(destWorld);
+                    newEntity.readFromNBT(tagCompound);
+                    newEntity.setLocationAndAngles(newX, newY, newZ, rotationYaw, rotationPitch);
+                    destWorld.spawnEntity(newEntity);
+                } catch (Exception e) {
+                }
+            } else {
+                entity.setLocationAndAngles(newX, newY, newZ, entity.rotationYaw, entity.rotationPitch);
+                destWorld.updateEntityWithOptionalForce(entity, false);
+            }
+        }
+    }
+
 }

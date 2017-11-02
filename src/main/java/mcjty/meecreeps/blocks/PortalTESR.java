@@ -27,8 +27,9 @@ public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
 //        double doubleZ = p.lastTickPosZ + (p.posZ - p.lastTickPosZ) * partialTicks;
 //        GlStateManager.translate(-doubleX, -doubleY, -doubleZ);
 
-        GlStateManager.depthMask(false);
+        GlStateManager.depthMask(true);
         GlStateManager.enableBlend();
+        GlStateManager.disableLighting();
 //        GlStateManager.blendFunc(GL11.GL_ONE, GL11.GL_ONE);
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 

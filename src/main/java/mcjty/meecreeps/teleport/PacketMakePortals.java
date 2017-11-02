@@ -15,15 +15,18 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PacketMakePortals implements IMessage {
 
+    private BlockPos selectedBlock;
     private TeleportDestination destination;
 
     @Override
     public void fromBytes(ByteBuf buf) {
+        selectedBlock = BlockPos.fromLong(buf.readLong());
         destination = new TeleportDestination(NetworkTools.readStringUTF8(buf), buf.readInt(), BlockPos.fromLong(buf.readLong()));
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
+        buf.writeLong(selectedBlock.toLong());
         NetworkTools.writeStringUTF8(buf, destination.getName());
         buf.writeInt(destination.getDimension());
         buf.writeLong(destination.getPos().toLong());
@@ -32,7 +35,8 @@ public class PacketMakePortals implements IMessage {
     public PacketMakePortals() {
     }
 
-    public PacketMakePortals(TeleportDestination destination) {
+    public PacketMakePortals(BlockPos selectedBlock, TeleportDestination destination) {
+        this.selectedBlock = selectedBlock;
         this.destination = destination;
     }
 
@@ -48,7 +52,7 @@ public class PacketMakePortals implements IMessage {
             ItemStack heldItem = PortalGunItem.getGun(player);
             if (heldItem.isEmpty()) return; // Something went wrong
 
-            TeleportationTools.performTeleport(player, message.destination);
+            TeleportationTools.makePortalPair(player, message.selectedBlock, message.destination);
 //            PortalGunItem.addDestination(heldItem, message.destination);
         }
     }

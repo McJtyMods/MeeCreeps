@@ -3,6 +3,7 @@ package mcjty.meecreeps.items;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.gui.GuiAskName;
+import mcjty.meecreeps.gui.GuiWheel;
 import mcjty.meecreeps.proxy.GuiProxy;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -57,6 +58,7 @@ public class PortalGunItem extends Item {
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
         if (world.isRemote) {
             if (!player.isSneaking()) {
+                GuiWheel.selectedBlock = pos;
                 player.openGui(MeeCreeps.instance, GuiProxy.GUI_WHEEL, world, pos.getX(), pos.getY(), pos.getZ());
             } else {
                 GuiAskName.destination = new TeleportDestination("", world.provider.getDimension(), pos);
