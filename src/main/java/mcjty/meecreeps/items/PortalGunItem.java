@@ -4,11 +4,13 @@ import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.gui.GuiAskName;
+import mcjty.meecreeps.gui.GuiBalloon;
 import mcjty.meecreeps.gui.GuiWheel;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
 import mcjty.meecreeps.teleport.PacketCancelPortal;
 import mcjty.meecreeps.teleport.TeleportDestination;
+import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -69,8 +71,14 @@ public class PortalGunItem extends Item {
                     player.openGui(MeeCreeps.instance, GuiProxy.GUI_WHEEL, world, pos.getX(), pos.getY(), pos.getZ());
                 }
             } else {
-                GuiAskName.destination = new TeleportDestination("", world.provider.getDimension(), pos);
-                player.openGui(MeeCreeps.instance, GuiProxy.GUI_ASKNAME, world, pos.getX(), pos.getY(), pos.getZ());
+                BlockPos bestPosition = TeleportationTools.findBestPosition(world, pos, side);
+                if (bestPosition == null) {
+                    GuiBalloon.message = "Can't find a good spot to make a portal!";
+                    player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
+                } else {
+                    GuiAskName.destination = new TeleportDestination("", world.provider.getDimension(), bestPosition, side);
+                    player.openGui(MeeCreeps.instance, GuiProxy.GUI_ASKNAME, world, pos.getX(), pos.getY(), pos.getZ());
+                }
             }
             return EnumActionResult.SUCCESS;
         } else {
@@ -80,8 +88,8 @@ public class PortalGunItem extends Item {
         return EnumActionResult.SUCCESS;
     }
 
-    public static void addDestination(ItemStack stack, World world, BlockPos pos, String name) {
-        TeleportDestination destination = new TeleportDestination(name, world.provider.getDimension(), pos);
+    public static void addDestination(ItemStack stack, World world, BlockPos pos, EnumFacing side, String name) {
+        TeleportDestination destination = new TeleportDestination(name, world.provider.getDimension(), pos, side);
         addDestination(stack, destination);
     }
 
@@ -108,6 +116,7 @@ public class PortalGunItem extends Item {
             if (destination != null) {
                 tc.setString("name", destination.getName());
                 tc.setInteger("dim", destination.getDimension());
+                tc.setByte("side", (byte) destination.getSide().ordinal());
                 tc.setInteger("x", destination.getPos().getX());
                 tc.setInteger("y", destination.getPos().getY());
                 tc.setInteger("z", destination.getPos().getZ());
@@ -132,7 +141,8 @@ public class PortalGunItem extends Item {
                     String name = tc.getString("name");
                     int dim = tc.getInteger("dim");
                     BlockPos pos = new BlockPos(tc.getInteger("x"), tc.getInteger("y"), tc.getInteger("z"));
-                    destinations.add(new TeleportDestination(name, dim, pos));
+                    EnumFacing side = EnumFacing.VALUES[tc.getByte("side")];
+                    destinations.add(new TeleportDestination(name, dim, pos, side));
                 } else {
                     destinations.add(null);
                 }

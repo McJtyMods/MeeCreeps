@@ -40,6 +40,32 @@ public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
                 scale = timeout / 10.0f;
             }
         }
+
+        double dx = 0;
+        double dz = 0;
+
+        switch (te.getPortalSide()) {
+            case DOWN:
+                // @todo
+                break;
+            case UP:
+                // Cannot happen
+                break;
+            case NORTH:
+                dz = -.4;
+                break;
+            case SOUTH:
+                dz = .4;
+                break;
+            case WEST:
+                dx = -.4;
+                break;
+            case EAST:
+                dx = .4;
+                break;
+        }
+        // @todo offset, todo direction
+
         renderQuadBright(scale, angle);
 
         GlStateManager.popMatrix();

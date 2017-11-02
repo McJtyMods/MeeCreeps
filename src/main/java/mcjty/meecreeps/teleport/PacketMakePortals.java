@@ -24,7 +24,8 @@ public class PacketMakePortals implements IMessage {
     public void fromBytes(ByteBuf buf) {
         selectedBlock = BlockPos.fromLong(buf.readLong());
         selectedSide = EnumFacing.VALUES[buf.readByte()];
-        destination = new TeleportDestination(NetworkTools.readStringUTF8(buf), buf.readInt(), BlockPos.fromLong(buf.readLong()));
+        destination = new TeleportDestination(NetworkTools.readStringUTF8(buf), buf.readInt(), BlockPos.fromLong(buf.readLong()),
+                EnumFacing.VALUES[buf.readByte()]);
     }
 
     @Override
@@ -34,6 +35,7 @@ public class PacketMakePortals implements IMessage {
         NetworkTools.writeStringUTF8(buf, destination.getName());
         buf.writeInt(destination.getDimension());
         buf.writeLong(destination.getPos().toLong());
+        buf.writeByte(destination.getSide().ordinal());
     }
 
     public PacketMakePortals() {

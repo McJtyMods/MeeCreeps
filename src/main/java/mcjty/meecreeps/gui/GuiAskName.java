@@ -72,7 +72,7 @@ public class GuiAskName extends GuiScreen {
         } else if (keyCode == Keyboard.KEY_ESCAPE) {
             close();
         } else if (keyCode == Keyboard.KEY_RETURN) {
-            destination = new TeleportDestination(text, destination.getDimension(), destination.getPos());
+            destination = new TeleportDestination(text, destination.getDimension(), destination.getPos(), destination.getSide());
             PacketHandler.INSTANCE.sendToServer(new PacketSetDestination(destination));
             close();
         } else if (typedChar != 0) {

@@ -40,11 +40,11 @@ public class TeleportationTools {
         }
 
         World destWorld = getWorldForDimension(dest.getDimension());
-        if (destWorld.getBlockState(dest.getPos().up()).getBlock() == ModBlocks.portalBlock) {
+        if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.portalBlock) {
             PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("There is already a portal there!"), (EntityPlayerMP) player);
             return;
         }
-        if (!destWorld.isAirBlock(dest.getPos().up()) || !destWorld.isAirBlock(dest.getPos().up(2))) {
+        if (!destWorld.isAirBlock(dest.getPos()) || !destWorld.isAirBlock(dest.getPos().up())) {
             PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("The destination seems obstructed!"), (EntityPlayerMP) player);
             return;
         }
@@ -52,18 +52,23 @@ public class TeleportationTools {
         sourceWorld.setBlockState(sourcePortalPos, ModBlocks.portalBlock.getDefaultState(), 3);
         PortalTileEntity source = (PortalTileEntity) sourceWorld.getTileEntity(sourcePortalPos);
 
-        destWorld.setBlockState(dest.getPos().up(), ModBlocks.portalBlock.getDefaultState(), 3);
-        PortalTileEntity destination = (PortalTileEntity) destWorld.getTileEntity(dest.getPos().up());
+        destWorld.setBlockState(dest.getPos(), ModBlocks.portalBlock.getDefaultState(), 3);
+        PortalTileEntity destination = (PortalTileEntity) destWorld.getTileEntity(dest.getPos());
 
         source.setTimeout(Config.portalTimeout);
         source.setOther(dest);
+        source.setPortalSide(selectedSide);
 
         destination.setTimeout(Config.portalTimeout);
-        destination.setOther(new TeleportDestination("", sourceWorld.provider.getDimension(), selectedBlock));
+        destination.setOther(new TeleportDestination("", sourceWorld.provider.getDimension(), sourcePortalPos, selectedSide));
+        destination.setPortalSide(dest.getSide());
     }
 
+    /**
+     * Return the position where the portal block should be placed
+     */
     @Nullable
-    private static BlockPos findBestPosition(World world, BlockPos selectedBlock, EnumFacing selectedSide) {
+    public static BlockPos findBestPosition(World world, BlockPos selectedBlock, EnumFacing selectedSide) {
         if (selectedSide == EnumFacing.UP) {
             if (world.isAirBlock(selectedBlock.up()) && world.isAirBlock(selectedBlock.up(2))) {
                 return selectedBlock.up();

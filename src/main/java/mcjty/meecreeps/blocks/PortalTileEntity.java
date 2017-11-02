@@ -13,6 +13,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
@@ -29,6 +30,7 @@ public class PortalTileEntity extends TileEntity implements ITickable {
     private int timeout;
     private int start;  // Client side only
     private TeleportDestination other;
+    private EnumFacing portalSide;            // Side to render the portal on
     private AxisAlignedBB box = null;
     private Set<UUID> blackListed = new HashSet<>();        // Entities can only go through the portal one time
 
@@ -73,6 +75,7 @@ public class PortalTileEntity extends TileEntity implements ITickable {
         NBTTagCompound nbtTag = new NBTTagCompound();
         nbtTag.setInteger("timeout", timeout);
         nbtTag.setInteger("start", Config.portalTimeout - timeout);
+        nbtTag.setByte("portalSide", (byte) portalSide.ordinal());
         return new SPacketUpdateTileEntity(getPos(), 1, nbtTag);
     }
 
@@ -80,11 +83,30 @@ public class PortalTileEntity extends TileEntity implements ITickable {
     public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity packet) {
         timeout = packet.getNbtCompound().getInteger("timeout");
         start = packet.getNbtCompound().getInteger("start");
+        portalSide = EnumFacing.VALUES[packet.getNbtCompound().getByte("portalSide")];
     }
 
     private AxisAlignedBB getTeleportBox() {
         if (box == null) {
-            box = new AxisAlignedBB(pos.getX()-.2, pos.getY()-1.2, pos.getZ()-.2, pos.getX()+1.2, pos.getY()+2.2, pos.getZ()+1.2);
+            switch (portalSide) {
+                case DOWN:
+                    box = new AxisAlignedBB(pos.getX() - .7, pos.getY() - 1.2, pos.getZ() - .7, pos.getX() + 1.7, pos.getY() + 2.2, pos.getZ() + 1.7);
+                    break;
+                case UP:
+                    throw new RuntimeException("What?");
+                case NORTH:
+                    box = new AxisAlignedBB(pos.getX() - .2, pos.getY() - 1.2, pos.getZ() - .2, pos.getX() + 1.2, pos.getY() + 2.2, pos.getZ() + 0.2);
+                    break;
+                case SOUTH:
+                    box = new AxisAlignedBB(pos.getX() - .2, pos.getY() - 1.2, pos.getZ() + .8, pos.getX() + 1.2, pos.getY() + 2.2, pos.getZ() + 1.2);
+                    break;
+                case WEST:
+                    box = new AxisAlignedBB(pos.getX() - .2, pos.getY() - 1.2, pos.getZ() - .2, pos.getX() + 0.2, pos.getY() + 2.2, pos.getZ() + 1.2);
+                    break;
+                case EAST:
+                    box = new AxisAlignedBB(pos.getX() + .8, pos.getY() - 1.2, pos.getZ() - .2, pos.getX() + 1.2, pos.getY() + 2.2, pos.getZ() + 1.2);
+                    break;
+            }
         }
         return box;
     }
@@ -116,6 +138,16 @@ public class PortalTileEntity extends TileEntity implements ITickable {
         }
     }
 
+    public EnumFacing getPortalSide() {
+        return portalSide;
+    }
+
+    public void setPortalSide(EnumFacing portalSide) {
+        this.portalSide = portalSide;
+        box = null;
+        markDirtyClient();
+    }
+
     public void tickTime() {
         timeout--;
         getOther().ifPresent(otherPortal -> {
@@ -143,7 +175,7 @@ public class PortalTileEntity extends TileEntity implements ITickable {
 
     private Optional<PortalTileEntity> getOther() {
         World otherWorld = TeleportationTools.getWorldForDimension(other.getDimension());
-        TileEntity te = otherWorld.getTileEntity(other.getPos().up());
+        TileEntity te = otherWorld.getTileEntity(other.getPos());
         if (te instanceof PortalTileEntity) {
             return Optional.of((PortalTileEntity) te);
         } else {
@@ -155,9 +187,11 @@ public class PortalTileEntity extends TileEntity implements ITickable {
     public void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);
         timeout = compound.getInteger("timeout");
+        portalSide = EnumFacing.VALUES[compound.getByte("portalSide")];
         BlockPos pos = BlockPos.fromLong(compound.getLong("pos"));
         int dim = compound.getInteger("dim");
-        other = new TeleportDestination("", dim, pos);
+        EnumFacing side = EnumFacing.VALUES[compound.getByte("side")];
+        other = new TeleportDestination("", dim, pos, side);
         NBTTagList list = compound.getTagList("bl", Constants.NBT.TAG_COMPOUND);
         blackListed.clear();
         for (int i = 0 ; i < list.tagCount() ; i++) {
@@ -170,8 +204,10 @@ public class PortalTileEntity extends TileEntity implements ITickable {
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         compound.setInteger("timeout", timeout);
+        compound.setByte("portalSide", (byte) portalSide.ordinal());
         compound.setLong("pos", other.getPos().toLong());
         compound.setInteger("dim", other.getDimension());
+        compound.setByte("side", (byte) other.getSide().ordinal());
         NBTTagList list = new NBTTagList();
         for (UUID uuid : blackListed) {
             NBTTagCompound tc = new NBTTagCompound();
