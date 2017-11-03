@@ -1,5 +1,7 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.ForgeEventHandlers;
+import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.actions.Stage;
@@ -43,7 +45,7 @@ public class WorkerHelper implements IWorkerHelper {
     private final double DISTANCE_TOLERANCE = 1.4;
 
     private IActionWorker worker;
-    protected final IActionOptions options;
+    protected final ActionOptions options;
     protected final EntityMeeCreeps entity;
     protected boolean needsToPutAway = false;
     protected int waitABit = 10;
@@ -57,8 +59,8 @@ public class WorkerHelper implements IWorkerHelper {
 
     private boolean messageShown = false;
 
-    public WorkerHelper(EntityMeeCreeps entity, IActionOptions options) {
-        this.options = options;
+    public WorkerHelper(EntityMeeCreeps entity, IActionContext options) {
+        this.options = (ActionOptions) options;
         this.entity = entity;
     }
 
@@ -67,12 +69,12 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
-    public IActionOptions getActionOptions() {
+    public IActionContext getContext() {
         return options;
     }
 
     @Override
-    public IMeeCreep getMeeCreeps() {
+    public IMeeCreep getMeeCreep() {
         return entity;
     }
 
@@ -102,6 +104,11 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
+    public void registerHarvestableBlock(BlockPos pos) {
+        ForgeEventHandlers.harvestableBlocksToCollect.put(pos, options.getActionId());
+    }
+
+    @Override
     public void navigateTo(BlockPos pos, Consumer<BlockPos> job) {
         BlockPos position = entity.getPosition();
         double d = position.distanceSq(pos.getX(), pos.getY(), pos.getZ());
@@ -121,7 +128,7 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public boolean navigateTo(Entity dest, Consumer<BlockPos> job, double maxDist) {
-        if (dest == null) {
+        if (dest == null || dest.isDead) {
             return false;
         }
         BlockPos position = entity.getPosition();
@@ -144,8 +151,8 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
-    public void navigateTo(Entity dest, Consumer<BlockPos> job) {
-        navigateTo(dest, job, 1000000000);
+    public boolean navigateTo(Entity dest, Consumer<BlockPos> job) {
+        return navigateTo(dest, job, 1000000000);
     }
 
     public void tick(boolean timeToWrapUp) {
@@ -231,13 +238,7 @@ public class WorkerHelper implements IWorkerHelper {
         net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
         SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
         entity.getEntityWorld().setBlockToAir(pos);
-        for (ItemStack stack : drops) {
-            ItemStack remaining = entity.addStack(stack);
-            if (!remaining.isEmpty()) {
-                itemsToPickup.add(entity.entityDropItem(remaining, 0.0f));
-                needsToPutAway = true;
-            }
-        }
+        giveDropsToMeeCreeps(drops);
     }
 
 
@@ -510,36 +511,35 @@ public class WorkerHelper implements IWorkerHelper {
         }
     }
 
-    @Override
-    public List<BlockPos> findInventoriesWithMostSpace(AxisAlignedBB box) {
-        World world = entity.getEntityWorld();
-        List<BlockPos> inventories = new ArrayList<>();
-        Map<BlockPos, Float> countMatching = new HashMap<>();
-        GeneralTools.traverseBox(world, box,
-                (pos, state) -> InventoryTools.isInventory(world, pos),
-                (pos, state) -> {
-                    TileEntity te = world.getTileEntity(pos);
-                    IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
-                    // @todo config?
-                    if (handler.getSlots() > 8) {
-                        int free = 0;
-                        for (int i = 0 ; i < handler.getSlots() ; i++) {
-                            ItemStack stack = handler.getStackInSlot(i);
-                            if (stack.isEmpty()) {
-                                free += handler.getSlotLimit(i);
-                            }
-                        }
-                        inventories.add(pos);
-                        countMatching.put(pos, (float) free);
-                    }
-                });
-        // Sort so that highest score goes first
-        inventories.sort((p1, p2) -> Float.compare(countMatching.get(p2), countMatching.get(p1)));
-        return inventories;
-    }
+//    @Override
+//    public List<BlockPos> findInventoriesWithMostSpace(AxisAlignedBB box) {
+//        World world = entity.getEntityWorld();
+//        List<BlockPos> inventories = new ArrayList<>();
+//        Map<BlockPos, Float> countMatching = new HashMap<>();
+//        GeneralTools.traverseBox(world, box,
+//                (pos, state) -> InventoryTools.isInventory(world, pos),
+//                (pos, state) -> {
+//                    TileEntity te = world.getTileEntity(pos);
+//                    IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+//                    // @todo config?
+//                    if (handler.getSlots() > 8) {
+//                        int free = 0;
+//                        for (int i = 0 ; i < handler.getSlots() ; i++) {
+//                            ItemStack stack = handler.getStackInSlot(i);
+//                            if (stack.isEmpty()) {
+//                                free += handler.getSlotLimit(i);
+//                            }
+//                        }
+//                        inventories.add(pos);
+//                        countMatching.put(pos, (float) free);
+//                    }
+//                });
+//        // Sort so that highest score goes first
+//        inventories.sort((p1, p2) -> Float.compare(countMatching.get(p2), countMatching.get(p1)));
+//        return inventories;
+//    }
 
-    @Override
-    public boolean tryFindingItemsToPickup() {
+    private boolean tryFindingItemsToPickup() {
         BlockPos position = entity.getPosition();
         List<EntityItem> items = itemsToPickup;
         if (!items.isEmpty()) {

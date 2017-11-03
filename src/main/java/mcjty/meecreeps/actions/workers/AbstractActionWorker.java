@@ -10,12 +10,12 @@ public abstract class AbstractActionWorker implements IActionWorker {
 
     protected final IWorkerHelper helper;
     protected final IMeeCreep entity;
-    protected final IActionOptions options;
+    protected final IActionContext options;
 
     public AbstractActionWorker(IWorkerHelper helper) {
         this.helper = helper;
-        this.entity = helper.getMeeCreeps();
-        this.options = helper.getActionOptions();
+        this.entity = helper.getMeeCreep();
+        this.options = helper.getContext();
     }
 
     @Override

@@ -1,8 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.api.IActionOptions;
 import mcjty.meecreeps.api.IWorkerHelper;
-import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.entity.EntityLiving;

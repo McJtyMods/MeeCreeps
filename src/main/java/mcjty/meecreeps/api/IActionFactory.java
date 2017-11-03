@@ -3,6 +3,9 @@ package mcjty.meecreeps.api;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+/**
+ * A factory for actions
+ */
 public interface IActionFactory {
 
     /**
@@ -19,5 +22,8 @@ public interface IActionFactory {
      */
     boolean isPossibleSecondary(World world, BlockPos pos);
 
+    /**
+     * Actually create the action
+     */
     IActionWorker createWorker(IWorkerHelper helper);
 }

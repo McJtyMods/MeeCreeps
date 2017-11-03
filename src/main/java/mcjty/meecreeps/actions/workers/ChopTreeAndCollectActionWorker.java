@@ -1,6 +1,5 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.api.PreferedChest;
 import mcjty.meecreeps.varia.Counter;
@@ -80,7 +79,7 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
             BlockPos pos = entry.getKey();
             if (!world.isAirBlock(pos)) {
                 IBlockState state = world.getBlockState(pos);
-                ForgeEventHandlers.harvestableBlocksToCollect.put(pos, options.getActionId());
+                helper.registerHarvestableBlock(pos);
                 state.getBlock().updateTick(world, pos, state, entity.getRNG());
 
                 if (!world.isAirBlock(pos)) {

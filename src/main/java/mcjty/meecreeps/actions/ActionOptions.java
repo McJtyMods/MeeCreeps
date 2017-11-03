@@ -2,7 +2,7 @@ package mcjty.meecreeps.actions;
 
 import io.netty.buffer.ByteBuf;
 import mcjty.meecreeps.MeeCreeps;
-import mcjty.meecreeps.api.IActionOptions;
+import mcjty.meecreeps.api.IActionContext;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.network.NetworkTools;
 import mcjty.meecreeps.network.PacketHandler;
@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class ActionOptions implements IActionOptions {
+public class ActionOptions implements IActionContext {
 
     private final List<MeeCreepActionType> actionOptions;
     private final List<MeeCreepActionType> maybeActionOptions;
@@ -189,12 +189,10 @@ public class ActionOptions implements IActionOptions {
         }
     }
 
-    @Override
     public List<Pair<BlockPos, ItemStack>> getDrops() {
         return drops;
     }
 
-    @Override
     public void clearDrops() {
         drops.clear();
     }
@@ -220,28 +218,23 @@ public class ActionOptions implements IActionOptions {
         return playerId;
     }
 
-    @Override
     public int getActionId() {
         return actionId;
     }
 
-    @Override
     public Stage getStage() {
         return stage;
     }
 
-    @Override
     public void setStage(Stage stage) {
         this.stage = stage;
         this.timeout = stage.getTimeout();
     }
 
-    @Override
     public boolean isPaused() {
         return paused;
     }
 
-    @Override
     public void setPaused(boolean paused) {
         this.paused = paused;
     }
