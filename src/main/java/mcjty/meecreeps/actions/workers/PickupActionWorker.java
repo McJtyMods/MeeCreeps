@@ -1,6 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.actions.ActionOptions;
+import mcjty.meecreeps.api.IActionOptions;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -12,7 +12,7 @@ public class PickupActionWorker extends AbstractActionWorker {
 
     private AxisAlignedBB actionBox = null;
 
-    public PickupActionWorker(EntityMeeCreeps entity, ActionOptions options) {
+    public PickupActionWorker(EntityMeeCreeps entity, IActionOptions options) {
         super(entity, options);
     }
 
@@ -20,7 +20,7 @@ public class PickupActionWorker extends AbstractActionWorker {
     protected AxisAlignedBB getActionBox() {
         if (actionBox == null) {
             // @todo config
-            actionBox = new AxisAlignedBB(options.getPos().add(-10, -10, -10), options.getPos().add(10, 10, 10));
+            actionBox = new AxisAlignedBB(options.getTargetPos().add(-10, -10, -10), options.getTargetPos().add(10, 10, 10));
         }
         return actionBox;
     }

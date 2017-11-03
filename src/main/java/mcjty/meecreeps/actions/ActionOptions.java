@@ -2,11 +2,13 @@ package mcjty.meecreeps.actions;
 
 import io.netty.buffer.ByteBuf;
 import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.api.IActionOptions;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.network.NetworkTools;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
 import mcjty.meecreeps.varia.SoundTools;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -22,11 +24,12 @@ import net.minecraftforge.common.util.Constants;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class ActionOptions {
+public class ActionOptions implements IActionOptions {
 
     private final List<MeeCreepActionType> actionOptions;
     private final List<MeeCreepActionType> maybeActionOptions;
@@ -186,10 +189,12 @@ public class ActionOptions {
         }
     }
 
+    @Override
     public List<Pair<BlockPos, ItemStack>> getDrops() {
         return drops;
     }
 
+    @Override
     public void clearDrops() {
         drops.clear();
     }
@@ -202,7 +207,8 @@ public class ActionOptions {
         return maybeActionOptions;
     }
 
-    public BlockPos getPos() {
+    @Override
+    public BlockPos getTargetPos() {
         return pos;
     }
 
@@ -214,23 +220,28 @@ public class ActionOptions {
         return playerId;
     }
 
+    @Override
     public int getActionId() {
         return actionId;
     }
 
+    @Override
     public Stage getStage() {
         return stage;
     }
 
+    @Override
     public void setStage(Stage stage) {
         this.stage = stage;
         this.timeout = stage.getTimeout();
     }
 
+    @Override
     public boolean isPaused() {
         return paused;
     }
 
+    @Override
     public void setPaused(boolean paused) {
         this.paused = paused;
     }
@@ -286,6 +297,14 @@ public class ActionOptions {
         return true;
     }
 
+    @Nullable
+    @Override
+    public EntityPlayer getPlayer() {
+        World world = DimensionManager.getWorld(0);
+        MinecraftServer server = world.getMinecraftServer();
+        return server.getPlayerList().getPlayerByUUID(getPlayerId());
+    }
+
     private boolean openGui() {
         MinecraftServer server = DimensionManager.getWorld(0).getMinecraftServer();
         EntityPlayerMP player = server.getPlayerList().getPlayerByUUID(getPlayerId());
@@ -303,16 +322,16 @@ public class ActionOptions {
 
     private boolean spawn(World world) {
         BlockPos p;
-        if (validSpawnPoint(world, getPos().north())) {
-            p = getPos().north();
-        } else if (validSpawnPoint(world, getPos().south())) {
-            p = getPos().south();
-        } else if (validSpawnPoint(world, getPos().east())) {
-            p = getPos().east();
-        } else if (validSpawnPoint(world, getPos().west())) {
-            p = getPos().west();
-        } else if (validSpawnPoint(world, getPos().up())) {
-            p = getPos().up();
+        if (validSpawnPoint(world, getTargetPos().north())) {
+            p = getTargetPos().north();
+        } else if (validSpawnPoint(world, getTargetPos().south())) {
+            p = getTargetPos().south();
+        } else if (validSpawnPoint(world, getTargetPos().east())) {
+            p = getTargetPos().east();
+        } else if (validSpawnPoint(world, getTargetPos().west())) {
+            p = getTargetPos().west();
+        } else if (validSpawnPoint(world, getTargetPos().up())) {
+            p = getTargetPos().up();
         } else {
             return false;
         }

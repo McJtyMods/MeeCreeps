@@ -1,7 +1,7 @@
 package mcjty.meecreeps.entities;
 
 import mcjty.meecreeps.actions.ActionOptions;
-import mcjty.meecreeps.actions.IActionWorker;
+import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.actions.Stage;
 import net.minecraft.entity.ai.EntityAIBase;

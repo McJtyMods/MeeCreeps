@@ -1,6 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.actions.ActionOptions;
+import mcjty.meecreeps.api.IActionOptions;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
@@ -29,12 +29,12 @@ public class DigdownActionWorker extends AbstractActionWorker {
     protected AxisAlignedBB getActionBox() {
         if (actionBox == null) {
             // @todo config
-            actionBox = new AxisAlignedBB(options.getPos().add(-10, -5, -10), options.getPos().add(10, 5, 10));
+            actionBox = new AxisAlignedBB(options.getTargetPos().add(-10, -5, -10), options.getTargetPos().add(10, 5, 10));
         }
         return actionBox;
     }
 
-    public DigdownActionWorker(EntityMeeCreeps entity, ActionOptions options) {
+    public DigdownActionWorker(EntityMeeCreeps entity, IActionOptions options) {
         super(entity, options);
     }
 
@@ -52,7 +52,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
     }
 
     private BlockPos findTopSpotNotDiggedYet() {
-        BlockPos p = options.getPos();
+        BlockPos p = options.getTargetPos();
         World world = entity.getEntityWorld();
         IBlockState state = world.getBlockState(p);
         while (world.isAirBlock(p) || state.getBlock() == Blocks.LADDER) {
@@ -77,10 +77,10 @@ public class DigdownActionWorker extends AbstractActionWorker {
 
     private boolean needsSupportPillar(BlockPos p) {
         supportPosTodo = null;
-        if (p.getY() < options.getPos().getY()) {
+        if (p.getY() < options.getTargetPos().getY()) {
             World world = entity.getEntityWorld();
             int y = p.getY();
-            while (y < options.getPos().getY()) {
+            while (y < options.getTargetPos().getY()) {
                 BlockPos test = new BlockPos(p.getX(), y, p.getZ());
                 if (world.isAirBlock(test.south())) {
                     supportPosTodo = test;

@@ -1,6 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.actions.ActionOptions;
+import mcjty.meecreeps.api.IActionOptions;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
@@ -8,7 +8,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockNetherWart;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
@@ -24,7 +23,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
 
     private AxisAlignedBB actionBox = null;
 
-    public HarvestActionWorker(EntityMeeCreeps entity, ActionOptions options) {
+    public HarvestActionWorker(EntityMeeCreeps entity, IActionOptions options) {
         super(entity, options);
     }
 
@@ -32,7 +31,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
     protected AxisAlignedBB getActionBox() {
         if (actionBox == null) {
             // @todo config
-            actionBox = new AxisAlignedBB(options.getPos().add(-10, -5, -10), options.getPos().add(10, 5, 10));
+            actionBox = new AxisAlignedBB(options.getTargetPos().add(-10, -5, -10), options.getTargetPos().add(10, 5, 10));
         }
         return actionBox;
     }

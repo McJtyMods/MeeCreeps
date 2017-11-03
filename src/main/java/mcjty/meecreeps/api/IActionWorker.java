@@ -1,4 +1,4 @@
-package mcjty.meecreeps.actions;
+package mcjty.meecreeps.api;
 
 import net.minecraft.nbt.NBTTagCompound;
 

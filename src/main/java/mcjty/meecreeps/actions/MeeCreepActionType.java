@@ -1,6 +1,7 @@
 package mcjty.meecreeps.actions;
 
 import mcjty.meecreeps.actions.factories.*;
+import mcjty.meecreeps.api.IActionFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;

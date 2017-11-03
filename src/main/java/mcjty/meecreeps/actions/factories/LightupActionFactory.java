@@ -1,15 +1,15 @@
 package mcjty.meecreeps.actions.factories;
 
 import mcjty.meecreeps.actions.ActionOptions;
-import mcjty.meecreeps.actions.IActionWorker;
-import mcjty.meecreeps.actions.IActionFactory;
+import mcjty.meecreeps.api.IActionOptions;
+import mcjty.meecreeps.api.IActionWorker;
+import mcjty.meecreeps.api.IActionFactory;
 import mcjty.meecreeps.actions.workers.LightupActionWorker;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.GeneralTools;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldEntitySpawner;
 
@@ -37,7 +37,7 @@ public class LightupActionFactory implements IActionFactory {
     }
 
     @Override
-    public IActionWorker createWorker(EntityMeeCreeps entity, ActionOptions options) {
+    public IActionWorker createWorker(EntityMeeCreeps entity, IActionOptions options) {
         return new LightupActionWorker(entity, options);
     }
 }

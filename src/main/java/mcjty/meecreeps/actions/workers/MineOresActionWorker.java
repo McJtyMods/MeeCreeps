@@ -1,6 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.actions.ActionOptions;
+import mcjty.meecreeps.api.IActionOptions;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
@@ -23,7 +23,7 @@ public class MineOresActionWorker extends AbstractActionWorker {
 
     private AxisAlignedBB actionBox = null;
 
-    public MineOresActionWorker(EntityMeeCreeps entity, ActionOptions options) {
+    public MineOresActionWorker(EntityMeeCreeps entity, IActionOptions options) {
         super(entity, options);
     }
 
@@ -31,7 +31,7 @@ public class MineOresActionWorker extends AbstractActionWorker {
     protected AxisAlignedBB getActionBox() {
         if (actionBox == null) {
             // @todo config
-            actionBox = new AxisAlignedBB(options.getPos().add(-10, -5, -10), options.getPos().add(10, 5, 10));
+            actionBox = new AxisAlignedBB(options.getTargetPos().add(-10, -5, -10), options.getTargetPos().add(10, 5, 10));
         }
         return actionBox;
     }

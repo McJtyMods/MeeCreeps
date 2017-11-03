@@ -1,9 +1,9 @@
 package mcjty.meecreeps.actions.factories;
 
-import mcjty.meecreeps.actions.ActionOptions;
-import mcjty.meecreeps.actions.IActionFactory;
-import mcjty.meecreeps.actions.IActionWorker;
 import mcjty.meecreeps.actions.workers.HarvestReplantActionWorker;
+import mcjty.meecreeps.api.IActionFactory;
+import mcjty.meecreeps.api.IActionOptions;
+import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.InventoryTools;
 import net.minecraft.block.Block;
@@ -92,7 +92,7 @@ public class HarvestReplantActionFactory implements IActionFactory {
     }
 
     @Override
-    public IActionWorker createWorker(EntityMeeCreeps entity, ActionOptions options) {
+    public IActionWorker createWorker(EntityMeeCreeps entity, IActionOptions options) {
         return new HarvestReplantActionWorker(entity, options);
     }
 }

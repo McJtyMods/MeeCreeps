@@ -14,7 +14,7 @@ public class ClientActionManager {
     public static void showActionOptions(ActionOptions options, int guiid) {
         EntityPlayer player = MeeCreeps.proxy.getClientPlayer();
         World worldIn = MeeCreeps.proxy.getClientWorld();
-        BlockPos pos = options.getPos();
+        BlockPos pos = options.getTargetPos();
         lastOptions = options;
         player.openGui(MeeCreeps.instance, guiid, worldIn, pos.getX(), pos.getY(), pos.getZ());
     }

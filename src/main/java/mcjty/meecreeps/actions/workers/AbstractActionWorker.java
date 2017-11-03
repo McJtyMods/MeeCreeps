@@ -1,6 +1,10 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.actions.*;
+import mcjty.meecreeps.actions.PacketShowBalloonToClient;
+import mcjty.meecreeps.actions.ServerActionManager;
+import mcjty.meecreeps.actions.Stage;
+import mcjty.meecreeps.api.IActionOptions;
+import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.varia.GeneralTools;
@@ -14,7 +18,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -27,6 +30,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +42,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
 
     private final double DISTANCE_TOLERANCE = 1.4;
 
-    protected final ActionOptions options;
+    protected final IActionOptions options;
     protected final EntityMeeCreeps entity;
     protected boolean needsToPutAway = false;
     protected int waitABit = 10;
@@ -52,7 +56,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
 
     private boolean messageShown = false;
 
-    public AbstractActionWorker(EntityMeeCreeps entity, ActionOptions options) {
+    public AbstractActionWorker(EntityMeeCreeps entity, IActionOptions options) {
         this.options = options;
         this.entity = entity;
     }
@@ -279,10 +283,9 @@ public abstract class AbstractActionWorker implements IActionWorker {
 
     }
 
+    @Nullable
     protected EntityPlayerMP getPlayer() {
-        World world = entity.getEntityWorld();
-        MinecraftServer server = world.getMinecraftServer();
-        return server.getPlayerList().getPlayerByUUID(options.getPlayerId());
+        return (EntityPlayerMP) options.getPlayer();
     }
 
     protected void findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message) {
@@ -391,7 +394,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
                 return true;
             }
         }
-        BlockPos pos = options.getPos();
+        BlockPos pos = options.getTargetPos();
         if (InventoryTools.isInventory(entity.getEntityWorld(), pos)) {
             navigateTo(pos, this::putInventoryInChest);
             return true;

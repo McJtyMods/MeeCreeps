@@ -1,6 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.actions.ActionOptions;
+import mcjty.meecreeps.api.IActionOptions;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
@@ -20,7 +20,7 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
 
     private Map<BlockPos, Block> needToReplant = new HashMap<>();
 
-    public HarvestReplantActionWorker(EntityMeeCreeps entity, ActionOptions options) {
+    public HarvestReplantActionWorker(EntityMeeCreeps entity, IActionOptions options) {
         super(entity, options);
     }
 

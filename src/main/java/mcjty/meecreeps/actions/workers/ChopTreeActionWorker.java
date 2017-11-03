@@ -1,17 +1,14 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.actions.ActionOptions;
+import mcjty.meecreeps.api.IActionOptions;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.Counter;
 import mcjty.meecreeps.varia.GeneralTools;
-import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.*;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagLong;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
@@ -23,7 +20,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
     protected List<BlockPos> blocks = new ArrayList<>();
     protected Counter<BlockPos> leavesToTick = new Counter<>();
 
-    public ChopTreeActionWorker(EntityMeeCreeps entity, ActionOptions options) {
+    public ChopTreeActionWorker(EntityMeeCreeps entity, IActionOptions options) {
         super(entity, options);
     }
 
@@ -96,7 +93,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
     }
 
     protected void findTree() {
-        BlockPos startPos = options.getPos();
+        BlockPos startPos = options.getTargetPos();
         if (entity.getEntityWorld().isAirBlock(startPos)) {
             return;
         }
