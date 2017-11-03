@@ -68,7 +68,11 @@ public class PortalTileEntity extends TileEntity implements ITickable {
                 for (Entity entity : entities) {
                     if (!blackListed.contains(entity.getUniqueID())) {
                         otherPortal.addBlackList(entity.getUniqueID());
-                        TeleportationTools.teleportEntity(entity, otherPortal.getWorld(), otherX, otherY, otherZ);
+                        double oy = otherY;
+                        if (otherPortal.getPortalSide() == EnumFacing.UP) {
+                            oy -= entity.height + .7;
+                        }
+                        TeleportationTools.teleportEntity(entity, otherPortal.getWorld(), otherX, oy, otherZ);
                         if (entity instanceof EntityPlayer) {
                             SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "teleport"));
                             // @todo config

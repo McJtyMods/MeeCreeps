@@ -12,6 +12,7 @@ import mcjty.meecreeps.teleport.PacketCancelPortal;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
@@ -23,6 +24,7 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
@@ -30,6 +32,7 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -54,6 +57,12 @@ public class PortalGunItem extends Item {
         return heldItem;
     }
 
+    @Override
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+        tooltip.add(TextFormatting.GREEN + "Sneak right click: " + TextFormatting.WHITE + "remember destination");
+        tooltip.add(TextFormatting.GREEN + "Right click: " + TextFormatting.WHITE + "create portal");
+    }
+
     @SideOnly(Side.CLIENT)
     public void initModel() {
         ModelLoader.setCustomModelResourceLocation(this, 0, new ModelResourceLocation(getRegistryName(), "inventory"));
@@ -62,14 +71,19 @@ public class PortalGunItem extends Item {
     @Override
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
         if (world.isRemote) {
+            if (world.getBlockState(pos.offset(side)).getBlock() == ModBlocks.portalBlock) {
+                PacketHandler.INSTANCE.sendToServer(new PacketCancelPortal(pos.offset(side)));
+                return EnumActionResult.SUCCESS;
+            }
+            if (side != EnumFacing.UP && side != EnumFacing.DOWN && world.getBlockState(pos.offset(side).down()).getBlock() == ModBlocks.portalBlock) {
+                PacketHandler.INSTANCE.sendToServer(new PacketCancelPortal(pos.offset(side).down()));
+                return EnumActionResult.SUCCESS;
+            }
+
             if (!player.isSneaking()) {
-                if (world.getBlockState(pos).getBlock() == ModBlocks.portalBlock) {
-                    PacketHandler.INSTANCE.sendToServer(new PacketCancelPortal(pos));
-                } else {
-                    GuiWheel.selectedBlock = pos;
-                    GuiWheel.selectedSide = side;
-                    player.openGui(MeeCreeps.instance, GuiProxy.GUI_WHEEL, world, pos.getX(), pos.getY(), pos.getZ());
-                }
+                GuiWheel.selectedBlock = pos;
+                GuiWheel.selectedSide = side;
+                player.openGui(MeeCreeps.instance, GuiProxy.GUI_WHEEL, world, pos.getX(), pos.getY(), pos.getZ());
             } else {
                 BlockPos bestPosition = TeleportationTools.findBestPosition(world, pos, side);
                 if (bestPosition == null) {
