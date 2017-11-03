@@ -73,8 +73,12 @@ public class TeleportationTools {
             if (world.isAirBlock(selectedBlock.up()) && world.isAirBlock(selectedBlock.up(2))) {
                 return selectedBlock.up();
             }
+            return null;
         }
         if (selectedSide == EnumFacing.DOWN) {
+            if (world.isAirBlock(selectedBlock.down()) && world.isAirBlock(selectedBlock.down(2))) {
+                return selectedBlock.down();
+            }
             return null;
         }
         selectedBlock = selectedBlock.offset(selectedSide);

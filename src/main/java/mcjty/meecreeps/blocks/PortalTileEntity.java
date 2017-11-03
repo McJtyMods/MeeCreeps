@@ -28,6 +28,8 @@ import java.util.*;
 public class PortalTileEntity extends TileEntity implements ITickable {
 
     private int timeout;
+    private boolean soundStart = false;
+    private boolean soundEnd = false;
     private int start;  // Client side only
     private TeleportDestination other;
     private EnumFacing portalSide;            // Side to render the portal on
@@ -42,6 +44,20 @@ public class PortalTileEntity extends TileEntity implements ITickable {
                 killPortal();
                 getOther().ifPresent(PortalTileEntity::killPortal);
                 return;
+            }
+
+            if ((!soundStart) && timeout > Config.portalTimeout-10) {
+                soundStart = true;
+                SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "portal"));
+                // @todo config
+                SoundTools.playSound(world, sound, pos.getX(), pos.getY(), pos.getZ(), 1, 1);
+            }
+
+            if ((!soundEnd) && timeout < 10) {
+                soundEnd = true;
+                SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "portal"));
+                // @todo config
+                SoundTools.playSound(world, sound, pos.getX(), pos.getY(), pos.getZ(), 1, 1);
             }
 
             getOther().ifPresent(otherPortal -> {
@@ -93,17 +109,18 @@ public class PortalTileEntity extends TileEntity implements ITickable {
                     box = new AxisAlignedBB(pos.getX() - .7, pos.getY() - 1.2, pos.getZ() - .7, pos.getX() + 1.7, pos.getY() + 2.2, pos.getZ() + 1.7);
                     break;
                 case UP:
-                    throw new RuntimeException("What?");
-                case NORTH:
-                    box = new AxisAlignedBB(pos.getX() - .2, pos.getY() - 1.2, pos.getZ() - .2, pos.getX() + 1.2, pos.getY() + 2.2, pos.getZ() + 0.2);
+                    box = new AxisAlignedBB(pos.getX() - .7, pos.getY() - 1.2, pos.getZ() - .7, pos.getX() + 1.7, pos.getY() + 2.2, pos.getZ() + 1.7);
                     break;
                 case SOUTH:
+                    box = new AxisAlignedBB(pos.getX() - .2, pos.getY() - 1.2, pos.getZ() - .2, pos.getX() + 1.2, pos.getY() + 2.2, pos.getZ() + 0.2);
+                    break;
+                case NORTH:
                     box = new AxisAlignedBB(pos.getX() - .2, pos.getY() - 1.2, pos.getZ() + .8, pos.getX() + 1.2, pos.getY() + 2.2, pos.getZ() + 1.2);
                     break;
-                case WEST:
+                case EAST:
                     box = new AxisAlignedBB(pos.getX() - .2, pos.getY() - 1.2, pos.getZ() - .2, pos.getX() + 0.2, pos.getY() + 2.2, pos.getZ() + 1.2);
                     break;
-                case EAST:
+                case WEST:
                     box = new AxisAlignedBB(pos.getX() + .8, pos.getY() - 1.2, pos.getZ() - .2, pos.getX() + 1.2, pos.getY() + 2.2, pos.getZ() + 1.2);
                     break;
             }
@@ -152,7 +169,7 @@ public class PortalTileEntity extends TileEntity implements ITickable {
         timeout--;
         getOther().ifPresent(otherPortal -> {
             int otherTimeout = otherPortal.getTimeout();
-            if (timeout < otherTimeout) {
+            if (timeout > otherTimeout) {
                 timeout = otherTimeout;
             }
         });

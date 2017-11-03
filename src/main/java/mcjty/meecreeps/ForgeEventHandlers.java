@@ -18,6 +18,7 @@ public class ForgeEventHandlers {
     @SubscribeEvent
     public void registerSounds(RegistryEvent.Register<SoundEvent> registry) {
         registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "teleport")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "teleport")));
+        registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "portal")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "portal")));
         registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "intro1")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "intro1")));
         registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "ok")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "ok")));
         registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "intro2")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "intro2")));

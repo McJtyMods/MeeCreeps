@@ -1,5 +1,6 @@
 {
     "teleport" : {"category": "blocks", "sounds": ["meecreeps:teleport"]},
+    "portal" : {"category": "blocks", "sounds": ["meecreeps:portal"]},
     "intro1" : {"category": "entity", "sounds": ["meecreeps:intro1"]},
     "intro2" : {"category": "entity", "sounds": ["meecreeps:intro2"]},
     "ok" : {"category": "entity", "sounds": ["meecreeps:ok"]},
