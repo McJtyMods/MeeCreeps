@@ -47,6 +47,8 @@ public class CommonProxy {
 
         // Initialization of blocks and items typically goes here:
         ModEntities.init();
+
+        MeeCreeps.api.registerFactories();
     }
 
     public void init(FMLInitializationEvent e) {

@@ -2,7 +2,6 @@ package mcjty.meecreeps.entities;
 
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ActionOptions;
-import mcjty.meecreeps.actions.ClientActionManager;
 import mcjty.meecreeps.actions.PacketActionOptionToClient;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.api.IMeeCreep;

@@ -1,7 +1,9 @@
 package mcjty.meecreeps.gui;
 
 import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.actions.*;
+import mcjty.meecreeps.actions.MeeCreepActionType;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
 import net.minecraft.client.gui.GuiScreen;
@@ -135,14 +137,16 @@ public class GuiMeeCreeps extends GuiScreen {
         } else if (showingAlternatives) {
             List<MeeCreepActionType> opts = options.getMaybeActionOptions();
             for (MeeCreepActionType type : opts) {
-                questions.add(new Question(type.getDescription(), () -> doAction(type)));
+                MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(type);
+                questions.add(new Question(factory.getMessage(), () -> doAction(type)));
             }
             questions.add(new Question("Never mind...", this::close));
             outsideWindowAction = this::dismiss;
         } else {
             List<MeeCreepActionType> opts = options.getActionOptions();
             for (MeeCreepActionType type : opts) {
-                questions.add(new Question(type.getDescription(), () -> doAction(type)));
+                MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(type);
+                questions.add(new Question(factory.getMessage(), () -> doAction(type)));
             }
             if (hasAlternatives()) {
                 questions.add(new Question("Can you do other things?", () -> { showingAlternatives = true;}));

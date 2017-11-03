@@ -1,7 +1,7 @@
 package mcjty.meecreeps.actions;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.world.World;
+import mcjty.meecreeps.network.NetworkTools;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -15,13 +15,13 @@ public class PacketPerformAction implements IMessage {
     @Override
     public void fromBytes(ByteBuf buf) {
         id = buf.readInt();
-        type = MeeCreepActionType.VALUES[buf.readByte()];
+        type = new MeeCreepActionType(NetworkTools.readStringUTF8(buf));
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
         buf.writeInt(id);
-        buf.writeByte(type.ordinal());
+        NetworkTools.writeStringUTF8(buf, type.getId());
     }
 
     public PacketPerformAction() {

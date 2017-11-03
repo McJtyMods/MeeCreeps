@@ -5,7 +5,6 @@ import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.blocks.PortalTileEntity;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.network.PacketHandler;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;

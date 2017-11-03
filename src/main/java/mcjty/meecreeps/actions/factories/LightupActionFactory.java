@@ -1,8 +1,8 @@
 package mcjty.meecreeps.actions.factories;
 
-import mcjty.meecreeps.api.IActionWorker;
-import mcjty.meecreeps.api.IActionFactory;
 import mcjty.meecreeps.actions.workers.LightupActionWorker;
+import mcjty.meecreeps.api.IActionFactory;
+import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import net.minecraft.entity.EntityLiving;

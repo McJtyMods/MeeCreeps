@@ -1,5 +1,7 @@
 package mcjty.meecreeps.entities;
 
+import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.actions.Stage;
@@ -35,7 +37,8 @@ public class MeeCreepWorkerTask extends EntityAIBase {
     private WorkerHelper getHelper(ActionOptions options) {
         if (helper == null) {
             helper = new WorkerHelper(meeCreeps, options);
-            IActionWorker worker = options.getTask().getActionFactory().createWorker(helper);
+            MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(options.getTask());
+            IActionWorker worker = factory.getFactory().createWorker(helper);
             helper.setWorker(worker);
         }
         return helper;

@@ -1,7 +1,6 @@
 package mcjty.meecreeps.items;
 
 import mcjty.meecreeps.MeeCreeps;
-import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.gui.GuiAskName;
 import mcjty.meecreeps.gui.GuiBalloon;
@@ -14,7 +13,6 @@ import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -25,7 +23,6 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.util.Constants;
@@ -34,7 +31,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class PortalGunItem extends Item {

@@ -1,6 +1,7 @@
 package mcjty.meecreeps.actions;
 
 import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -19,6 +20,7 @@ import net.minecraftforge.common.util.Constants;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,34 +74,38 @@ public class ServerActionManager extends WorldSavedData {
         return instance;
     }
 
-    public void createActionOptions(World world, BlockPos pos, EntityPlayer player) {
+    public int createActionOptions(World world, BlockPos pos, @Nullable EntityPlayer player) {
         List<MeeCreepActionType> types = new ArrayList<>();
         List<MeeCreepActionType> maybeTypes = new ArrayList<>();
-        for (MeeCreepActionType type : MeeCreepActionType.VALUES) {
-            if (type.getActionFactory().isPossible(world, pos)) {
-                types.add(type);
-            } else if (type.getActionFactory().isPossibleSecondary(world, pos)) {
-                maybeTypes.add(type);
+        for (MeeCreepsApi.Factory type : MeeCreeps.api.getFactories()) {
+            if (type.getFactory().isPossible(world, pos)) {
+                types.add(new MeeCreepActionType(type.getId()));
+            } else if (type.getFactory().isPossibleSecondary(world, pos)) {
+                maybeTypes.add(new MeeCreepActionType(type.getId()));
             }
         }
         int actionId = newId();
-        ActionOptions opt = new ActionOptions(types, maybeTypes, pos, world.provider.getDimension(), player.getUniqueID(), actionId);
+        ActionOptions opt = new ActionOptions(types, maybeTypes, pos, world.provider.getDimension(), player == null ? null : player.getUniqueID(), actionId);
         options.add(opt);
         optionMap.put(actionId, opt);
         save();
+        return actionId;
     }
 
-    public void performAction(EntityPlayerMP player, int id, MeeCreepActionType type) {
-        System.out.println("ServerActionManager.performAction: " + type.getDescription());
+    public void performAction(@Nullable EntityPlayerMP player, int id, MeeCreepActionType type) {
+        MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(type);
+        System.out.println("ServerActionManager.performAction: " + factory.getMessage());
         ActionOptions option = getOptions(id);
         if (option != null) {
             option.setStage(Stage.WORKING);
             option.setTask(type);
             save();
 
-            SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "ok"));
-            // @todo config
-            SoundTools.playSound(player.getEntityWorld(), sound, player.posX, player.posY, player.posZ, 1, 1);
+            if (player != null) {
+                SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "ok"));
+                // @todo config
+                SoundTools.playSound(player.getEntityWorld(), sound, player.posX, player.posY, player.posZ, 1, 1);
+            }
         }
     }
 

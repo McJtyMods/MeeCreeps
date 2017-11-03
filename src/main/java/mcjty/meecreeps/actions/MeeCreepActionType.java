@@ -1,58 +1,30 @@
 package mcjty.meecreeps.actions;
 
-import mcjty.meecreeps.actions.factories.*;
-import mcjty.meecreeps.api.IActionFactory;
+public class MeeCreepActionType {
+    private final String id;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-public enum MeeCreepActionType {
-    ACTION_CHOP_TREE("chop_tree", "Chop this tree", new ChopTreeActionFactory()),
-    ACTION_DIG_DOWN("dig_down", "Dig down to bedrock", new DigdownActionFactory()),
-    ACTION_MINE_ORES("mine_ores", "Find and mine all nearby ores", new MineOresActionFactory()),
-    ACTION_CHOP_TREE_AND_COLLECT("chop_tree_collect", "Chop this tree and get the drops", new ChopTreeAndCollectActionFactory()),
-    ACTION_HARVEST_REPLANT("harvest_replant", "Harvest and replant those crops", new HarvestReplantActionFactory()),
-    ACTION_HARVEST("harvest", "Harvest those crops", new HarvestActionFactory()),
-    ACTION_PLACE_TORCHES("torches", "Light up the area", new LightupActionFactory()),
-    ACTION_PICKUP_ITEMS("pickup", "Pickup items", new PickupActionFactory());
-
-    public static final MeeCreepActionType[] VALUES;
-    private static final Map<String, MeeCreepActionType> TYPE_MAP = new HashMap<>();
-
-    private final String code;
-    private final String description;
-    private final IActionFactory actionFactory;
-
-    static {
-        List<MeeCreepActionType> v = new ArrayList<>();
-        for (MeeCreepActionType type : values()) {
-            v.add(type);
-            TYPE_MAP.put(type.getCode(), type);
-        }
-        VALUES = v.toArray(new MeeCreepActionType[v.size()]);
+    public MeeCreepActionType(String id) {
+        this.id = id;
     }
 
-    MeeCreepActionType(String code, String description, IActionFactory actionFactory) {
-        this.code = code;
-        this.description = description;
-        this.actionFactory = actionFactory;
+    public String getId() {
+        return id;
     }
 
-    public String getDescription() {
-        return description;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MeeCreepActionType)) return false;
+
+        MeeCreepActionType that = (MeeCreepActionType) o;
+
+        if (!id.equals(that.id)) return false;
+
+        return true;
     }
 
-    public String getCode() {
-        return code;
-    }
-
-    public IActionFactory getActionFactory() {
-        return actionFactory;
-    }
-
-    public static MeeCreepActionType getByCode(String code) {
-        return TYPE_MAP.get(code);
+    @Override
+    public int hashCode() {
+        return id.hashCode();
     }
 }
