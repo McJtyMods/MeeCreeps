@@ -110,10 +110,10 @@ public class PortalTileEntity extends TileEntity implements ITickable {
         if (box == null) {
             switch (portalSide) {
                 case DOWN:
-                    box = new AxisAlignedBB(pos.getX() - .7, pos.getY() - 1.2, pos.getZ() - .7, pos.getX() + 1.7, pos.getY() + 2.2, pos.getZ() + 1.7);
+                    box = new AxisAlignedBB(pos.getX() - .7, pos.getY() + .5, pos.getZ() - .7, pos.getX() + 1.7, pos.getY() + 1, pos.getZ() + 1.7);
                     break;
                 case UP:
-                    box = new AxisAlignedBB(pos.getX() - .7, pos.getY() - 1.2, pos.getZ() - .7, pos.getX() + 1.7, pos.getY() + 2.2, pos.getZ() + 1.7);
+                    box = new AxisAlignedBB(pos.getX() - .7, pos.getY() - .2, pos.getZ() - .7, pos.getX() + 1.7, pos.getY() + .5, pos.getZ() + 1.7);
                     break;
                 case SOUTH:
                     box = new AxisAlignedBB(pos.getX() - .2, pos.getY() - 1.2, pos.getZ() - .2, pos.getX() + 1.2, pos.getY() + 2.2, pos.getZ() + 0.2);

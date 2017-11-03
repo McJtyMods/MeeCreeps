@@ -43,9 +43,16 @@ public class TeleportationTools {
             PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("There is already a portal there!"), (EntityPlayerMP) player);
             return;
         }
-        if (!destWorld.isAirBlock(dest.getPos()) || !destWorld.isAirBlock(dest.getPos().up())) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("The destination seems obstructed!"), (EntityPlayerMP) player);
-            return;
+        if (dest.getSide() == EnumFacing.DOWN) {
+            if (!destWorld.isAirBlock(dest.getPos()) || !destWorld.isAirBlock(dest.getPos().down())) {
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("The destination seems obstructed!"), (EntityPlayerMP) player);
+                return;
+            }
+        } else {
+            if (!destWorld.isAirBlock(dest.getPos()) || !destWorld.isAirBlock(dest.getPos().up())) {
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("The destination seems obstructed!"), (EntityPlayerMP) player);
+                return;
+            }
         }
 
         sourceWorld.setBlockState(sourcePortalPos, ModBlocks.portalBlock.getDefaultState(), 3);
