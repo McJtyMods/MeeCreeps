@@ -69,7 +69,7 @@ public class PortalTileEntity extends TileEntity implements ITickable {
                     if (!blackListed.contains(entity.getUniqueID())) {
                         otherPortal.addBlackList(entity.getUniqueID());
                         double oy = otherY;
-                        if (otherPortal.getPortalSide() == EnumFacing.UP) {
+                        if (otherPortal.getPortalSide() == EnumFacing.DOWN) {
                             oy -= entity.height + .7;
                         }
                         TeleportationTools.teleportEntity(entity, otherPortal.getWorld(), otherX, oy, otherZ);
