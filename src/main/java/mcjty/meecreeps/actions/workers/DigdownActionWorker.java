@@ -1,7 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.api.IActionOptions;
-import mcjty.meecreeps.entities.EntityMeeCreeps;
+import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.Block;
@@ -26,7 +25,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
     private BlockPos supportPosTodo = null;
 
     @Override
-    protected AxisAlignedBB getActionBox() {
+    public AxisAlignedBB getActionBox() {
         if (actionBox == null) {
             // @todo config
             actionBox = new AxisAlignedBB(options.getTargetPos().add(-10, -5, -10), options.getTargetPos().add(10, 5, 10));
@@ -34,8 +33,8 @@ public class DigdownActionWorker extends AbstractActionWorker {
         return actionBox;
     }
 
-    public DigdownActionWorker(EntityMeeCreeps entity, IActionOptions options) {
-        super(entity, options);
+    public DigdownActionWorker(IWorkerHelper helper) {
+        super(helper);
     }
 
     private boolean isLadder(ItemStack stack) {
@@ -43,17 +42,17 @@ public class DigdownActionWorker extends AbstractActionWorker {
     }
 
     private void placeLadder(BlockPos pos) {
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         ItemStack ladder = entity.consumeItem(this::isLadder, 1);
         if (!ladder.isEmpty()) {
-            entity.getEntityWorld().setBlockState(pos, Blocks.LADDER.getDefaultState(), 3);
+            world.setBlockState(pos, Blocks.LADDER.getDefaultState(), 3);
             SoundTools.playSound(world, Blocks.LADDER.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
         }
     }
 
     private BlockPos findTopSpotNotDiggedYet() {
         BlockPos p = options.getTargetPos();
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         IBlockState state = world.getBlockState(p);
         while (world.isAirBlock(p) || state.getBlock() == Blocks.LADDER) {
             p = p.down();
@@ -63,22 +62,22 @@ public class DigdownActionWorker extends AbstractActionWorker {
     }
 
     private void digDown() {
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         BlockPos p = findTopSpotNotDiggedYet();
         IBlockState state = world.getBlockState(p);
-        if (state.getBlock().getBlockHardness(state, world, p) >= 0 && allowedToHarvest(state, world, p, GeneralTools.getHarvester())) {
-            harvestAndDrop(p);
+        if (state.getBlock().getBlockHardness(state, world, p) >= 0 && helper.allowedToHarvest(state, world, p, GeneralTools.getHarvester())) {
+            helper.harvestAndDrop(p);
             placeLadder(p);
         } else {
             // Too hard or not allowed. We stop here
-            taskIsDone();
+            helper.taskIsDone();
         }
     }
 
     private boolean needsSupportPillar(BlockPos p) {
         supportPosTodo = null;
         if (p.getY() < options.getTargetPos().getY()) {
-            World world = entity.getEntityWorld();
+            World world = entity.getWorld();
             int y = p.getY();
             while (y < options.getTargetPos().getY()) {
                 BlockPos test = new BlockPos(p.getX(), y, p.getZ());
@@ -98,7 +97,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
         if (blockStack.isEmpty()) {
             entityItem.setDead();
         }
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
 
         Block block = ((ItemBlock) actual.getItem()).getBlock();
         IBlockState stateForPlacement = block.getStateForPlacement(world, supportPosTodo.south(), EnumFacing.DOWN, 0, 0, 0, actual.getItem().getMetadata(actual), GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
@@ -140,27 +139,27 @@ public class DigdownActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    protected void performTick(boolean timeToWrapUp) {
+    public void tick(boolean timeToWrapUp) {
         if (supportPosTodo != null) {
-            if (!findItemOnGround(new AxisAlignedBB(entity.getPosition().add(-3, -3, -3), entity.getPosition().add(3, 3, 3)),
+            if (!helper.findItemOnGround(new AxisAlignedBB(entity.getEntity().getPosition().add(-3, -3, -3), entity.getEntity().getPosition().add(3, 3, 3)),
                     this::isBuildingBlock, this::buildSupportBlock)) {
                 // We didn't find a suitable item to build support with. If it is time to wrap up
                 // then we will not find any suitable blocks later so we just stop then
                 if (timeToWrapUp) {
-                    done();
+                    helper.done();
                     return;
                 }
             }
         }
 
         if (timeToWrapUp && supportPosTodo == null) {
-            done();
+            helper.done();
         } else if (!entity.hasItem(this::isLadder)) {
-            findItemOnGroundOrInChest(this::isLadder, "I cannot find any ladders");
+            helper.findItemOnGroundOrInChest(this::isLadder, "I cannot find any ladders");
         } else {
             BlockPos p = findTopSpotNotDiggedYet();
             if (!needsSupportPillar(p)) {
-                navigateTo(p, blockPos -> digDown());
+                helper.navigateTo(p, blockPos -> digDown());
             }
         }
     }

@@ -1,12 +1,10 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.api.IActionOptions;
-import mcjty.meecreeps.entities.EntityMeeCreeps;
+import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -20,12 +18,12 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
 
     private Map<BlockPos, Block> needToReplant = new HashMap<>();
 
-    public HarvestReplantActionWorker(EntityMeeCreeps entity, IActionOptions options) {
-        super(entity, options);
+    public HarvestReplantActionWorker(IWorkerHelper helper) {
+        super(helper);
     }
 
     private void replant(BlockPos pos) {
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         Block block = needToReplant.get(pos);
         needToReplant.remove(pos);
         for (ItemStack stack : entity.getInventory()) {
@@ -43,13 +41,13 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
 
     @Override
     protected void harvest(BlockPos pos) {
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
         net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
         SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
-        entity.getEntityWorld().setBlockToAir(pos);
+        world.setBlockToAir(pos);
         boolean replanted = false;
         for (ItemStack stack : drops) {
             if ((!replanted) && stack.getItem() instanceof IPlantable) {
@@ -63,9 +61,7 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
             }
             ItemStack remaining = entity.addStack(stack);
             if (!remaining.isEmpty()) {
-                EntityItem entityItem = entity.entityDropItem(remaining, 0.0f);
-                itemsToPickup.add(entityItem);
-                needsToPutAway = true;
+                helper.dropAndPutAwayLater(remaining);
             }
         }
 
@@ -91,7 +87,7 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
     }
 
     private BlockPos hasSuitableSeed() {
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         for (Map.Entry<BlockPos, Block> entry : needToReplant.entrySet()) {
             BlockPos pos = entry.getKey();
             Block block = entry.getValue();
@@ -109,12 +105,12 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
     }
 
     @Override
-    protected void performTick(boolean timeToWrapUp) {
+    public void tick(boolean timeToWrapUp) {
         BlockPos pos;
         if (!needToReplant.isEmpty() && (pos = hasSuitableSeed()) != null) {
-            navigateTo(pos, this::replant);
+            helper.navigateTo(pos, this::replant);
         } else if (timeToWrapUp) {
-            done();
+            helper.done();
         } else {
             tryFindingCropsToHarvest();
         }

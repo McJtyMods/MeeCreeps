@@ -5,8 +5,10 @@ import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.actions.ClientActionManager;
 import mcjty.meecreeps.actions.PacketActionOptionToClient;
 import mcjty.meecreeps.actions.ServerActionManager;
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAILookIdle;
@@ -25,7 +27,7 @@ import net.minecraftforge.common.util.Constants;
 import javax.annotation.Nullable;
 import java.util.function.Predicate;
 
-public class EntityMeeCreeps extends EntityCreature {
+public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
 
     public static final ResourceLocation LOOT = new ResourceLocation(MeeCreeps.MODID, "entities/meecreeps");
 
@@ -40,6 +42,16 @@ public class EntityMeeCreeps extends EntityCreature {
         super(worldIn);
         setSize(0.6F, 1.95F);
         variation = worldIn.rand.nextInt(9);
+    }
+
+    @Override
+    public Entity getEntity() {
+        return this;
+    }
+
+    @Override
+    public World getWorld() {
+        return getEntityWorld();
     }
 
     @Override
@@ -109,6 +121,7 @@ public class EntityMeeCreeps extends EntityCreature {
     }
 
     // Add an itemstack to the internal inventory and return what could not be added
+    @Override
     public ItemStack addStack(ItemStack stack) {
         int i = 0;
 
@@ -152,10 +165,12 @@ public class EntityMeeCreeps extends EntityCreature {
     }
 
 
+    @Override
     public NonNullList<ItemStack> getInventory() {
         return inventory;
     }
 
+    @Override
     public Predicate<ItemStack> getInventoryMatcher() {
         return stack -> {
             for (ItemStack s : inventory) {
@@ -167,6 +182,7 @@ public class EntityMeeCreeps extends EntityCreature {
         };
     }
 
+    @Override
     public boolean hasEmptyInventory() {
         for (ItemStack stack : inventory) {
             if (!stack.isEmpty()) {
@@ -176,6 +192,7 @@ public class EntityMeeCreeps extends EntityCreature {
         return true;
     }
 
+    @Override
     public boolean hasStuffInInventory() {
         for (ItemStack stack : inventory) {
             if (!stack.isEmpty()) {
@@ -185,6 +202,7 @@ public class EntityMeeCreeps extends EntityCreature {
         return false;
     }
 
+    @Override
     public boolean hasItem(Predicate<ItemStack> matcher) {
         for (ItemStack stack : inventory) {
             if (!stack.isEmpty() && matcher.test(stack)) {
@@ -195,6 +213,7 @@ public class EntityMeeCreeps extends EntityCreature {
     }
 
 
+    @Override
     public void dropInventory() {
         for (int i = 0; i < inventory.size(); i++) {
             ItemStack stack = inventory.get(i);
@@ -205,6 +224,7 @@ public class EntityMeeCreeps extends EntityCreature {
         }
     }
 
+    @Override
     public ItemStack consumeItem(Predicate<ItemStack> matcher, int amount) {
         for (ItemStack stack : inventory) {
             if (!stack.isEmpty() && matcher.test(stack)) {

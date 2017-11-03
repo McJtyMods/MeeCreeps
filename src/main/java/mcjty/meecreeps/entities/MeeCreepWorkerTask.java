@@ -1,16 +1,17 @@
 package mcjty.meecreeps.entities;
 
 import mcjty.meecreeps.actions.ActionOptions;
-import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.actions.Stage;
+import mcjty.meecreeps.actions.workers.WorkerHelper;
+import mcjty.meecreeps.api.IActionWorker;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class MeeCreepWorkerTask extends EntityAIBase {
 
     private final EntityMeeCreeps meeCreeps;
-    private IActionWorker worker = null;
+    private WorkerHelper helper = null;
 
     public MeeCreepWorkerTask(EntityMeeCreeps meeCreeps) {
         this.meeCreeps = meeCreeps;
@@ -31,11 +32,13 @@ public class MeeCreepWorkerTask extends EntityAIBase {
         return false;
     }
 
-    private IActionWorker getWorker(ActionOptions options) {
-        if (worker == null) {
-            worker = options.getTask().getActionFactory().createWorker(meeCreeps, options);
+    private WorkerHelper getHelper(ActionOptions options) {
+        if (helper == null) {
+            helper = new WorkerHelper(meeCreeps, options);
+            IActionWorker worker = options.getTask().getActionFactory().createWorker(helper);
+            helper.setWorker(worker);
         }
-        return worker;
+        return helper;
     }
 
     @Override
@@ -50,9 +53,9 @@ public class MeeCreepWorkerTask extends EntityAIBase {
                         meeCreeps.getNavigator().clearPath();
                     }
                 } else if (options.getStage() == Stage.WORKING) {
-                    getWorker(options).tick(false);
+                    getHelper(options).tick(false);
                 } else if (options.getStage() == Stage.TIME_IS_UP) {
-                    getWorker(options).tick(true);
+                    getHelper(options).tick(true);
                 }
             }
         }
@@ -64,14 +67,14 @@ public class MeeCreepWorkerTask extends EntityAIBase {
         if (actionId != 0) {
             ActionOptions options = manager.getOptions(actionId);
             if (options != null) {
-                getWorker(options).readFromNBT(tag);
+                getHelper(options).readFromNBT(tag);
             }
         }
     }
 
     public void writeToNBT(NBTTagCompound tag) {
-        if (worker != null) {
-            worker.writeToNBT(tag);
+        if (helper != null) {
+            helper.writeToNBT(tag);
         }
     }
 }

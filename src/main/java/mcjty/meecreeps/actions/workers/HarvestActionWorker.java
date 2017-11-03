@@ -1,7 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.api.IActionOptions;
-import mcjty.meecreeps.entities.EntityMeeCreeps;
+import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.Block;
@@ -23,12 +22,12 @@ public class HarvestActionWorker extends AbstractActionWorker {
 
     private AxisAlignedBB actionBox = null;
 
-    public HarvestActionWorker(EntityMeeCreeps entity, IActionOptions options) {
-        super(entity, options);
+    public HarvestActionWorker(IWorkerHelper helper) {
+        super(helper);
     }
 
     @Override
-    protected AxisAlignedBB getActionBox() {
+    public AxisAlignedBB getActionBox() {
         if (actionBox == null) {
             // @todo config
             actionBox = new AxisAlignedBB(options.getTargetPos().add(-10, -5, -10), options.getTargetPos().add(10, 5, 10));
@@ -37,27 +36,21 @@ public class HarvestActionWorker extends AbstractActionWorker {
     }
 
     protected void harvest(BlockPos pos) {
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
         net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
         SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
-        entity.getEntityWorld().setBlockToAir(pos);
-        for (ItemStack stack : drops) {
-            ItemStack remaining = entity.addStack(stack);
-            if (!remaining.isEmpty()) {
-                itemsToPickup.add(entity.entityDropItem(remaining, 0.0f));
-                needsToPutAway = true;
-            }
-        }
+        entity.getWorld().setBlockToAir(pos);
+        helper.giveDropsToMeeCreeps(drops);
     }
 
 
     @Override
-    protected void performTick(boolean timeToWrapUp) {
+    public void tick(boolean timeToWrapUp) {
         if (timeToWrapUp) {
-            done();
+            helper.done();
         } else {
             tryFindingCropsToHarvest();
         }
@@ -65,10 +58,10 @@ public class HarvestActionWorker extends AbstractActionWorker {
 
     protected void tryFindingCropsToHarvest() {
         AxisAlignedBB box = getActionBox();
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         List<BlockPos> positions = new ArrayList<>();
         GeneralTools.traverseBox(world, box,
-                (pos, state) -> state.getBlock() == Blocks.FARMLAND && allowedToHarvest(state, world, pos, GeneralTools.getHarvester()),
+                (pos, state) -> state.getBlock() == Blocks.FARMLAND && helper.allowedToHarvest(state, world, pos, GeneralTools.getHarvester()),
                 (pos, state) -> {
                     IBlockState cropState = world.getBlockState(pos.up());
                     Block cropBlock = cropState.getBlock();
@@ -92,9 +85,9 @@ public class HarvestActionWorker extends AbstractActionWorker {
                 });
         if (!positions.isEmpty()) {
             BlockPos cropPos = positions.get(0);
-            navigateTo(cropPos, this::harvest);
+            helper.navigateTo(cropPos, this::harvest);
         } else if (!entity.getInventory().isEmpty()) {
-            needsToPutAway = true;
+            helper.putStuffAway();
         }
     }
 

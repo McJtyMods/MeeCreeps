@@ -1,6 +1,5 @@
 package mcjty.meecreeps.api;
 
-import mcjty.meecreeps.entities.EntityMeeCreeps;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -20,5 +19,5 @@ public interface IActionFactory {
      */
     boolean isPossibleSecondary(World world, BlockPos pos);
 
-    IActionWorker createWorker(EntityMeeCreeps entity, IActionOptions options);
+    IActionWorker createWorker(IWorkerHelper helper);
 }

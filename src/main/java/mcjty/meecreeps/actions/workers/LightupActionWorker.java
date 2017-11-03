@@ -1,6 +1,7 @@
 package mcjty.meecreeps.actions.workers;
 
 import mcjty.meecreeps.api.IActionOptions;
+import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
@@ -18,7 +19,7 @@ public class LightupActionWorker extends AbstractActionWorker {
     private AxisAlignedBB actionBox = null;
 
     @Override
-    protected AxisAlignedBB getActionBox() {
+    public AxisAlignedBB getActionBox() {
         if (actionBox == null) {
             // @todo config
             actionBox = new AxisAlignedBB(options.getTargetPos().add(-10, -5, -10), options.getTargetPos().add(10, 5, 10));
@@ -27,12 +28,12 @@ public class LightupActionWorker extends AbstractActionWorker {
     }
 
 
-    public LightupActionWorker(EntityMeeCreeps entity, IActionOptions options) {
-        super(entity, options);
+    public LightupActionWorker(IWorkerHelper helper) {
+        super(helper);
     }
 
     private BlockPos findDarkSpot() {
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         AxisAlignedBB box = getActionBox();
         return GeneralTools.traverseBoxFirst(box, p -> {
             if (WorldEntitySpawner.canCreatureTypeSpawnAtLocation(EntityLiving.SpawnPlacementType.ON_GROUND, world, p)) {
@@ -46,12 +47,12 @@ public class LightupActionWorker extends AbstractActionWorker {
     }
 
     private void placeTorch(BlockPos pos) {
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         int light = world.getLightFromNeighbors(pos);
         if (light < 7) {
             ItemStack torch = entity.consumeItem(this::isTorch, 1);
             if (!torch.isEmpty()) {
-                entity.getEntityWorld().setBlockState(pos, Blocks.TORCH.getDefaultState(), 3);
+                entity.getWorld().setBlockState(pos, Blocks.TORCH.getDefaultState(), 3);
                 SoundTools.playSound(world, Blocks.TORCH.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
             }
         }
@@ -62,17 +63,17 @@ public class LightupActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    protected void performTick(boolean timeToWrapUp) {
+    public void tick(boolean timeToWrapUp) {
         if (timeToWrapUp) {
-            done();
+            helper.done();
         } else if (!entity.hasItem(this::isTorch)) {
-            findItemOnGroundOrInChest(this::isTorch, "I cannot find any torches");
+            helper.findItemOnGroundOrInChest(this::isTorch, "I cannot find any torches");
         } else {
             BlockPos darkSpot = findDarkSpot();
             if (darkSpot != null) {
-                navigateTo(darkSpot, this::placeTorch);
+                helper.navigateTo(darkSpot, this::placeTorch);
             } else {
-                taskIsDone();
+                helper.taskIsDone();
             }
         }
     }

@@ -1,7 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.api.IActionOptions;
-import mcjty.meecreeps.entities.EntityMeeCreeps;
+import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.Counter;
 import mcjty.meecreeps.varia.GeneralTools;
 import net.minecraft.block.*;
@@ -9,6 +8,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagLong;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
@@ -20,14 +20,19 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
     protected List<BlockPos> blocks = new ArrayList<>();
     protected Counter<BlockPos> leavesToTick = new Counter<>();
 
-    public ChopTreeActionWorker(EntityMeeCreeps entity, IActionOptions options) {
-        super(entity, options);
+    public ChopTreeActionWorker(IWorkerHelper helper) {
+        super(helper);
+    }
+
+    @Override
+    public AxisAlignedBB getActionBox() {
+        return null;
     }
 
     private void harvest(BlockPos pos) {
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         BlockPlanks.EnumType woodType = getWoodType(world.getBlockState(pos));
-        harvestAndDrop(pos);
+        helper.harvestAndDrop(pos);
         findLeaves(pos, world, woodType);
     }
 
@@ -77,8 +82,8 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
                     if (x != 0 || y != 0 || z != 0) {
                         BlockPos p = pos.add(x, y, z);
                         if (!alreadyDone.contains(p)) {
-                            IBlockState log = entity.getEntityWorld().getBlockState(p);
-                            if (allowedToHarvest(log, entity.getEntityWorld(), p, GeneralTools.getHarvester())) {
+                            IBlockState log = entity.getWorld().getBlockState(p);
+                            if (helper.allowedToHarvest(log, entity.getWorld(), p, GeneralTools.getHarvester())) {
                                 if (log.getBlock() instanceof BlockOldLog || log.getBlock() instanceof BlockNewLog) {
                                     if (woodType == getWoodType(log)) {
                                         traverseTreeLogs(alreadyDone, p, woodType);
@@ -94,23 +99,23 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
 
     protected void findTree() {
         BlockPos startPos = options.getTargetPos();
-        if (entity.getEntityWorld().isAirBlock(startPos)) {
+        if (entity.getWorld().isAirBlock(startPos)) {
             return;
         }
-        IBlockState logBase = entity.getEntityWorld().getBlockState(startPos);
+        IBlockState logBase = entity.getWorld().getBlockState(startPos);
         BlockPlanks.EnumType woodType = getWoodType(logBase);
         Set<BlockPos> alreadyDone = new HashSet<>();
         traverseTreeLogs(alreadyDone, startPos, woodType);
     }
 
     @Override
-    protected void performTick(boolean timeToWrapUp) {
+    public void tick(boolean timeToWrapUp) {
         if (blocks.isEmpty()) {
             findTree();
         }
         if (blocks.isEmpty() && leavesToTick.isEmpty()) {
             // There is nothing left to do
-            done();
+            helper.done();
             return;
         }
 
@@ -119,18 +124,18 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
         }
 
         if (timeToWrapUp) {
-            done();
+            helper.done();
         } else if (!blocks.isEmpty()) {
             harvest(blocks.remove(0));
             // @todo config
-            waitABit = 5;   // Speed up things
+            helper.speedUp(5);
         } else {
-            taskIsDone();
+            helper.taskIsDone();
         }
     }
 
     private void decayLeaves() {
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         Counter<BlockPos> newmap = new Counter<>();
         for (Map.Entry<BlockPos, Integer> entry : leavesToTick.entrySet()) {
             BlockPos pos = entry.getKey();

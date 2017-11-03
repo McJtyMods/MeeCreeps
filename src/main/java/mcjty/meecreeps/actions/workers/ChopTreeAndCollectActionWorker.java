@@ -1,8 +1,8 @@
 package mcjty.meecreeps.actions.workers;
 
 import mcjty.meecreeps.ForgeEventHandlers;
-import mcjty.meecreeps.api.IActionOptions;
-import mcjty.meecreeps.entities.EntityMeeCreeps;
+import mcjty.meecreeps.api.IWorkerHelper;
+import mcjty.meecreeps.api.PreferedChest;
 import mcjty.meecreeps.varia.Counter;
 import net.minecraft.block.BlockPlanks;
 import net.minecraft.block.state.IBlockState;
@@ -14,14 +14,16 @@ import java.util.Map;
 
 public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
 
+    private static final PreferedChest[] PREFERED_CHESTS = new PreferedChest[]{PreferedChest.FIND_MATCHING_INVENTORY};
+
     private AxisAlignedBB actionBox = null;
 
-    public ChopTreeAndCollectActionWorker(EntityMeeCreeps entity, IActionOptions options) {
-        super(entity, options);
+    public ChopTreeAndCollectActionWorker(IWorkerHelper helper) {
+        super(helper);
     }
 
     @Override
-    protected AxisAlignedBB getActionBox() {
+    public AxisAlignedBB getActionBox() {
         if (actionBox == null) {
             // @todo config
             actionBox = new AxisAlignedBB(options.getTargetPos().add(-10, -5, -10), options.getTargetPos().add(10, 5, 10));
@@ -30,20 +32,20 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
     }
 
     private void harvest(BlockPos pos) {
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         BlockPlanks.EnumType woodType = getWoodType(world.getBlockState(pos));
-        harvestAndPickup(pos);
+        helper.harvestAndPickup(pos);
         findLeaves(pos, world, woodType);
     }
 
     @Override
-    protected void performTick(boolean timeToWrapUp) {
+    public void tick(boolean timeToWrapUp) {
         if (blocks.isEmpty()) {
             findTree();
         }
         if (blocks.isEmpty() && leavesToTick.isEmpty()) {
             // There is nothing left to do
-            done();
+            helper.done();
             return;
         }
 
@@ -54,25 +56,25 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
         if (timeToWrapUp) {
             if (entity.hasStuffInInventory()) {
                 // We need to find a suitable chest
-                if (!findSuitableInventory(getActionBox(), entity.getInventoryMatcher(), this::putInventoryInChest)) {
-                    if (!navigateTo(getPlayer(), (p) -> giveToPlayerOrDrop(), 12)) {
+                if (!helper.findSuitableInventory(getActionBox(), entity.getInventoryMatcher(), helper::putInventoryInChest)) {
+                    if (!helper.navigateTo(options.getPlayer(), (p) -> helper.giveToPlayerOrDrop(), 12)) {
                         entity.dropInventory();
                     }
                 }
             } else {
-                done();
+                helper.done();
             }
         } else if (!blocks.isEmpty()) {
             harvest(blocks.remove(0));
             // @todo config
-            waitABit = 5;   // Speed up things
+            helper.speedUp(5);
         } else {
-            taskIsDone();
+            helper.taskIsDone();
         }
     }
 
     private void decayLeaves() {
-        World world = entity.getEntityWorld();
+        World world = entity.getWorld();
         Counter<BlockPos> newmap = new Counter<>();
         for (Map.Entry<BlockPos, Integer> entry : leavesToTick.entrySet()) {
             BlockPos pos = entry.getKey();
@@ -94,7 +96,7 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
     }
 
     @Override
-    protected boolean findChestToPutItemsIn() {
-        return findSuitableInventory(getActionBox(), entity.getInventoryMatcher(), this::putInventoryInChest);
+    public PreferedChest[] getPreferedChests() {
+        return PREFERED_CHESTS;
     }
 }
