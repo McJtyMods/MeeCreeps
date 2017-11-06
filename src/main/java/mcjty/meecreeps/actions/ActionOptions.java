@@ -15,6 +15,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
@@ -33,7 +34,8 @@ public class ActionOptions implements IActionContext {
 
     private final List<MeeCreepActionType> actionOptions;
     private final List<MeeCreepActionType> maybeActionOptions;
-    private final BlockPos pos;
+    private final BlockPos targetPos;
+    private final EnumFacing targetSide;
     private final int dimension;
     @Nullable private final UUID playerId;
     private final int actionId;
@@ -46,10 +48,11 @@ public class ActionOptions implements IActionContext {
 
     // playerId can be null in case we have a player-less action
     public ActionOptions(List<MeeCreepActionType> actionOptions, List<MeeCreepActionType> maybeActionOptions,
-                         BlockPos pos, int dimension, @Nullable UUID playerId, int actionId) {
+                         BlockPos targetPos, EnumFacing targetSide, int dimension, @Nullable UUID playerId, int actionId) {
         this.actionOptions = actionOptions;
         this.maybeActionOptions = maybeActionOptions;
-        this.pos = pos;
+        this.targetPos = targetPos;
+        this.targetSide = targetSide;
         this.dimension = dimension;
         this.playerId = playerId;
         this.actionId = actionId;
@@ -72,7 +75,8 @@ public class ActionOptions implements IActionContext {
             maybeActionOptions.add(new MeeCreepActionType(NetworkTools.readStringUTF8(buf)));
             size--;
         }
-        pos = NetworkTools.readPos(buf);
+        targetPos = NetworkTools.readPos(buf);
+        targetSide = EnumFacing.VALUES[buf.readByte()];
         dimension = buf.readInt();
         if (buf.readBoolean()) {
             playerId = new UUID(buf.readLong(), buf.readLong());
@@ -114,7 +118,8 @@ public class ActionOptions implements IActionContext {
         }
 
         dimension = tagCompound.getInteger("dim");
-        pos = BlockPos.fromLong(tagCompound.getLong("pos"));
+        targetPos = BlockPos.fromLong(tagCompound.getLong("pos"));
+        targetSide = EnumFacing.VALUES[tagCompound.getByte("targetSide")];
         if (tagCompound.hasKey("player")) {
             playerId = tagCompound.getUniqueId("player");
         } else {
@@ -138,7 +143,8 @@ public class ActionOptions implements IActionContext {
         for (MeeCreepActionType option : maybeActionOptions) {
             NetworkTools.writeStringUTF8(buf, option.getId());
         }
-        NetworkTools.writePos(buf, pos);
+        NetworkTools.writePos(buf, targetPos);
+        buf.writeByte(targetSide.ordinal());
         buf.writeInt(dimension);
         if (playerId != null) {
             buf.writeBoolean(true);
@@ -184,7 +190,8 @@ public class ActionOptions implements IActionContext {
         tagCompound.setTag("drops", list);
 
         tagCompound.setInteger("dim", dimension);
-        tagCompound.setLong("pos", pos.toLong());
+        tagCompound.setLong("pos", targetPos.toLong());
+        tagCompound.setByte("targetSide", (byte) targetSide.ordinal());
         if (playerId != null) {
             tagCompound.setUniqueId("player", playerId);
         }
@@ -224,7 +231,12 @@ public class ActionOptions implements IActionContext {
 
     @Override
     public BlockPos getTargetPos() {
-        return pos;
+        return targetPos;
+    }
+
+    @Override
+    public EnumFacing getTargetSide() {
+        return targetSide;
     }
 
     public int getDimension() {
@@ -269,7 +281,7 @@ public class ActionOptions implements IActionContext {
             timeout = 20;
             switch (stage) {
                 case WAITING_FOR_SPAWN:
-                    if (spawn(world, getTargetPos(), getActionId())) {
+                    if (spawn(world, getTargetPos(), getTargetSide(), getActionId())) {
                         setStage(Stage.OPENING_GUI);
                     } else {
                         return false;
@@ -332,9 +344,11 @@ public class ActionOptions implements IActionContext {
         return world.isAirBlock(p) && (!world.isAirBlock(p.down())) && world.isAirBlock(p.up());
     }
 
-    public static boolean spawn(World world, BlockPos targetPos, int actionId) {
+    public static boolean spawn(World world, BlockPos targetPos, EnumFacing targetSide, int actionId) {
         BlockPos p;
-        if (validSpawnPoint(world, targetPos.north())) {
+        if (validSpawnPoint(world, targetPos.offset(targetSide))) {
+            p = targetPos.offset(targetSide);
+        } else if (validSpawnPoint(world, targetPos.north())) {
             p = targetPos.north();
         } else if (validSpawnPoint(world, targetPos.south())) {
             p = targetPos.south();

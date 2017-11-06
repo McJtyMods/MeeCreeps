@@ -7,6 +7,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.Collections;
@@ -34,7 +35,8 @@ public class CommandTestApi implements ICommand {
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
         if (sender instanceof EntityPlayerMP) {
             EntityPlayerMP player = (EntityPlayerMP) sender;
-            MeeCreeps.api.spawnMeeCreep("meecreeps.dig_down", player.getEntityWorld(), player.getPosition().down(), null);
+            MeeCreeps.api.spawnMeeCreep("meecreeps.dig_down", player.getEntityWorld(), player.getPosition().down(),
+                    EnumFacing.UP, null);
         }
     }
 

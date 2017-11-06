@@ -16,10 +16,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
 
+import javax.annotation.Nonnull;
+
 public class HarvestReplantActionFactory implements IActionFactory {
 
     @Override
-    public boolean isPossible(World world, BlockPos pos) {
+    public boolean isPossible(World world, BlockPos pos, EnumFacing side) {
         if (!InventoryTools.isInventory(world, pos)) {
             return false;
         }
@@ -62,7 +64,7 @@ public class HarvestReplantActionFactory implements IActionFactory {
     }
 
     @Override
-    public boolean isPossibleSecondary(World world, BlockPos pos) {
+    public boolean isPossibleSecondary(World world, BlockPos pos, EnumFacing side) {
         if (!InventoryTools.isInventory(world, pos)) {
             return false;
         }
@@ -91,7 +93,7 @@ public class HarvestReplantActionFactory implements IActionFactory {
     }
 
     @Override
-    public IActionWorker createWorker(IWorkerHelper helper) {
+    public IActionWorker createWorker(@Nonnull IWorkerHelper helper) {
         return new HarvestReplantActionWorker(helper);
     }
 }

@@ -6,15 +6,18 @@ import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldEntitySpawner;
 
+import javax.annotation.Nonnull;
+
 public class LightupActionFactory implements IActionFactory {
 
     @Override
-    public boolean isPossible(World world, BlockPos pos) {
+    public boolean isPossible(World world, BlockPos pos, EnumFacing side) {
         // @todo config for area
         AxisAlignedBB box = new AxisAlignedBB(pos.add(-10, -5, -10), pos.add(10, 5, 10));
 //        AxisAlignedBB box = new AxisAlignedBB(pos.add(-2, -2, -2), pos.add(2, 2, 2));
@@ -30,12 +33,12 @@ public class LightupActionFactory implements IActionFactory {
     }
 
     @Override
-    public boolean isPossibleSecondary(World world, BlockPos pos) {
+    public boolean isPossibleSecondary(World world, BlockPos pos, EnumFacing side) {
         return false;
     }
 
     @Override
-    public IActionWorker createWorker(IWorkerHelper helper) {
+    public IActionWorker createWorker(@Nonnull IWorkerHelper helper) {
         return new LightupActionWorker(helper);
     }
 }

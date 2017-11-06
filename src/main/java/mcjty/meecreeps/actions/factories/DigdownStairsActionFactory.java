@@ -1,22 +1,30 @@
 package mcjty.meecreeps.actions.factories;
 
-import mcjty.meecreeps.actions.workers.MineOresActionWorker;
+import mcjty.meecreeps.actions.workers.DigdownStairsActionWorker;
 import mcjty.meecreeps.api.IActionFactory;
 import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.api.IWorkerHelper;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
-public class MineOresActionFactory implements IActionFactory {
+public class DigdownStairsActionFactory implements IActionFactory {
 
     @Override
     public boolean isPossible(World world, BlockPos pos, EnumFacing side) {
-        return false;
-        // @todo
+        if (side == EnumFacing.UP || side == EnumFacing.DOWN) {
+            return false;
+        }
+        TileEntity te = world.getTileEntity(pos);
+        if (te != null) {
+            return false;
+        }
+//        Block block = world.getBlockState(pos).getBlock();
+//        if (block.is)
+        return true;
     }
 
     @Override
@@ -24,9 +32,8 @@ public class MineOresActionFactory implements IActionFactory {
         return false;
     }
 
-    @Nullable
     @Override
     public IActionWorker createWorker(@Nonnull IWorkerHelper helper) {
-        return new MineOresActionWorker(helper);
+        return new DigdownStairsActionWorker(helper);
     }
 }

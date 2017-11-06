@@ -9,6 +9,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
@@ -74,18 +75,18 @@ public class ServerActionManager extends WorldSavedData {
         return instance;
     }
 
-    public int createActionOptions(World world, BlockPos pos, @Nullable EntityPlayer player) {
+    public int createActionOptions(World world, BlockPos pos, EnumFacing side, @Nullable EntityPlayer player) {
         List<MeeCreepActionType> types = new ArrayList<>();
         List<MeeCreepActionType> maybeTypes = new ArrayList<>();
         for (MeeCreepsApi.Factory type : MeeCreeps.api.getFactories()) {
-            if (type.getFactory().isPossible(world, pos)) {
+            if (type.getFactory().isPossible(world, pos, side)) {
                 types.add(new MeeCreepActionType(type.getId()));
-            } else if (type.getFactory().isPossibleSecondary(world, pos)) {
+            } else if (type.getFactory().isPossibleSecondary(world, pos, side)) {
                 maybeTypes.add(new MeeCreepActionType(type.getId()));
             }
         }
         int actionId = newId();
-        ActionOptions opt = new ActionOptions(types, maybeTypes, pos, world.provider.getDimension(), player == null ? null : player.getUniqueID(), actionId);
+        ActionOptions opt = new ActionOptions(types, maybeTypes, pos, side, world.provider.getDimension(), player == null ? null : player.getUniqueID(), actionId);
         options.add(opt);
         optionMap.put(actionId, opt);
         save();
