@@ -11,25 +11,29 @@ public class PacketPerformAction implements IMessage {
 
     private int id;
     private MeeCreepActionType type;
+    private String furtherQuestionId;
 
     @Override
     public void fromBytes(ByteBuf buf) {
         id = buf.readInt();
         type = new MeeCreepActionType(NetworkTools.readStringUTF8(buf));
+        furtherQuestionId = NetworkTools.readStringUTF8(buf);
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
         buf.writeInt(id);
         NetworkTools.writeStringUTF8(buf, type.getId());
+        NetworkTools.writeStringUTF8(buf, furtherQuestionId);
     }
 
     public PacketPerformAction() {
     }
 
-    public PacketPerformAction(ActionOptions options, MeeCreepActionType type) {
+    public PacketPerformAction(ActionOptions options, MeeCreepActionType type, String furtherQuestionId) {
         this.id = options.getActionId();
         this.type = type;
+        this.furtherQuestionId = furtherQuestionId;
     }
 
     public static class Handler implements IMessageHandler<PacketPerformAction, IMessage> {
@@ -40,7 +44,8 @@ public class PacketPerformAction implements IMessage {
         }
 
         private void handle(PacketPerformAction message, MessageContext ctx) {
-            ServerActionManager.getManager().performAction(ctx.getServerHandler().player, message.id, message.type);
+            ServerActionManager.getManager().performAction(ctx.getServerHandler().player, message.id, message.type,
+                    message.furtherQuestionId);
         }
     }
 

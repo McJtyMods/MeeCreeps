@@ -43,6 +43,7 @@ public class ActionOptions implements IActionContext {
     private int timeout;
     private Stage stage;
     private MeeCreepActionType task;
+    private String furtherQuestionId;
     private boolean paused;
     private List<Pair<BlockPos, ItemStack>> drops = new ArrayList<>();
 
@@ -59,6 +60,7 @@ public class ActionOptions implements IActionContext {
         timeout = 10;
         stage = Stage.WAITING_FOR_SPAWN;
         task = null;
+        furtherQuestionId = null;
         paused = false;
     }
 
@@ -89,6 +91,7 @@ public class ActionOptions implements IActionContext {
         if (buf.readBoolean()) {
             task = new MeeCreepActionType(NetworkTools.readStringUTF8(buf));
         }
+        furtherQuestionId = NetworkTools.readStringUTF8(buf);
         paused = buf.readBoolean();
 
         // Drops not needed on client so no persistance
@@ -131,6 +134,11 @@ public class ActionOptions implements IActionContext {
         if (tagCompound.hasKey("task")) {
             task = new MeeCreepActionType(tagCompound.getString("task"));
         }
+        if (tagCompound.hasKey("fqid")) {
+            furtherQuestionId = tagCompound.getString("fqid");
+        } else {
+            furtherQuestionId = null;
+        }
         paused = tagCompound.getBoolean("paused");
     }
 
@@ -162,6 +170,7 @@ public class ActionOptions implements IActionContext {
         } else {
             buf.writeBoolean(false);
         }
+        NetworkTools.writeStringUTF8(buf, furtherQuestionId);
         buf.writeBoolean(paused);
 
         // Drops not needed on client so no persistance
@@ -200,6 +209,9 @@ public class ActionOptions implements IActionContext {
         tagCompound.setString("stage", stage.getCode());
         if (task != null) {
             tagCompound.setString("task", task.getId());
+        }
+        if (furtherQuestionId != null) {
+            tagCompound.setString("fqid", furtherQuestionId);
         }
         tagCompound.setBoolean("paused", paused);
     }
@@ -268,8 +280,15 @@ public class ActionOptions implements IActionContext {
         return task;
     }
 
-    public void setTask(MeeCreepActionType task) {
+    @Nullable
+    @Override
+    public String getFurtherQuestionId() {
+        return furtherQuestionId;
+    }
+
+    public void setTask(MeeCreepActionType task, @Nullable String furtherQuestionId) {
         this.task = task;
+        this.furtherQuestionId = furtherQuestionId;
     }
 
     public boolean tick(World world) {

@@ -55,11 +55,11 @@ public class MeeCreepsApi implements IMeeCreepsApi {
     }
 
     @Override
-    public boolean spawnMeeCreep(String id, World world, BlockPos targetPos, EnumFacing targetSide, @Nullable EntityPlayerMP player) {
+    public boolean spawnMeeCreep(String id, String furtherQuestionId, World world, BlockPos targetPos, EnumFacing targetSide, @Nullable EntityPlayerMP player) {
         ServerActionManager manager = ServerActionManager.getManager();
         int actionId = manager.createActionOptions(world, targetPos, targetSide, player);
         ActionOptions.spawn(world, targetPos, targetSide, actionId);
-        manager.performAction(player, actionId, new MeeCreepActionType(id));
+        manager.performAction(player, actionId, new MeeCreepActionType(id), furtherQuestionId);
         return true;
     }
 
@@ -72,6 +72,7 @@ public class MeeCreepsApi implements IMeeCreepsApi {
     }
 
     public void registerFactories() {
+        registerActionFactory("meecreeps.make_house", "Build a house", new MakeHouseActionFactory());
         registerActionFactory("meecreeps.chop_tree", "Chop this tree", new ChopTreeActionFactory());
         registerActionFactory("meecreeps.dig_down", "Dig straight down to bedrock", new DigdownActionFactory());
         registerActionFactory("meecreeps.dig_down_stairs", "Dig down to bedrock using stairs", new DigdownStairsActionFactory());

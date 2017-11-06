@@ -23,6 +23,13 @@ public interface IActionContext {
     EnumFacing getTargetSide();
 
     /**
+     * If the action required further questions then this will be the id of the selected
+     * answer
+     */
+    @Nullable
+    String getFurtherQuestionId();
+
+    /**
      * If that player is still online this will return the player that spawned the MeeCreep. If not this returns null
      */
     @Nullable

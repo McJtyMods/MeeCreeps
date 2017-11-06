@@ -6,8 +6,10 @@ import mcjty.meecreeps.actions.*;
 import mcjty.meecreeps.actions.MeeCreepActionType;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ResourceLocation;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,6 +31,10 @@ public class GuiMeeCreeps extends GuiScreen {
     private ActionOptions options;
     private boolean confirmedAction = false;
     private boolean showingAlternatives = false;
+    private String furtherQuestionsHeading = null;
+    private List<Pair<String, String>> furtherQuestions = Collections.emptyList();
+    private MeeCreepActionType furtherQuestionType;
+
     private List<Question> questions = Collections.emptyList();
     private Runnable outsideWindowAction;
 
@@ -104,10 +110,17 @@ public class GuiMeeCreeps extends GuiScreen {
         }
     }
 
-    private void doAction(MeeCreepActionType type) {
-        confirmedAction = true;
-        PacketHandler.INSTANCE.sendToServer(new PacketPerformAction(options, type));
-        close();
+    private void doAction(MeeCreepActionType type, MeeCreepsApi.Factory factory, String furtherQuestionId) {
+        String heading = factory.getFactory().getFurtherQuestionHeading(Minecraft.getMinecraft().world, options.getTargetPos(), options.getTargetSide());
+        if (heading == null || furtherQuestionId != null) {
+            confirmedAction = true;
+            PacketHandler.INSTANCE.sendToServer(new PacketPerformAction(options, type, furtherQuestionId));
+            close();
+        } else {
+            furtherQuestionType = type;
+            furtherQuestionsHeading = heading;
+            furtherQuestions = factory.getFactory().getFurtherQuestions(Minecraft.getMinecraft().world, options.getTargetPos(), options.getTargetSide());
+        }
     }
 
     static class Question {
@@ -134,11 +147,18 @@ public class GuiMeeCreeps extends GuiScreen {
             questions.add(new Question("Please stop now!", this::dismissAndClose));
             questions.add(new Question("Carry on...", this::resumeAndClose));
             outsideWindowAction = this::resume;
+        } else if (furtherQuestionsHeading != null) {
+            MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(furtherQuestionType);
+            for (Pair<String, String> pair : furtherQuestions) {
+                questions.add(new Question(pair.getRight(), () -> doAction(furtherQuestionType, factory, pair.getLeft())));
+            }
+            questions.add(new Question("Never mind...", this::close));
+            outsideWindowAction = this::dismiss;
         } else if (showingAlternatives) {
             List<MeeCreepActionType> opts = options.getMaybeActionOptions();
             for (MeeCreepActionType type : opts) {
                 MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(type);
-                questions.add(new Question(factory.getMessage(), () -> doAction(type)));
+                questions.add(new Question(factory.getMessage(), () -> doAction(type, factory, null)));
             }
             questions.add(new Question("Never mind...", this::close));
             outsideWindowAction = this::dismiss;
@@ -146,7 +166,7 @@ public class GuiMeeCreeps extends GuiScreen {
             List<MeeCreepActionType> opts = options.getActionOptions();
             for (MeeCreepActionType type : opts) {
                 MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(type);
-                questions.add(new Question(factory.getMessage(), () -> doAction(type)));
+                questions.add(new Question(factory.getMessage(), () -> doAction(type, factory, null)));
             }
             if (hasAlternatives()) {
                 questions.add(new Question("Can you do other things?", () -> { showingAlternatives = true;}));
@@ -176,6 +196,8 @@ public class GuiMeeCreeps extends GuiScreen {
 
         if (id == GuiProxy.GUI_MEECREEP_DISMISS) {
             msg = "Is there a problem?";
+        } else if (furtherQuestionsHeading != null) {
+            msg = furtherQuestionsHeading;
         } else if (showingAlternatives) {
             msg = "Any of this suits you then?";
         } else if (options.getActionOptions().isEmpty()) {

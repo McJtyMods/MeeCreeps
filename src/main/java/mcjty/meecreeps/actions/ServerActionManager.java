@@ -93,13 +93,13 @@ public class ServerActionManager extends WorldSavedData {
         return actionId;
     }
 
-    public void performAction(@Nullable EntityPlayerMP player, int id, MeeCreepActionType type) {
+    public void performAction(@Nullable EntityPlayerMP player, int id, MeeCreepActionType type, @Nullable String furtherQuestionId) {
         MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(type);
         System.out.println("ServerActionManager.performAction: " + factory.getMessage());
         ActionOptions option = getOptions(id);
         if (option != null) {
             option.setStage(Stage.WORKING);
-            option.setTask(type);
+            option.setTask(type, furtherQuestionId);
             save();
 
             if (player != null) {

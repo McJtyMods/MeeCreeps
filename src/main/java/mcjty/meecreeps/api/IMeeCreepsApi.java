@@ -18,9 +18,11 @@ public interface IMeeCreepsApi {
      * Register an action factory. The 'id' should preferably contain a modid. The message is shown
      * to the player.
      *
-     * The standard actions are:
+     * The standard actions are (with further question ids between brackets (if required)):
      *      * meecreeps.chop_tree
      *      * meecreeps.dig_down
+     *      * meecreeps.dig_down_stairs (north, south, west, east)
+     *      * meecreeps.make_house (9x9, 11x11, 13x13)
      *      * meecreeps.mine_ores
      *      * meecreeps.chop_tree_collect
      *      * meecreeps.harvest_replant
@@ -34,7 +36,11 @@ public interface IMeeCreepsApi {
      * Spawn a MeeCreep with the given action and target position. Optionally you can give
      * a player. If the player is not present then the MeeCreep will work as if there is no
      * player present.
+     * The 'furtherQuestionId' is an optional id that some of the actions use for extra information
+     * (this is normally asked from the player)
+     *
      * Return false if the task was not possible for some reason (or invalid)
      */
-    boolean spawnMeeCreep(String id, World world, BlockPos targetPos, EnumFacing targetSide, @Nullable EntityPlayerMP player);
+    boolean spawnMeeCreep(String id, @Nullable String furtherQuestionId, World world, BlockPos targetPos, EnumFacing targetSide,
+                          @Nullable EntityPlayerMP player);
 }

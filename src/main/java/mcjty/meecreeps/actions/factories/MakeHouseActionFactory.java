@@ -1,6 +1,7 @@
 package mcjty.meecreeps.actions.factories;
 
-import mcjty.meecreeps.actions.workers.DigdownStairsActionWorker;
+import mcjty.meecreeps.actions.workers.MakeHouseActionWorker;
+import mcjty.meecreeps.actions.workers.MineOresActionWorker;
 import mcjty.meecreeps.api.IActionFactory;
 import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.api.IWorkerHelper;
@@ -14,17 +15,11 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DigdownStairsActionFactory implements IActionFactory {
+public class MakeHouseActionFactory implements IActionFactory {
 
     @Override
     public boolean isPossible(World world, BlockPos pos, EnumFacing side) {
-        return false;   // @todo
-
-//        TileEntity te = world.getTileEntity(pos);
-//        if (te != null) {
-//            return false;
-//        }
-//        return true;
+        return true;
     }
 
     @Override
@@ -35,22 +30,22 @@ public class DigdownStairsActionFactory implements IActionFactory {
     @Nullable
     @Override
     public String getFurtherQuestionHeading(World world, BlockPos pos, EnumFacing side) {
-        return "What direction should I dig?";
+        return "How big do you want the house?";
     }
 
     @Nonnull
     @Override
     public List<Pair<String, String>> getFurtherQuestions(World world, BlockPos pos, EnumFacing side) {
         List<Pair<String, String>> result = new ArrayList<>();
-        result.add(Pair.of(EnumFacing.NORTH.getName(), "To the north"));
-        result.add(Pair.of(EnumFacing.SOUTH.getName(), "To the south"));
-        result.add(Pair.of(EnumFacing.WEST.getName(), "To the west"));
-        result.add(Pair.of(EnumFacing.EAST.getName(), "To the east"));
+        result.add(Pair.of("9x9", "9x9 of course!"));
+        result.add(Pair.of("11x11", "11x11 is cleary inferior but..."));
+        result.add(Pair.of("13x13", "I need the room so take 13x13"));
         return result;
     }
 
+    @Nullable
     @Override
     public IActionWorker createWorker(@Nonnull IWorkerHelper helper) {
-        return new DigdownStairsActionWorker(helper);
+        return new MakeHouseActionWorker(helper);
     }
 }
