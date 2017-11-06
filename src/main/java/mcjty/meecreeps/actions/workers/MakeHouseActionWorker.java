@@ -1,12 +1,18 @@
 package mcjty.meecreeps.actions.workers;
 
 import mcjty.meecreeps.api.IWorkerHelper;
+import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemDoor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -26,6 +32,16 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         super(helper);
     }
 
+    @Override
+    public boolean onlyStopWhenDone() {
+        return true;
+    }
+
+    @Override
+    public void init() {
+        helper.setSpeed(3);
+    }
+
     @Nullable
     @Override
     public AxisAlignedBB getActionBox() {
@@ -38,10 +54,16 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
 
     private void placeBuildingBlock(BlockPos pos, Predicate<ItemStack> isBuilderBlock) {
         World world = entity.getWorld();
-        ItemStack block = entity.consumeItem(isBuilderBlock, 1);
-        if (!block.isEmpty()) {
-            entity.getWorld().setBlockState(pos, Blocks.COBBLESTONE.getDefaultState(), 3);
-            SoundTools.playSound(world, Blocks.COBBLESTONE.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        ItemStack blockStack = entity.consumeItem(isBuilderBlock, 1);
+        if (!blockStack.isEmpty()) {
+            if (blockStack.getItem() instanceof ItemBlock) {
+                Block block = ((ItemBlock) blockStack.getItem()).getBlock();
+                IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, blockStack.getItem().getMetadata(blockStack), GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
+                entity.getWorld().setBlockState(pos, stateForPlacement, 3);
+                SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+            } else {
+                blockStack.getItem().onItemUse(GeneralTools.getHarvester(), world, pos, EnumHand.MAIN_HAND, EnumFacing.UP, 0, 0, 0);
+            }
         }
     }
 
@@ -96,15 +118,16 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
 
 
     private Pair<BlockPos,Predicate<ItemStack>> findSpotToBuild() {
-        while (true) {
-            BlockPos tpos = options.getTargetPos();
-            int hs = (getSize() - 1) / 2;
+        BlockPos tpos = options.getTargetPos();
+        int hs = (getSize() - 1) / 2;
+        if (relativePos == null) {
+            relativePos = new BlockPos(-hs, stage, -hs);
+        }
 
-            if (relativePos == null) {
-                relativePos = new BlockPos(-hs, stage, -hs);
-            }
+        while (true) {
             if (entity.getWorld().isAirBlock(relativePos.add(tpos))) {
                 if (stage == 0) {
+                    return Pair.of(relativePos.add(tpos), this::isCobble);
                 } else if (stage == 1) {
                     if (isDoorPos(hs)) {
                         return Pair.of(relativePos.add(tpos), this::isDoor);
@@ -137,9 +160,10 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
             if (relativePos.getX() < hs) {
                 relativePos = new BlockPos(relativePos.getX() + 1, stage, relativePos.getZ());
             } else if (relativePos.getZ() < hs) {
-                relativePos = new BlockPos(hs, stage, relativePos.getZ() + 1);
+                relativePos = new BlockPos(-hs, stage, relativePos.getZ() + 1);
             } else if (stage < 5) {
                 stage++;
+                relativePos = new BlockPos(-hs, stage, -hs);
             } else {
                 return null;
             }
@@ -147,13 +171,13 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
     }
 
     private BlockPos findSpotToFlatten() {
-        while (true) {
-            BlockPos tpos = options.getTargetPos();
-            int hs = (getSize() - 1) / 2;
+        BlockPos tpos = options.getTargetPos();
+        int hs = (getSize() - 1) / 2;
+        if (relativePos == null) {
+            relativePos = new BlockPos(-hs, 0, -hs);
+        }
 
-            if (relativePos == null) {
-                relativePos = new BlockPos(-hs, 0, -hs);
-            }
+        while (true) {
             for (int i = 5; i >= 0; i--) {
                 if (!entity.getWorld().isAirBlock(relativePos.add(tpos).up(i))) {
                     return relativePos.add(tpos).up(i);
@@ -178,8 +202,10 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
             BlockPos flatSpot = findSpotToFlatten();
             if (flatSpot == null) {
                 stage = 0;
+                relativePos = null;
+                helper.setSpeed(5);
             } else {
-                helper.navigateTo(flatSpot, helper::harvestAndDrop);
+                helper.navigateTo(flatSpot.north(), p -> helper.harvestAndDrop(flatSpot));
             }
         } else {
             Pair<BlockPos,Predicate<ItemStack>> buildSpot = findSpotToBuild();
@@ -187,7 +213,7 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
                 if (!entity.hasItem(buildSpot.getValue())) {
                     helper.findItemOnGroundOrInChest(buildSpot.getValue(), "I cannot find any @@@cobblestone");
                 } else {
-                    helper.navigateTo(buildSpot.getKey(), p -> placeBuildingBlock(p, buildSpot.getValue()));
+                    helper.navigateTo(buildSpot.getKey().north(), p -> placeBuildingBlock(buildSpot.getKey(), buildSpot.getValue()));
                 }
             } else {
                 helper.taskIsDone();

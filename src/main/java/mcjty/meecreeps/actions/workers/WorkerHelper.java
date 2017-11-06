@@ -49,6 +49,7 @@ public class WorkerHelper implements IWorkerHelper {
     protected final EntityMeeCreeps entity;
     protected boolean needsToPutAway = false;
     protected int waitABit = 10;
+    private int speed = 10;
 
     protected BlockPos movingToPos;
     protected Entity movingToEntity;
@@ -66,6 +67,20 @@ public class WorkerHelper implements IWorkerHelper {
 
     public void setWorker(IActionWorker worker) {
         this.worker = worker;
+    }
+
+    public IActionWorker getWorker() {
+        return worker;
+    }
+
+    @Override
+    public void setSpeed(int speed) {
+        this.speed = speed;
+    }
+
+    @Override
+    public int getSpeed() {
+        return speed;
     }
 
     @Override
@@ -161,7 +176,7 @@ public class WorkerHelper implements IWorkerHelper {
             return;
         }
         // @todo config
-        waitABit = 10;
+        waitABit = speed;
 
         if (job != null) {
             BlockPos position = entity.getPosition();
@@ -287,7 +302,7 @@ public class WorkerHelper implements IWorkerHelper {
     // Indicate the task is done and that it is time to do the last task (putting back stuff etc)
     @Override
     public void taskIsDone() {
-        options.setStage(Stage.TIME_IS_UP);
+        options.setStage(Stage.TASK_IS_DONE);
         ServerActionManager.getManager().save();
     }
 

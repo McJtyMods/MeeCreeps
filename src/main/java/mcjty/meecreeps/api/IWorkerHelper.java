@@ -110,6 +110,13 @@ public interface IWorkerHelper {
     boolean navigateTo(Entity dest, Consumer<BlockPos> job);
 
     /**
+     * Set the default tick speed of this worker. Default is 10
+     */
+    void setSpeed(int speed);
+
+    int getSpeed();
+
+    /**
      * Drop an item. Mark it for later retreival and then proceed to put away the items in inventory
      */
     void dropAndPutAwayLater(ItemStack stack);

@@ -26,7 +26,7 @@ public class MeeCreepWorkerTask extends EntityAIBase {
         if (actionId != 0) {
             ActionOptions options = manager.getOptions(actionId);
             if (options != null) {
-                if (options.getStage() == Stage.WORKING || options.getStage() == Stage.TIME_IS_UP) {
+                if (options.getStage() == Stage.WORKING || options.getStage() == Stage.TIME_IS_UP || options.getStage() == Stage.TASK_IS_DONE) {
                     return true;
                 }
             }
@@ -40,6 +40,7 @@ public class MeeCreepWorkerTask extends EntityAIBase {
             MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(options.getTask());
             IActionWorker worker = factory.getFactory().createWorker(helper);
             helper.setWorker(worker);
+            worker.init();
         }
         return helper;
     }
@@ -55,10 +56,19 @@ public class MeeCreepWorkerTask extends EntityAIBase {
                     if (!meeCreeps.getNavigator().noPath()) {
                         meeCreeps.getNavigator().clearPath();
                     }
-                } else if (options.getStage() == Stage.WORKING) {
-                    getHelper(options).tick(false);
-                } else if (options.getStage() == Stage.TIME_IS_UP) {
-                    getHelper(options).tick(true);
+                } else {
+                    WorkerHelper helper = getHelper(options);
+                    if (options.getStage() == Stage.WORKING) {
+                        helper.tick(false);
+                    } else if (options.getStage() == Stage.TIME_IS_UP) {
+                        if (helper.getWorker().onlyStopWhenDone()) {
+                            helper.tick(false);
+                        } else {
+                            helper.tick(true);
+                        }
+                    } else if (options.getStage() == Stage.TASK_IS_DONE) {
+                        helper.tick(true);
+                    }
                 }
             }
         }

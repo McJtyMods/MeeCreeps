@@ -18,12 +18,21 @@ public interface IActionWorker {
     void tick(boolean timeToWrapUp);
 
     /**
+     * Called at initialization time. In contrast with the constructor the helper will be correctly setup here
+     */
+    default void init() { }
+
+    /**
      * Optionally return a box on which this action should operate and where the IWorkerHelper can look for
      * stuff (like inventories and items on the ground).
-     * @return
      */
     @Nullable
     AxisAlignedBB getActionBox();
+
+    /**
+     * If this returns true the MeeCreep will only finish when the task is done. Not earlier
+     */
+    default boolean onlyStopWhenDone() { return false; }
 
     /**
      * Return a sorted array of prefered chest locations for putting back items. The

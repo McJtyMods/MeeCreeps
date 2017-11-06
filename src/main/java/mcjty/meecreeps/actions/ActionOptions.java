@@ -327,6 +327,8 @@ public class ActionOptions implements IActionContext {
                     break;
                 case TIME_IS_UP:
                     break;
+                case TASK_IS_DONE:
+                    break;
                 case DONE:
                     return false;
             }
