@@ -72,7 +72,10 @@ public class PortalTileEntity extends TileEntity implements ITickable {
                         if (otherPortal.getPortalSide() == EnumFacing.DOWN) {
                             oy -= entity.height + .7;
                         }
-                        TeleportationTools.teleportEntity(entity, otherPortal.getWorld(), otherX, oy, otherZ);
+                        TeleportationTools.teleportEntity(entity, otherPortal.getWorld(), otherX, oy, otherZ, otherPortal.getPortalSide());
+                        setTimeout(Config.portalTimeoutAfterEntry);
+                        otherPortal.setTimeout(Config.portalTimeoutAfterEntry);
+
                         if (entity instanceof EntityPlayer) {
                             SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "teleport"));
                             // @todo config
