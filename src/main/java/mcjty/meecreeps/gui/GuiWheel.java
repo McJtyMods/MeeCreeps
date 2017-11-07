@@ -150,16 +150,6 @@ public class GuiWheel extends GuiScreen {
             drawSelectedSection(offset, lastSelected, 0);
             if (lastSelected < 8) {
                 drawTooltip(lastSelected);
-                List<TeleportDestination> destinations = PortalGunItem.getDestinations(PortalGunItem.getGun(Minecraft.getMinecraft().player));
-                TeleportDestination destination = destinations.get(lastSelected);
-                List<String> tooltips = new ArrayList<>();
-                if (destination == null) {
-                    tooltips.add(TextFormatting.BLUE + "Click: " + TextFormatting.WHITE + "to set current location as destination");
-                } else {
-                    tooltips.add(TextFormatting.BLUE + "Click: " + TextFormatting.WHITE + "to set this destination as current");
-                    tooltips.add(TextFormatting.BLUE + "Del: " + TextFormatting.WHITE + "to remove this destination");
-                }
-                drawHoveringText(tooltips, mouseX - guiLeft, mouseY - guiTop);
             }
         }
 
@@ -169,6 +159,21 @@ public class GuiWheel extends GuiScreen {
         }
 
         drawIcons(offset, lastSelected);
+
+        if (lastSelected != -1) {
+            if (lastSelected < 8) {
+                List<TeleportDestination> destinations = PortalGunItem.getDestinations(PortalGunItem.getGun(Minecraft.getMinecraft().player));
+                TeleportDestination destination = destinations.get(lastSelected);
+                List<String> tooltips = new ArrayList<>();
+                if (destination == null) {
+                    tooltips.add(TextFormatting.BLUE + "Click: " + TextFormatting.WHITE + "to set current location as destination");
+                } else {
+                    tooltips.add(TextFormatting.BLUE + "Click: " + TextFormatting.WHITE + "to set this destination as current");
+                    tooltips.add(TextFormatting.BLUE + "Del: " + TextFormatting.WHITE + "to remove this destination");
+                }
+                drawHoveringText(tooltips, mouseX, mouseY);
+            }
+        }
     }
 
     private void drawIcons(int offset, int q) {
