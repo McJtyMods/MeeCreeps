@@ -50,6 +50,7 @@ public class ClientProxy extends CommonProxy {
     public static void registerModels(ModelRegistryEvent event) {
         ModBlocks.initModels();
         ModItems.initModels();
+        ModEntities.initModels();
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)

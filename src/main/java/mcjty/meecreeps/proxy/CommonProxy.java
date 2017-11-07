@@ -10,6 +10,7 @@ import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.entities.ModEntities;
 import mcjty.meecreeps.items.CreepCubeItem;
 import mcjty.meecreeps.items.PortalGunItem;
+import mcjty.meecreeps.items.ProjectileItem;
 import mcjty.meecreeps.network.PacketHandler;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
@@ -71,6 +72,7 @@ public class CommonProxy {
     public static void registerItems(RegistryEvent.Register<Item> event) {
         event.getRegistry().register(new CreepCubeItem());
         event.getRegistry().register(new PortalGunItem());
+        event.getRegistry().register(new ProjectileItem());
         event.getRegistry().register(new ItemBlock(ModBlocks.portalBlock).setRegistryName(ModBlocks.portalBlock.getRegistryName()));
     }
 

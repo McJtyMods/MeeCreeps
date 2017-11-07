@@ -80,7 +80,7 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
             if (!world.isAirBlock(pos)) {
                 IBlockState state = world.getBlockState(pos);
                 helper.registerHarvestableBlock(pos);
-                state.getBlock().updateTick(world, pos, state, entity.getRNG());
+                state.getBlock().updateTick(world, pos, state, entity.getRandom());
 
                 if (!world.isAirBlock(pos)) {
                     Integer counter = entry.getValue();

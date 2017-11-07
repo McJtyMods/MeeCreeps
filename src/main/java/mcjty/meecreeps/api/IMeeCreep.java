@@ -17,7 +17,7 @@ public interface IMeeCreep {
 
     World getWorld();
 
-    Random getRNG();
+    Random getRandom();
 
     /**
      * Add an itemstack to the internal inventory and return what could not be added

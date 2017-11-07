@@ -1,5 +1,6 @@
 package mcjty.meecreeps.teleport;
 
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
@@ -14,6 +15,24 @@ public class TeleportDestination {
         this.dimension = dimension;
         this.pos = pos;
         this.side = side;
+    }
+
+    public TeleportDestination(NBTTagCompound tc) {
+        name = tc.getString("name");
+        dimension = tc.getInteger("dim");
+        pos = new BlockPos(tc.getInteger("x"), tc.getInteger("y"), tc.getInteger("z"));
+        side = EnumFacing.VALUES[tc.getByte("side")];
+    }
+
+    public NBTTagCompound getCompound() {
+        NBTTagCompound tc = new NBTTagCompound();
+        tc.setString("name", getName());
+        tc.setInteger("dim", getDimension());
+        tc.setByte("side", (byte) getSide().ordinal());
+        tc.setInteger("x", getPos().getX());
+        tc.setInteger("y", getPos().getY());
+        tc.setInteger("z", getPos().getZ());
+        return tc;
     }
 
     public String getName() {

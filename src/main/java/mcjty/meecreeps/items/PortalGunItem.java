@@ -2,12 +2,12 @@ package mcjty.meecreeps.items;
 
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.blocks.ModBlocks;
+import mcjty.meecreeps.entities.EntityProjectile;
 import mcjty.meecreeps.gui.GuiBalloon;
 import mcjty.meecreeps.gui.GuiWheel;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
 import mcjty.meecreeps.teleport.PacketCancelPortal;
-import mcjty.meecreeps.teleport.PacketMakePortals;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.util.ITooltipFlag;
@@ -82,23 +82,42 @@ public class PortalGunItem extends Item {
                 GuiWheel.selectedBlock = pos;
                 GuiWheel.selectedSide = side;
                 player.openGui(MeeCreeps.instance, GuiProxy.GUI_WHEEL, world, pos.getX(), pos.getY(), pos.getZ());
-            } else {
-                List<TeleportDestination> destinations = getDestinations(heldItem);
-                int current = getCurrentDestination(heldItem);
-                if (current == -1) {
-                    GuiBalloon.message = "This gun does not have a current destination!";
-                    player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
-                } else if (destinations.get(current) == null) {
-                    GuiBalloon.message = "Something is wrong with this destination!";
-                    player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
-                } else {
-                    PacketHandler.INSTANCE.sendToServer(new PacketMakePortals(pos, side, destinations.get(current)));
-                }
             }
             return EnumActionResult.SUCCESS;
+        } else {
+            if (world.getBlockState(pos.offset(side)).getBlock() == ModBlocks.portalBlock) {
+                return EnumActionResult.SUCCESS;
+            }
+            if (side != EnumFacing.UP && side != EnumFacing.DOWN && world.getBlockState(pos.offset(side).down()).getBlock() == ModBlocks.portalBlock) {
+                return EnumActionResult.SUCCESS;
+            }
+
+            if (!player.isSneaking()) {
+                throwProjectile(player, hand, world);
+            }
         }
 
         return EnumActionResult.SUCCESS;
+    }
+
+    private void throwProjectile(EntityPlayer player, EnumHand hand, World world) {
+        ItemStack heldItem = player.getHeldItem(hand);
+        BlockPos pos = player.getPosition();
+        List<TeleportDestination> destinations = getDestinations(heldItem);
+        int current = getCurrentDestination(heldItem);
+        if (current == -1) {
+            GuiBalloon.message = "This gun does not have a current destination!";
+            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
+        } else if (destinations.get(current) == null) {
+            GuiBalloon.message = "Something is wrong with this destination!";
+            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
+        } else {
+            EntityProjectile projectile = new EntityProjectile(world, player);
+            projectile.setDestination(destinations.get(current));
+            projectile.setPlayerId(player.getUniqueID());
+            projectile.shoot(player, player.rotationPitch, player.rotationYaw, 0.0F, 1.5F, 1.0F);
+            world.spawnEntity(projectile);
+        }
     }
 
     public static void addDestination(ItemStack stack, @Nullable TeleportDestination destination, int destinationIndex) {
@@ -116,16 +135,11 @@ public class PortalGunItem extends Item {
     private static void setDestinations(ItemStack stack, List<TeleportDestination> destinations) {
         NBTTagList dests = new NBTTagList();
         for (TeleportDestination destination : destinations) {
-            NBTTagCompound tc = new NBTTagCompound();
             if (destination != null) {
-                tc.setString("name", destination.getName());
-                tc.setInteger("dim", destination.getDimension());
-                tc.setByte("side", (byte) destination.getSide().ordinal());
-                tc.setInteger("x", destination.getPos().getX());
-                tc.setInteger("y", destination.getPos().getY());
-                tc.setInteger("z", destination.getPos().getZ());
+                dests.appendTag(destination.getCompound());
+            } else {
+                dests.appendTag(new NBTTagCompound());
             }
-            dests.appendTag(tc);
         }
         stack.getTagCompound().setTag("dests", dests);
     }
@@ -157,11 +171,7 @@ public class PortalGunItem extends Item {
             for (int i = 0; i < 8; i++) {
                 NBTTagCompound tc = i < dests.tagCount() ? dests.getCompoundTagAt(i) : null;
                 if (tc != null && tc.hasKey("dim")) {
-                    String name = tc.getString("name");
-                    int dim = tc.getInteger("dim");
-                    BlockPos pos = new BlockPos(tc.getInteger("x"), tc.getInteger("y"), tc.getInteger("z"));
-                    EnumFacing side = EnumFacing.VALUES[tc.getByte("side")];
-                    destinations.add(new TeleportDestination(name, dim, pos, side));
+                    destinations.add(new TeleportDestination(tc));
                 } else {
                     destinations.add(null);
                 }
@@ -177,15 +187,12 @@ public class PortalGunItem extends Item {
     }
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand handIn) {
-        if (world.isRemote) {
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
+        if (!world.isRemote) {
             if (!player.isSneaking()) {
-                BlockPos pos = player.getPosition();
-                player.openGui(MeeCreeps.instance, GuiProxy.GUI_WHEEL, world, pos.getX(), pos.getY(), pos.getZ());
+                throwProjectile(player, hand, world);
             }
-        } else {
-            // Add destination?
         }
-        return new ActionResult<>(EnumActionResult.SUCCESS, player.getHeldItem(handIn));
+        return new ActionResult<>(EnumActionResult.SUCCESS, player.getHeldItem(hand));
     }
 }

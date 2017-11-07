@@ -141,7 +141,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
             BlockPos pos = entry.getKey();
             if (!world.isAirBlock(pos)) {
                 IBlockState state = world.getBlockState(pos);
-                state.getBlock().updateTick(world, pos, state, entity.getRNG());
+                state.getBlock().updateTick(world, pos, state, entity.getRandom());
 
                 if (!world.isAirBlock(pos)) {
                     Integer counter = entry.getValue();

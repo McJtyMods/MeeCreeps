@@ -24,6 +24,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nullable;
+import java.util.Random;
 import java.util.function.Predicate;
 
 public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
@@ -41,6 +42,11 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
         super(worldIn);
         setSize(0.6F, 1.95F);
         variation = worldIn.rand.nextInt(9);
+    }
+
+    @Override
+    public Random getRandom() {
+        return getRNG();
     }
 
     @Override

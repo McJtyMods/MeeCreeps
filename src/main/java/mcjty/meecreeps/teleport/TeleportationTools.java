@@ -6,7 +6,6 @@ import mcjty.meecreeps.blocks.PortalTileEntity;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.network.PacketHandler;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -42,7 +41,7 @@ public class TeleportationTools {
 
         World destWorld = getWorldForDimension(dest.getDimension());
         if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.portalBlock) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("There is already a portal there!"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("There is already a portal at the destination!"), (EntityPlayerMP) player);
             return;
         }
         if (dest.getSide() == EnumFacing.DOWN) {
@@ -53,6 +52,41 @@ public class TeleportationTools {
         } else {
             if (!destWorld.isAirBlock(dest.getPos()) || !destWorld.isAirBlock(dest.getPos().up())) {
                 PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("The destination seems obstructed!"), (EntityPlayerMP) player);
+                return;
+            }
+        }
+
+        sourceWorld.setBlockState(sourcePortalPos, ModBlocks.portalBlock.getDefaultState(), 3);
+        PortalTileEntity source = (PortalTileEntity) sourceWorld.getTileEntity(sourcePortalPos);
+
+        destWorld.setBlockState(dest.getPos(), ModBlocks.portalBlock.getDefaultState(), 3);
+        PortalTileEntity destination = (PortalTileEntity) destWorld.getTileEntity(dest.getPos());
+
+        source.setTimeout(Config.portalTimeout);
+        source.setOther(dest);
+        source.setPortalSide(selectedSide);
+
+        destination.setTimeout(Config.portalTimeout);
+        destination.setOther(new TeleportDestination("", sourceWorld.provider.getDimension(), sourcePortalPos, selectedSide));
+        destination.setPortalSide(dest.getSide());
+    }
+
+    public static void makePortalPair(World sourceWorld, BlockPos selectedBlock, EnumFacing selectedSide, TeleportDestination dest) {
+        BlockPos sourcePortalPos = findBestPosition(sourceWorld, selectedBlock, selectedSide);
+        if (sourcePortalPos == null) {
+            return;
+        }
+
+        World destWorld = getWorldForDimension(dest.getDimension());
+        if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.portalBlock) {
+            return;
+        }
+        if (dest.getSide() == EnumFacing.DOWN) {
+            if (!destWorld.isAirBlock(dest.getPos()) || !destWorld.isAirBlock(dest.getPos().down())) {
+                return;
+            }
+        } else {
+            if (!destWorld.isAirBlock(dest.getPos()) || !destWorld.isAirBlock(dest.getPos().up())) {
                 return;
             }
         }
