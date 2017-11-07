@@ -15,12 +15,14 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 public class PacketSetDestination implements IMessage {
 
     private TeleportDestination destination;
+    private int destinationIndex;
 
     @Override
     public void fromBytes(ByteBuf buf) {
         destination = new TeleportDestination(NetworkTools.readStringUTF8(buf), buf.readInt(),
                 BlockPos.fromLong(buf.readLong()),
                 EnumFacing.VALUES[buf.readByte()]);
+        destinationIndex = buf.readInt();
     }
 
     @Override
@@ -29,13 +31,15 @@ public class PacketSetDestination implements IMessage {
         buf.writeInt(destination.getDimension());
         buf.writeLong(destination.getPos().toLong());
         buf.writeByte(destination.getSide().ordinal());
+        buf.writeInt(destinationIndex);
     }
 
     public PacketSetDestination() {
     }
 
-    public PacketSetDestination(TeleportDestination destination) {
+    public PacketSetDestination(TeleportDestination destination, int destinationIndex) {
         this.destination = destination;
+        this.destinationIndex = destinationIndex;
     }
 
     public static class Handler implements IMessageHandler<PacketSetDestination, IMessage> {
@@ -49,7 +53,7 @@ public class PacketSetDestination implements IMessage {
             EntityPlayerMP player = ctx.getServerHandler().player;
             ItemStack heldItem = PortalGunItem.getGun(player);
             if (heldItem.isEmpty()) return;
-            PortalGunItem.addDestination(heldItem, message.destination);
+            PortalGunItem.addDestination(heldItem, message.destination, message.destinationIndex);
         }
     }
 

@@ -24,6 +24,7 @@ public class GuiAskName extends GuiScreen {
     private String text = "";
     private int cursor = 0;
 
+    public static int destinationIndex;
     public static TeleportDestination destination;
 
     @Override
@@ -73,7 +74,7 @@ public class GuiAskName extends GuiScreen {
             close();
         } else if (keyCode == Keyboard.KEY_RETURN) {
             destination = new TeleportDestination(text, destination.getDimension(), destination.getPos(), destination.getSide());
-            PacketHandler.INSTANCE.sendToServer(new PacketSetDestination(destination));
+            PacketHandler.INSTANCE.sendToServer(new PacketSetDestination(destination, destinationIndex));
             close();
         } else if (typedChar != 0) {
             if (text.length() < 15) {

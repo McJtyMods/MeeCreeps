@@ -19,6 +19,11 @@ public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
     @Override
     public void render(PortalTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
         super.render(te, x, y, z, partialTicks, destroyStage, alpha);
+
+        if (te.getPortalSide() == null) {
+            return;
+        }
+
         GlStateManager.pushMatrix();
 
         GlStateManager.depthMask(true);

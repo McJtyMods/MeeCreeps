@@ -3,9 +3,12 @@ package mcjty.meecreeps.gui;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.items.PortalGunItem;
 import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.proxy.GuiProxy;
 import mcjty.meecreeps.render.RenderHelper;
-import mcjty.meecreeps.teleport.PacketMakePortals;
+import mcjty.meecreeps.teleport.PacketDeleteDestination;
+import mcjty.meecreeps.teleport.PacketSetCurrent;
 import mcjty.meecreeps.teleport.TeleportDestination;
+import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
@@ -14,6 +17,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextFormatting;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -29,6 +33,8 @@ public class GuiWheel extends GuiScreen {
 
     private int guiLeft;
     private int guiTop;
+
+    private int lastSelected = -1;
 
     private static final ResourceLocation background = new ResourceLocation(MeeCreeps.MODID, "textures/gui/wheel.png");
     private static final ResourceLocation hilight = new ResourceLocation(MeeCreeps.MODID, "textures/gui/wheel_hilight.png");
@@ -56,7 +62,13 @@ public class GuiWheel extends GuiScreen {
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         super.keyTyped(typedChar, keyCode);
         if (keyCode == Keyboard.KEY_DELETE || keyCode == Keyboard.KEY_BACK) {
-
+            if (lastSelected != -1) {
+                ItemStack heldItem = PortalGunItem.getGun(mc.player);
+                List<TeleportDestination> destinations = PortalGunItem.getDestinations(heldItem);
+                if (destinations.get(lastSelected) != null) {
+                    PacketHandler.INSTANCE.sendToServer(new PacketDeleteDestination(lastSelected));
+                }
+            }
         }
     }
 
@@ -64,6 +76,7 @@ public class GuiWheel extends GuiScreen {
     public boolean doesGuiPauseGame() {
         return false;
     }
+
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
@@ -76,11 +89,26 @@ public class GuiWheel extends GuiScreen {
         if (q == -1) {
             closeThis();
         } else {
-            ItemStack heldItem = PortalGunItem.getGun(Minecraft.getMinecraft().player);
+            ItemStack heldItem = PortalGunItem.getGun(mc.player);
             if (!heldItem.isEmpty()) {
                 List<TeleportDestination> destinations = PortalGunItem.getDestinations(heldItem);
                 if (destinations.get(q) != null) {
-                    PacketHandler.INSTANCE.sendToServer(new PacketMakePortals(selectedBlock, selectedSide, destinations.get(q)));
+                    PacketHandler.INSTANCE.sendToServer(new PacketSetCurrent(q));
+                } else {
+                    BlockPos bestPosition = TeleportationTools.findBestPosition(mc.world, selectedBlock, selectedSide);
+                    if (bestPosition == null) {
+                        GuiBalloon.message = "Can't find a good spot to make a portal!";
+                        closeThis();
+                        mc.player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, mc.world, selectedBlock.getX(), selectedBlock.getY(), selectedBlock.getZ());
+                        return;
+                    } else {
+                        GuiAskName.destinationIndex = q;
+                        GuiAskName.destination = new TeleportDestination("", mc.world.provider.getDimension(), bestPosition, selectedSide);
+                        closeThis();
+                        mc.player.openGui(MeeCreeps.instance, GuiProxy.GUI_ASKNAME, mc.world, selectedBlock.getX(), selectedBlock.getY(), selectedBlock.getZ());
+                        return;
+                    }
+
                 }
             }
             closeThis();
@@ -117,14 +145,30 @@ public class GuiWheel extends GuiScreen {
         int cx = mouseX - guiLeft - WIDTH / 2;
         int cy = mouseY - guiTop - HEIGHT / 2;
         int offset = 8 / 2;
-        int q = getSelectedSection(cx, cy);
-        if (q != -1) {
-            drawSelectedSection(offset, q);
-            if (q < 8) {
-                drawTooltip(q);
+        lastSelected = getSelectedSection(cx, cy);
+        if (lastSelected != -1) {
+            drawSelectedSection(offset, lastSelected, 0);
+            if (lastSelected < 8) {
+                drawTooltip(lastSelected);
+                List<TeleportDestination> destinations = PortalGunItem.getDestinations(PortalGunItem.getGun(Minecraft.getMinecraft().player));
+                TeleportDestination destination = destinations.get(lastSelected);
+                List<String> tooltips = new ArrayList<>();
+                if (destination == null) {
+                    tooltips.add(TextFormatting.BLUE + "Click: " + TextFormatting.WHITE + "to set current location as destination");
+                } else {
+                    tooltips.add(TextFormatting.BLUE + "Click: " + TextFormatting.WHITE + "to set this destination as current");
+                    tooltips.add(TextFormatting.BLUE + "Del: " + TextFormatting.WHITE + "to remove this destination");
+                }
+                drawHoveringText(tooltips, mouseX - guiLeft, mouseY - guiTop);
             }
         }
-        drawIcons(offset, q);
+
+        int currentDestination = PortalGunItem.getCurrentDestination(PortalGunItem.getGun(mc.player));
+        if (currentDestination != -1) {
+            drawSelectedSection(offset, currentDestination, 128);
+        }
+
+        drawIcons(offset, lastSelected);
     }
 
     private void drawIcons(int offset, int q) {
@@ -166,32 +210,32 @@ public class GuiWheel extends GuiScreen {
         }
     }
 
-    private void drawSelectedSection(int offset, int q) {
+    private void drawSelectedSection(int offset, int q, int voffset) {
         mc.getTextureManager().bindTexture(hilight);
         switch ((q - offset + 8) % 8) {
             case 0:
-                drawTexturedModalRect(guiLeft + 78, guiTop, 0, 0, 63, 63);
+                drawTexturedModalRect(guiLeft + 78, guiTop, 0, voffset, 63, 63);
                 break;
             case 1:
-                drawTexturedModalRect(guiLeft + 107, guiTop + 22, 64, 0, 63, 63);
+                drawTexturedModalRect(guiLeft + 107, guiTop + 22, 64, voffset, 63, 63);
                 break;
             case 2:
-                drawTexturedModalRect(guiLeft + 107, guiTop + 78, 128, 0, 63, 63);
+                drawTexturedModalRect(guiLeft + 107, guiTop + 78, 128, voffset, 63, 63);
                 break;
             case 3:
-                drawTexturedModalRect(guiLeft + 78, guiTop + 108, 192, 0, 63, 63);
+                drawTexturedModalRect(guiLeft + 78, guiTop + 108, 192, voffset, 63, 63);
                 break;
             case 4:
-                drawTexturedModalRect(guiLeft + 23, guiTop + 107, 0, 64, 63, 63);
+                drawTexturedModalRect(guiLeft + 23, guiTop + 107, 0, voffset+64, 63, 63);
                 break;
             case 5:
-                drawTexturedModalRect(guiLeft, guiTop + 78, 64, 64, 63, 63);
+                drawTexturedModalRect(guiLeft, guiTop + 78, 64, voffset+64, 63, 63);
                 break;
             case 6:
-                drawTexturedModalRect(guiLeft, guiTop + 22, 128, 64, 63, 63);
+                drawTexturedModalRect(guiLeft, guiTop + 22, 128, voffset+64, 63, 63);
                 break;
             case 7:
-                drawTexturedModalRect(guiLeft + 22, guiTop, 192, 64, 63, 63);
+                drawTexturedModalRect(guiLeft + 22, guiTop, 192, voffset+64, 63, 63);
                 break;
         }
     }

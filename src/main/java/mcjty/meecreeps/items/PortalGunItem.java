@@ -2,14 +2,13 @@ package mcjty.meecreeps.items;
 
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.blocks.ModBlocks;
-import mcjty.meecreeps.gui.GuiAskName;
 import mcjty.meecreeps.gui.GuiBalloon;
 import mcjty.meecreeps.gui.GuiWheel;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
 import mcjty.meecreeps.teleport.PacketCancelPortal;
+import mcjty.meecreeps.teleport.PacketMakePortals;
 import mcjty.meecreeps.teleport.TeleportDestination;
-import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
@@ -55,8 +54,9 @@ public class PortalGunItem extends Item {
 
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-        tooltip.add(TextFormatting.GREEN + "Sneak right click: " + TextFormatting.WHITE + "remember destination");
-        tooltip.add(TextFormatting.GREEN + "Right click: " + TextFormatting.WHITE + "create portal");
+        tooltip.add(TextFormatting.GREEN + "Sneak right click: " + TextFormatting.WHITE + "manage destinations");
+        tooltip.add(TextFormatting.GREEN + "Right click: " + TextFormatting.WHITE + "create portal to current destination");
+        tooltip.add(TextFormatting.GREEN + "Right click on portal: " + TextFormatting.WHITE + "remove portal");
     }
 
     @SideOnly(Side.CLIENT)
@@ -67,6 +67,8 @@ public class PortalGunItem extends Item {
     @Override
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
         if (world.isRemote) {
+            ItemStack heldItem = player.getHeldItem(hand);
+
             if (world.getBlockState(pos.offset(side)).getBlock() == ModBlocks.portalBlock) {
                 PacketHandler.INSTANCE.sendToServer(new PacketCancelPortal(pos.offset(side)));
                 return EnumActionResult.SUCCESS;
@@ -76,47 +78,39 @@ public class PortalGunItem extends Item {
                 return EnumActionResult.SUCCESS;
             }
 
-            if (!player.isSneaking()) {
+            if (player.isSneaking()) {
                 GuiWheel.selectedBlock = pos;
                 GuiWheel.selectedSide = side;
                 player.openGui(MeeCreeps.instance, GuiProxy.GUI_WHEEL, world, pos.getX(), pos.getY(), pos.getZ());
             } else {
-                BlockPos bestPosition = TeleportationTools.findBestPosition(world, pos, side);
-                if (bestPosition == null) {
-                    GuiBalloon.message = "Can't find a good spot to make a portal!";
+                List<TeleportDestination> destinations = getDestinations(heldItem);
+                int current = getCurrentDestination(heldItem);
+                if (current == -1) {
+                    GuiBalloon.message = "This gun does not have a current destination!";
+                    player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
+                } else if (destinations.get(current) == null) {
+                    GuiBalloon.message = "Something is wrong with this destination!";
                     player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
                 } else {
-                    GuiAskName.destination = new TeleportDestination("", world.provider.getDimension(), bestPosition, side);
-                    player.openGui(MeeCreeps.instance, GuiProxy.GUI_ASKNAME, world, pos.getX(), pos.getY(), pos.getZ());
+                    PacketHandler.INSTANCE.sendToServer(new PacketMakePortals(pos, side, destinations.get(current)));
                 }
             }
             return EnumActionResult.SUCCESS;
-        } else {
-//            addDestination(player.getHeldItem(hand), world, pos);
         }
 
         return EnumActionResult.SUCCESS;
     }
 
-    public static void addDestination(ItemStack stack, World world, BlockPos pos, EnumFacing side, String name) {
-        TeleportDestination destination = new TeleportDestination(name, world.provider.getDimension(), pos, side);
-        addDestination(stack, destination);
-    }
-
-    public static void addDestination(ItemStack stack, TeleportDestination destination) {
+    public static void addDestination(ItemStack stack, @Nullable TeleportDestination destination, int destinationIndex) {
         if (stack.getTagCompound() == null) {
             stack.setTagCompound(new NBTTagCompound());
         }
         List<TeleportDestination> destinations = getDestinations(stack);
-        for (int i = 0 ; i < 8 ; i++) {
-            if (destinations.get(i) == null) {
-                destinations.set(i, destination);
-                setDestinations(stack, destinations);
-                // @todo give a note
-                return;
-            }
+        destinations.set(destinationIndex, destination);
+        setDestinations(stack, destinations);
+        if (destination != null) {
+            setCurrentDestination(stack, destinationIndex);
         }
-        // @todo warning, no empty spot
     }
 
     private static void setDestinations(ItemStack stack, List<TeleportDestination> destinations) {
@@ -134,6 +128,21 @@ public class PortalGunItem extends Item {
             dests.appendTag(tc);
         }
         stack.getTagCompound().setTag("dests", dests);
+    }
+
+    public static int getCurrentDestination(ItemStack stack) {
+        NBTTagCompound tag = stack.getTagCompound();
+        if (tag == null) {
+            return -1;
+        }
+        return tag.getInteger("destination");
+    }
+
+    public static void setCurrentDestination(ItemStack stack, int dest) {
+        if (!stack.hasTagCompound()) {
+            stack.setTagCompound(new NBTTagCompound());
+        }
+        stack.getTagCompound().setInteger("destination", dest);
     }
 
     public static List<TeleportDestination> getDestinations(ItemStack stack) {

@@ -58,7 +58,6 @@ public class PacketMakePortals implements IMessage {
             if (heldItem.isEmpty()) return; // Something went wrong
 
             TeleportationTools.makePortalPair(player, message.selectedBlock, message.selectedSide, message.destination);
-//            PortalGunItem.addDestination(heldItem, message.destination);
         }
     }
 
