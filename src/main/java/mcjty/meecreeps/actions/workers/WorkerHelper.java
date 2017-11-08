@@ -379,6 +379,16 @@ public class WorkerHelper implements IWorkerHelper {
         }
     }
 
+    @Override
+    public boolean findItemOnGroundOrInChest(Predicate<ItemStack> matcher) {
+        if (!findItemOnGround(worker.getActionBox(), matcher, this::pickup)) {
+            if (!findInventoryContainingMost(worker.getActionBox(), matcher, p -> fetchFromInventory(p, matcher))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * See if there is a specific item around. If so start navigating to it and return true
      */

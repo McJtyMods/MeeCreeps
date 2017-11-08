@@ -9,6 +9,8 @@ public interface IDesiredBlock {
 
     default int getPass() { return 0; }
 
+    default boolean isOptional() { return false; }
+
     String getName();
 
     Predicate<ItemStack> getMatcher();

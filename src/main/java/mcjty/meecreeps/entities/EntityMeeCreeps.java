@@ -7,9 +7,7 @@ import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityCreature;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.*;
 import net.minecraft.entity.ai.EntityAILookIdle;
 import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.ai.EntityAIWatchClosest;
@@ -50,7 +48,7 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     }
 
     @Override
-    public Entity getEntity() {
+    public EntityCreature getEntity() {
         return this;
     }
 

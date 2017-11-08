@@ -135,6 +135,12 @@ public interface IWorkerHelper {
     void findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message);
 
     /**
+     * Find items matching the predicate on the ground or else in a nearby chest (uses getActionBox()). Returns
+     * false if it could not find the items
+     */
+    boolean findItemOnGroundOrInChest(Predicate<ItemStack> matcher);
+
+    /**
      * Find an item that matches the predicate. If there is such an item then navigate to it and
      * finally execute the job. Otherwise return false.
      */
