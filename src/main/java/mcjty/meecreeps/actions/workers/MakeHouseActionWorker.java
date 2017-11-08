@@ -4,6 +4,9 @@ import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.BlockGlass;
+import net.minecraft.block.BlockTorch;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
@@ -16,17 +19,17 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 
 public class MakeHouseActionWorker extends AbstractActionWorker {
 
     private AxisAlignedBB actionBox = null;
-    private int stage = -1;     // -1 means flattening. Otherwise it is the level we are currently working on
+    private int stage = 0;     // 0 means flattening. Otherwise it is the level we are currently working on
     private int size = 0;
-    private BlockPos relativePos = null;     // Relative position!
 
     public MakeHouseActionWorker(IWorkerHelper helper) {
         super(helper);
@@ -52,9 +55,9 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         return actionBox;
     }
 
-    private void placeBuildingBlock(BlockPos pos, Predicate<ItemStack> isBuilderBlock) {
+    private void placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock) {
         World world = entity.getWorld();
-        ItemStack blockStack = entity.consumeItem(isBuilderBlock, 1);
+        ItemStack blockStack = entity.consumeItem(desiredBlock.getMatcher(), 1);
         if (!blockStack.isEmpty()) {
             if (blockStack.getItem() instanceof ItemBlock) {
                 Block block = ((ItemBlock) blockStack.getItem()).getBlock();
@@ -65,22 +68,6 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
                 blockStack.getItem().onItemUse(GeneralTools.getHarvester(), world, pos, EnumHand.MAIN_HAND, EnumFacing.UP, 0, 0, 0);
             }
         }
-    }
-
-    private boolean isCobble(ItemStack stack) {
-        return stack.getItem() == Item.getItemFromBlock(Blocks.COBBLESTONE);
-    }
-
-    private boolean isDoor(ItemStack stack) {
-        return stack.getItem() instanceof ItemDoor;
-    }
-
-    private boolean isTorch(ItemStack stack) {
-        return stack.getItem() == Item.getItemFromBlock(Blocks.TORCH);
-    }
-
-    private boolean isGlass(ItemStack stack) {
-        return stack.getItem() == Item.getItemFromBlock(Blocks.GLASS);
     }
 
     private int getSize() {
@@ -97,123 +84,261 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         return size;
     }
 
-    private boolean isBorderPos(int hs) {
+    private boolean isBorderPos(BlockPos relativePos, int hs) {
         return relativePos.getX() <= -hs || relativePos.getX() >= hs || relativePos.getZ() <= -hs || relativePos.getZ() >= hs;
     }
 
-    private boolean isDoorPos(int hs) {
+    private boolean isDoorPos(BlockPos relativePos, int hs) {
         return relativePos.getZ() == 0 && relativePos.getX() == hs;
     }
 
-    private boolean isGlassPos(int hs) {
+    private boolean isGlassPos(BlockPos relativePos, int hs) {
         return relativePos.getX() != 0 && relativePos.getZ() != 0 && Math.abs(relativePos.getX()) < hs-4 && Math.abs(relativePos.getZ()) < hs-4;
     }
 
-    private boolean isTorchPos(int hs) {
-        if (relativePos.getZ() == 0 && (relativePos.getX() == hs-1 || relativePos.getX() == hs+1)) {
+    private boolean isTorchPos(BlockPos relativePos, int hs) {
+        if (relativePos.getZ() == 0 && (relativePos.getX() == hs-1 || relativePos.getX() == -hs+1)) {
             return true;
         }
-        return relativePos.getX() == 0 && (relativePos.getZ() == hs-1 || relativePos.getZ() == hs+1);
+        return relativePos.getX() == 0 && (relativePos.getZ() == hs-1 || relativePos.getZ() == -hs+1);
     }
 
+    private final static IDesiredBlock COBBLE = new IDesiredBlock() {
+        @Override
+        public String getName() {
+            return "cobblestone";
+        }
 
-    private Pair<BlockPos,Predicate<ItemStack>> findSpotToBuild() {
+        @Override
+        public Predicate<ItemStack> getMatcher() {
+            return stack -> stack.getItem() == Item.getItemFromBlock(Blocks.COBBLESTONE);
+        }
+
+        @Override
+        public Predicate<IBlockState> getStateMatcher() {
+            return blockState -> blockState.getBlock() == Blocks.COBBLESTONE;
+        }
+    };
+
+    private final static IDesiredBlock GLASS = new IDesiredBlock() {
+        @Override
+        public String getName() {
+            return "glass";
+        }
+
+        @Override
+        public Predicate<ItemStack> getMatcher() {
+            return stack -> stack.getItem() == Item.getItemFromBlock(Blocks.GLASS);
+        }
+
+        @Override
+        public Predicate<IBlockState> getStateMatcher() {
+            return blockState -> blockState.getBlock() instanceof BlockGlass;
+        }
+    };
+
+    private final static IDesiredBlock AIR = new IDesiredBlock() {
+        @Override
+        public String getName() {
+            return "air";
+        }
+
+        @Override
+        public Predicate<ItemStack> getMatcher() {
+            return ItemStack::isEmpty;
+        }
+
+        @Override
+        public Predicate<IBlockState> getStateMatcher() {
+            return blockState -> blockState.getBlock() == Blocks.AIR;
+        }
+    };
+
+    private final static IDesiredBlock DOOR = new IDesiredBlock() {
+        @Override
+        public String getName() {
+            return "door";
+        }
+
+        @Override
+        public Predicate<ItemStack> getMatcher() {
+            return stack -> stack.getItem() instanceof ItemDoor;
+        }
+
+        @Override
+        public Predicate<IBlockState> getStateMatcher() {
+            return blockState -> blockState.getBlock() instanceof BlockDoor;
+        }
+    };
+
+    private final static IDesiredBlock DOORTOP = new IDesiredBlock() {
+        @Override
+        public String getName() {
+            return "door";
+        }
+
+        @Override
+        public Predicate<ItemStack> getMatcher() {
+            return stack -> stack.getItem() instanceof ItemDoor;
+        }
+
+        @Override
+        public Predicate<IBlockState> getStateMatcher() {
+            return blockState -> blockState.getBlock() instanceof BlockDoor;
+        }
+    };
+
+    private final static IDesiredBlock TORCH = new IDesiredBlock() {
+        @Override
+        public String getName() {
+            return "torch";
+        }
+
+        @Override
+        public Predicate<ItemStack> getMatcher() {
+            return stack -> stack.getItem() == Item.getItemFromBlock(Blocks.TORCH);
+        }
+
+        @Override
+        public Predicate<IBlockState> getStateMatcher() {
+            return blockState -> blockState.getBlock() instanceof BlockTorch;
+        }
+    };
+
+
+    private IDesiredBlock getDesiredState(BlockPos relativePos) {
+        int hs = (getSize() - 1) / 2;
+        switch (relativePos.getY()) {
+            case 1:
+                if (isDoorPos(relativePos, hs)) {
+                    return DOOR;
+                } else if (isBorderPos(relativePos, hs)) {
+                    return COBBLE;
+                } else {
+                    return AIR;
+                }
+            case 2:
+                if (isDoorPos(relativePos, hs)) {
+                    return DOORTOP;
+                } else if (isBorderPos(relativePos, hs)) {
+                    return COBBLE;
+                } else {
+                    return AIR;
+                }
+            case 3:
+                if (isTorchPos(relativePos, hs)) {
+                    return TORCH;    // @todo
+                } else if (isBorderPos(relativePos, hs)) {
+                    return COBBLE;
+                } else {
+                    return AIR;
+                }
+            case 4:
+                if (isBorderPos(relativePos, hs)) {
+                    return COBBLE;
+                } else {
+                    return AIR;
+                }
+            case 5:
+                if (isGlassPos(relativePos, hs)) {
+                    return GLASS;
+                } else {
+                    return COBBLE;
+                }
+        }
+        return AIR;
+    }
+
+    /**
+     * Return the relative spot to build
+     */
+    private BlockPos findSpotToBuild() {
         BlockPos tpos = options.getTargetPos();
         int hs = (getSize() - 1) / 2;
-        if (relativePos == null) {
-            relativePos = new BlockPos(-hs, stage, -hs);
-        }
 
-        while (true) {
-            if (entity.getWorld().isAirBlock(relativePos.add(tpos))) {
-                if (stage == 0) {
-                    return Pair.of(relativePos.add(tpos), this::isCobble);
-                } else if (stage == 1) {
-                    if (isDoorPos(hs)) {
-                        return Pair.of(relativePos.add(tpos), this::isDoor);
-                    } else if (isBorderPos(hs)) {
-                        return Pair.of(relativePos.add(tpos), this::isCobble);
-                    }
-                } else if (stage == 2) {
-                    if (isBorderPos(hs) && !isDoorPos(hs)) {
-                        return Pair.of(relativePos.add(tpos), this::isCobble);
-                    }
-                } else if (stage == 3) {
-                    if (isBorderPos(hs)) {
-                        return Pair.of(relativePos.add(tpos), this::isCobble);
-                    } else if (isTorchPos(hs)) {
-                        return Pair.of(relativePos.add(tpos), this::isTorch);
-                    }
-                } else if (stage == 4) {
-                    if (isBorderPos(hs)) {
-                        return Pair.of(relativePos.add(tpos), this::isCobble);
-                    }
-                } else {
-                    if (isGlassPos(hs)) {
-                        return Pair.of(relativePos.add(tpos), this::isGlass);
-                    } else {
-                        return Pair.of(relativePos.add(tpos), this::isCobble);
-                    }
+        List<BlockPos> todo = new ArrayList<>();
+        for (int x = -hs ; x <= hs ; x++) {
+            for (int z = -hs ; z <= hs ; z++) {
+                BlockPos relativePos = new BlockPos(x, stage, z);
+                BlockPos p = tpos.add(relativePos);
+                IBlockState state = entity.getWorld().getBlockState(p);
+                IDesiredBlock desired = getDesiredState(relativePos);
+                if (!desired.getStateMatcher().test(state)) {
+                    todo.add(relativePos);
                 }
             }
-
-            if (relativePos.getX() < hs) {
-                relativePos = new BlockPos(relativePos.getX() + 1, stage, relativePos.getZ());
-            } else if (relativePos.getZ() < hs) {
-                relativePos = new BlockPos(-hs, stage, relativePos.getZ() + 1);
-            } else if (stage < 5) {
-                stage++;
-                relativePos = new BlockPos(-hs, stage, -hs);
-            } else {
-                return null;
-            }
         }
+        if (todo.isEmpty()) {
+            stage++;
+            if (stage >= 6) {
+                return null;    // Done
+            }
+            return findSpotToBuild();
+        }
+        BlockPos position = entity.getEntity().getPosition().subtract(tpos);        // Make entity position relative for distance calculation
+        todo.sort((o1, o2) -> {
+            double d1 = position.distanceSq(o1);
+            double d2 = position.distanceSq(o2);
+            return Double.compare(d1, d2);
+        });
+        return todo.get(0);
     }
 
+    /**
+     * Returns absolute position
+     */
     private BlockPos findSpotToFlatten() {
         BlockPos tpos = options.getTargetPos();
         int hs = (getSize() - 1) / 2;
-        if (relativePos == null) {
-            relativePos = new BlockPos(-hs, 0, -hs);
-        }
 
-        while (true) {
-            for (int i = 5; i >= 0; i--) {
-                if (!entity.getWorld().isAirBlock(relativePos.add(tpos).up(i))) {
-                    return relativePos.add(tpos).up(i);
+        List<BlockPos> todo = new ArrayList<>();
+        for (int x = -hs ; x <= hs ; x++) {
+            for (int y = 1 ; y <= 5 ; y++) {
+                for (int z = -hs; z <= hs; z++) {
+                    BlockPos relativePos = new BlockPos(x, y, z);
+                    BlockPos p = tpos.add(relativePos);
+                    IBlockState state = entity.getWorld().getBlockState(p);
+                    IDesiredBlock desired = getDesiredState(relativePos);
+                    if (!desired.getStateMatcher().test(state) && !entity.getWorld().isAirBlock(p)) {
+                        todo.add(p);
+                    }
                 }
             }
-
-            if (relativePos.getX() < hs) {
-                relativePos = new BlockPos(relativePos.getX() + 1, 0, relativePos.getZ());
-            } else if (relativePos.getZ() < hs) {
-                relativePos = new BlockPos(-hs, 0, relativePos.getZ() + 1);
-            } else {
-                return null;
-            }
         }
+        if (todo.isEmpty()) {
+            return null;
+        }
+
+        BlockPos position = entity.getEntity().getPosition();
+        todo.sort((o1, o2) -> {
+            double d1 = position.distanceSq(o1);
+            double d2 = position.distanceSq(o2);
+            return Double.compare(d1, d2);
+        });
+        return todo.get(0);
     }
 
     @Override
     public void tick(boolean timeToWrapUp) {
         if (timeToWrapUp) {
             helper.done();
-        } if (stage == -1) {
+        } if (stage == 0) {
             BlockPos flatSpot = findSpotToFlatten();
             if (flatSpot == null) {
-                stage = 0;
-                relativePos = null;
+                stage = 1;
                 helper.setSpeed(5);
             } else {
                 helper.navigateTo(flatSpot.north(), p -> helper.harvestAndDrop(flatSpot));
             }
         } else {
-            Pair<BlockPos,Predicate<ItemStack>> buildSpot = findSpotToBuild();
-            if (buildSpot != null) {
-                if (!entity.hasItem(buildSpot.getValue())) {
-                    helper.findItemOnGroundOrInChest(buildSpot.getValue(), "I cannot find any @@@cobblestone");
+            BlockPos relativePos = findSpotToBuild();
+            if (relativePos != null) {
+                IDesiredBlock desired = getDesiredState(relativePos);
+                if (!entity.hasItem(desired.getMatcher())) {
+                    helper.findItemOnGroundOrInChest(desired.getMatcher(), "I cannot find any " + desired.getName());
                 } else {
-                    helper.navigateTo(buildSpot.getKey().north(), p -> placeBuildingBlock(buildSpot.getKey(), buildSpot.getValue()));
+                    BlockPos buildPos = relativePos.add(options.getTargetPos());
+                    helper.navigateTo(buildPos.north(), p -> placeBuildingBlock(buildPos, desired));
                 }
             } else {
                 helper.taskIsDone();
@@ -224,18 +349,10 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
     @Override
     public void readFromNBT(NBTTagCompound tag) {
         stage = tag.getInteger("stage");
-        if (tag.hasKey("workPos")) {
-            relativePos = BlockPos.fromLong(tag.getLong("workPos"));
-        } else {
-            relativePos = null;
-        }
     }
 
     @Override
     public void writeToNBT(NBTTagCompound tag) {
         tag.setInteger("stage", stage);
-        if (relativePos != null) {
-            tag.setLong("workPos", relativePos.toLong());
-        }
     }
 }

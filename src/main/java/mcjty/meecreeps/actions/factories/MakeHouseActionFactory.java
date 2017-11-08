@@ -19,7 +19,7 @@ public class MakeHouseActionFactory implements IActionFactory {
 
     @Override
     public boolean isPossible(World world, BlockPos pos, EnumFacing side) {
-        return false;
+        return true;
     }
 
     @Override

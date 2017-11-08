@@ -126,7 +126,7 @@ public class WorkerHelper implements IWorkerHelper {
     @Override
     public void navigateTo(BlockPos pos, Consumer<BlockPos> job) {
         BlockPos position = entity.getPosition();
-        double d = position.distanceSq(pos.getX(), pos.getY(), pos.getZ());
+        double d = Math.min(position.distanceSq(pos), position.add(0, entity.getEyeHeight(), 0).distanceSq(pos));
         if (d < DISTANCE_TOLERANCE) {
             job.accept(pos);
         } else if (!entity.getNavigator().tryMoveToXYZ(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 2.0)) {
@@ -147,7 +147,7 @@ public class WorkerHelper implements IWorkerHelper {
             return false;
         }
         BlockPos position = entity.getPosition();
-        double d = position.distanceSq(dest.posX, dest.posY, dest.posZ);
+        double d = Math.min(position.distanceSq(dest.posX, dest.posY, dest.posZ), position.add(0, entity.getEyeHeight(), 0).distanceSq(dest.posX, dest.posY, dest.posZ));
         if (d > maxDist*maxDist) {
             return false;
         } else if (d < DISTANCE_TOLERANCE) {
