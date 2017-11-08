@@ -22,4 +22,5 @@ public abstract class AbstractActionWorker implements IActionWorker {
     public PreferedChest[] getPreferedChests() {
         return PREFERED_CHESTS;
     }
+
 }

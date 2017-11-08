@@ -8,7 +8,6 @@ import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockGlass;
 import net.minecraft.block.BlockTorch;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
@@ -364,73 +363,6 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         return todo.get(0);
     }
 
-    /**
-     * Return true if the given postion is air, the postion below is not and the postion above is also air
-     */
-    private boolean isStandable(BlockPos pos) {
-        World world = entity.getWorld();
-        return !world.isAirBlock(pos.down()) && world.isAirBlock(pos) && world.isAirBlock(pos.up());
-    }
-
-    /**
-     * Find the nearest suitable spot to stand on at this x,z
-     * Or null if there is no suitable position
-     */
-    private BlockPos findSuitableSpot(BlockPos pos) {
-        if (isStandable(pos)) {
-            return pos;
-        }
-        if (isStandable(pos.down())) {
-            return pos.down();
-        }
-        if (isStandable(pos.up())) {
-            return pos.up();
-        }
-        if (isStandable(pos.down(2))) {
-            return pos.down(2);
-        }
-        return null;
-    }
-
-    /**
-     * Calculate the best spot to move too for reaching the given position
-     */
-    private BlockPos findBestNavigationSpot(BlockPos pos) {
-        Entity ent = entity.getEntity();
-        World world = entity.getWorld();
-
-        BlockPos spotN = findSuitableSpot(pos.north());
-        BlockPos spotS = findSuitableSpot(pos.south());
-        BlockPos spotW = findSuitableSpot(pos.west());
-        BlockPos spotE = findSuitableSpot(pos.east());
-
-        double dn = spotN == null ? Double.MAX_VALUE : spotN.distanceSqToCenter(ent.posX, ent.posY, ent.posZ);
-        double ds = spotS == null ? Double.MAX_VALUE : spotS.distanceSqToCenter(ent.posX, ent.posY, ent.posZ);
-        double de = spotE == null ? Double.MAX_VALUE : spotE.distanceSqToCenter(ent.posX, ent.posY, ent.posZ);
-        double dw = spotW == null ? Double.MAX_VALUE : spotW.distanceSqToCenter(ent.posX, ent.posY, ent.posZ);
-        BlockPos p;
-        if (dn <= ds && dn <= de && dn <= dw) {
-            p = spotN;
-        } else if (ds <= de && ds <= dw && ds <= dn) {
-            p = spotS;
-        } else if (de <= dn && de <= dw && de <= ds) {
-            p = spotE;
-        } else {
-            p = spotW;
-        }
-
-        if (p == null) {
-            // No suitable spot. Try standing on top
-            p = findSuitableSpot(pos);
-            // We also need to be able to jump up one spot
-            if (p != null && !world.isAirBlock(p.up(2))) {
-                p = null;
-            }
-        }
-
-        return p;
-    }
-
     @Override
     public void tick(boolean timeToWrapUp) {
         if (timeToWrapUp) {
@@ -464,7 +396,7 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
                 }
             } else {
                 BlockPos buildPos = relativePos.add(options.getTargetPos());
-                BlockPos navigate = findBestNavigationSpot(buildPos);
+                BlockPos navigate = helper.findBestNavigationSpot(buildPos);
                 if (navigate != null) {
                     helper.navigateTo(navigate, p -> {
                         boolean jump = buildPos.up().equals(navigate);
@@ -486,7 +418,7 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
             stage = 1;
             helper.setSpeed(5);
         } else {
-            BlockPos navigate = findBestNavigationSpot(flatSpot);
+            BlockPos navigate = helper.findBestNavigationSpot(flatSpot);
             if (navigate != null) {
                 helper.navigateTo(navigate, p -> helper.harvestAndDrop(flatSpot));
             } else {

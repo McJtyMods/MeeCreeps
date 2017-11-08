@@ -157,4 +157,10 @@ public interface IWorkerHelper {
      * inventory and execute the job. If no such inventory could be found return false
      */
     boolean findSuitableInventory(AxisAlignedBB box, Predicate<ItemStack> matcher, Consumer<BlockPos> job);
+
+    /**
+     * Calculate the best spot to move too for reaching the given position. This routine will prefer
+     * standing on a spot next to the given location but if that fails it will pick a spot on top of the location
+     */
+    BlockPos findBestNavigationSpot(BlockPos pos);
 }

@@ -73,6 +73,7 @@ public class MeeCreepsApi implements IMeeCreepsApi {
 
     public void registerFactories() {
         registerActionFactory("meecreeps.make_house", "Build a house", new MakeHouseActionFactory());
+        registerActionFactory("meecreeps.flatten_area", "Flatten an area", new FlattenAreaActionFactory());
         registerActionFactory("meecreeps.chop_tree", "Chop this tree", new ChopTreeActionFactory());
         registerActionFactory("meecreeps.dig_down", "Dig straight down to bedrock", new DigdownActionFactory());
         registerActionFactory("meecreeps.dig_down_stairs", "Dig down to bedrock using stairs", new DigdownStairsActionFactory());
