@@ -50,15 +50,10 @@ public class RemoveCartridgeFactory implements IRecipeFactory {
                     }
                 }
 
-                NBTTagCompound tagCompound = null;
                 if (!portalGunItem.isEmpty()) {
-                    tagCompound = portalGunItem.getTagCompound();
+                    int charge = PortalGunItem.getCharge(portalGunItem);
+                    CartridgeItem.setCharge(result, charge);
                 }
-
-                NBTTagCompound newtag = new NBTTagCompound();
-                // @todo copy charge from gun to cartridge
-//                result.setItemDamage(childDamage);
-//                result.setTagCompound(newtag);
             }
             return result;
         }

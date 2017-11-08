@@ -59,7 +59,10 @@ public class InsertCartridgeFactory implements IRecipeFactory {
             if (portalgun.hasTagCompound()) {
                 newOutput.setTagCompound(portalgun.getTagCompound().copy());
             }
-            // @todo copy charge from cartridge
+            if (!cartridge.isEmpty()) {
+                int charge = CartridgeItem.getCharge(cartridge);
+                PortalGunItem.setCharge(newOutput, charge);
+            }
 
             return newOutput;
         }

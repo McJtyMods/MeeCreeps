@@ -48,23 +48,24 @@ public class CartridgeItem extends Item {
         ModelLoader.setCustomModelResourceLocation(this, 0, new ModelResourceLocation(getRegistryName(), "inventory"));
     }
 
-    @Override
-    public boolean showDurabilityBar(ItemStack stack) {
-        return true;
-    }
-
-    private static void setCharge(ItemStack stack, int charge) {
+    public static void setCharge(ItemStack stack, int charge) {
         if (stack.getTagCompound() == null) {
             stack.setTagCompound(new NBTTagCompound());
         }
         stack.getTagCompound().setInteger("charge", charge);
     }
 
-    private static int getCharge(ItemStack stack) {
+    public static int getCharge(ItemStack stack) {
         if (stack.getTagCompound() == null) {
             return 0;
         }
         return stack.getTagCompound().getInteger("charge");
+    }
+
+
+    @Override
+    public boolean showDurabilityBar(ItemStack stack) {
+        return true;
     }
 
     @Override
@@ -85,6 +86,7 @@ public class CartridgeItem extends Item {
     @Override
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
         if (!world.isRemote) {
+            chargeCartridge(player, world, player.getPosition(), hand);
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, player.getHeldItem(hand));
     }

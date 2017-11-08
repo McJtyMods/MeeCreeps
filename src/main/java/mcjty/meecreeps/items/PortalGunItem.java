@@ -1,6 +1,7 @@
 package mcjty.meecreeps.items;
 
 import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.entities.EntityProjectile;
 import mcjty.meecreeps.gui.GuiBalloon;
@@ -12,6 +13,7 @@ import mcjty.meecreeps.teleport.TeleportDestination;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -67,8 +69,6 @@ public class PortalGunItem extends Item {
     @Override
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
         if (world.isRemote) {
-            ItemStack heldItem = player.getHeldItem(hand);
-
             if (world.getBlockState(pos.offset(side)).getBlock() == ModBlocks.portalBlock) {
                 PacketHandler.INSTANCE.sendToServer(new PacketCancelPortal(pos.offset(side)));
                 return EnumActionResult.SUCCESS;
@@ -102,15 +102,20 @@ public class PortalGunItem extends Item {
 
     private void throwProjectile(EntityPlayer player, EnumHand hand, World world) {
         ItemStack heldItem = player.getHeldItem(hand);
-        BlockPos pos = player.getPosition();
+
+        int charge = getCharge(heldItem);
+        if (charge <= 0) {
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("Not enough charge!"), (EntityPlayerMP) player);
+            return;
+        }
+        setCharge(heldItem, charge-1);
+
         List<TeleportDestination> destinations = getDestinations(heldItem);
         int current = getCurrentDestination(heldItem);
         if (current == -1) {
-            GuiBalloon.message = "This gun does not have a current destination!";
-            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("This gun does not have a current destination!"), (EntityPlayerMP) player);
         } else if (destinations.get(current) == null) {
-            GuiBalloon.message = "Something is wrong with this destination!";
-            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("Something is wrong with this destination!"), (EntityPlayerMP) player);
         } else {
             EntityProjectile projectile = new EntityProjectile(world, player);
             projectile.setDestination(destinations.get(current));
@@ -180,6 +185,50 @@ public class PortalGunItem extends Item {
         return destinations;
     }
 
+    public static void setCharge(ItemStack stack, int charge) {
+        if (stack.getTagCompound() == null) {
+            stack.setTagCompound(new NBTTagCompound());
+        }
+        stack.getTagCompound().setInteger("charge", charge);
+    }
+
+    public static int getCharge(ItemStack stack) {
+        if (stack.getTagCompound() == null) {
+            return 0;
+        }
+        return stack.getTagCompound().getInteger("charge");
+    }
+
+    @Override
+    public boolean showDurabilityBar(ItemStack stack) {
+        return true;
+    }
+
+    @Override
+    public double getDurabilityForDisplay(ItemStack stack) {
+        int max = 32;
+        int stored = getCharge(stack);
+        return (max - stored) / (double) max;
+    }
+
+
+
+    @Override
+    public boolean hasContainerItem(ItemStack stack) {
+        return true;
+    }
+
+    @Override
+    public Item getContainerItem() {
+        return ModItems.emptyPortalGunItem;
+    }
+
+    @Override
+    public ItemStack getContainerItem(ItemStack itemStack) {
+        ItemStack stack = new ItemStack(ModItems.emptyPortalGunItem);
+        stack.setTagCompound(itemStack.getTagCompound());
+        return stack;
+    }
 
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
