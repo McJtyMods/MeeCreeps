@@ -217,6 +217,20 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
         return false;
     }
 
+    @Override
+    public boolean hasRoom(Predicate<ItemStack> matcher) {
+        for (ItemStack stack : inventory) {
+            if (stack.isEmpty()) {
+                return true;
+            }
+            if (!stack.isEmpty() && matcher.test(stack)) {
+                if (stack.getCount() < stack.getMaxStackSize()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     @Override
     public void dropInventory() {

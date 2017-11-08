@@ -7,6 +7,8 @@ import java.util.function.Predicate;
 
 public interface IDesiredBlock {
 
+    default int getPass() { return 0; }
+
     String getName();
 
     Predicate<ItemStack> getMatcher();

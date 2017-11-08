@@ -23,6 +23,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.BlockEvent;
@@ -125,8 +126,7 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void navigateTo(BlockPos pos, Consumer<BlockPos> job) {
-        BlockPos position = entity.getPosition();
-        double d = Math.min(position.distanceSq(pos), position.add(0, entity.getEyeHeight(), 0).distanceSq(pos));
+        double d = getSquareDist(entity, pos);
         if (d < DISTANCE_TOLERANCE) {
             job.accept(pos);
         } else if (!entity.getNavigator().tryMoveToXYZ(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 2.0)) {
@@ -146,8 +146,7 @@ public class WorkerHelper implements IWorkerHelper {
         if (dest == null || dest.isDead) {
             return false;
         }
-        BlockPos position = entity.getPosition();
-        double d = Math.min(position.distanceSq(dest.posX, dest.posY, dest.posZ), position.add(0, entity.getEyeHeight(), 0).distanceSq(dest.posX, dest.posY, dest.posZ));
+        double d = getSquareDist(entity, dest);
         if (d > maxDist*maxDist) {
             return false;
         } else if (d < DISTANCE_TOLERANCE) {
@@ -165,6 +164,24 @@ public class WorkerHelper implements IWorkerHelper {
         return true;
     }
 
+    private static double getSquareDist(Entity source, BlockPos dest) {
+        BlockPos position = source.getPosition();
+        double d0 = dest.distanceSqToCenter(source.posX, source.posY - 1, source.posZ);
+        double d1 = dest.distanceSqToCenter(source.posX, source.posY, source.posZ);
+        double d2 = dest.distanceSqToCenter(source.posX, source.posY + source.getEyeHeight(), source.posZ);
+        return Math.min(Math.min(d0, d1), d2);
+    }
+
+    private static double getSquareDist(Entity source, Entity dest) {
+        Vec3d lowPosition = new Vec3d(source.posX, source.posY-1, source.posZ);
+        Vec3d position = new Vec3d(source.posX, source.posY, source.posZ);
+        Vec3d eyePosition = new Vec3d(source.posX, source.posY+source.getEyeHeight(), source.posZ);
+        double d0 = lowPosition.squareDistanceTo(dest.posX, dest.posY, dest.posZ);
+        double d1 = position.squareDistanceTo(dest.posX, dest.posY, dest.posZ);
+        double d2 = eyePosition.squareDistanceTo(dest.posX, dest.posY, dest.posZ);
+        return Math.min(Math.min(d0, d1), d2);
+    }
+
     @Override
     public boolean navigateTo(Entity dest, Consumer<BlockPos> job) {
         return navigateTo(dest, job, 1000000000);
@@ -179,12 +196,11 @@ public class WorkerHelper implements IWorkerHelper {
         waitABit = speed;
 
         if (job != null) {
-            BlockPos position = entity.getPosition();
             if (movingToEntity != null) {
                 if (movingToEntity.isDead) {
                     job = null;
                 } else {
-                    double d = position.distanceSq(movingToEntity.posX, movingToEntity.posY, movingToEntity.posZ);
+                    double d = getSquareDist(entity, movingToEntity);
                     if (d < DISTANCE_TOLERANCE) {
                         job.accept(movingToEntity.getPosition());
                         job = null;
@@ -200,7 +216,7 @@ public class WorkerHelper implements IWorkerHelper {
                     }
                 }
             } else {
-                double d = position.distanceSq(movingToPos.getX(), movingToPos.getY(), movingToPos.getZ());
+                double d = getSquareDist(entity, movingToPos);
                 if (d < DISTANCE_TOLERANCE) {
                     job.accept(movingToPos);
                     job = null;

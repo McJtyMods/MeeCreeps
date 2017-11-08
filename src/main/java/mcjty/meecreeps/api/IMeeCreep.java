@@ -51,6 +51,11 @@ public interface IMeeCreep {
     boolean hasItem(Predicate<ItemStack> matcher);
 
     /**
+     * Return true if the MeeCreep has room for an item matching the predicate
+     */
+    boolean hasRoom(Predicate<ItemStack> matcher);
+
+    /**
      * Let the MeeCreep drop everything he holds
      */
     void dropInventory();

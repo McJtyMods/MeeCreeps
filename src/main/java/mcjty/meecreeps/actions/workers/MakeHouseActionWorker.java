@@ -8,6 +8,7 @@ import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockGlass;
 import net.minecraft.block.BlockTorch;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
@@ -28,7 +29,8 @@ import java.util.function.Predicate;
 public class MakeHouseActionWorker extends AbstractActionWorker {
 
     private AxisAlignedBB actionBox = null;
-    private int stage = 0;     // 0 means flattening. Otherwise it is the level we are currently working on
+    private int pass = 0;       // Pass when building
+    private int stage = 0;      // 0 means flattening. Otherwise it is the level we are currently working on
     private int size = 0;
 
     public MakeHouseActionWorker(IWorkerHelper helper) {
@@ -65,6 +67,7 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
                 entity.getWorld().setBlockState(pos, stateForPlacement, 3);
                 SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
             } else {
+                GeneralTools.getHarvester().setPosition(entity.getEntity().posX, entity.getEntity().posY, entity.getEntity().posZ);
                 blockStack.getItem().onItemUse(GeneralTools.getHarvester(), world, pos, EnumHand.MAIN_HAND, EnumFacing.UP, 0, 0, 0);
             }
         }
@@ -93,17 +96,17 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
     }
 
     private boolean isGlassPos(BlockPos relativePos, int hs) {
-        return relativePos.getX() != 0 && relativePos.getZ() != 0 && Math.abs(relativePos.getX()) < hs-4 && Math.abs(relativePos.getZ()) < hs-4;
+        return relativePos.getX() != 0 && relativePos.getZ() != 0 && Math.abs(relativePos.getX()) < (hs - 1) && Math.abs(relativePos.getZ()) < (hs - 1);
     }
 
     private boolean isTorchPos(BlockPos relativePos, int hs) {
-        if (relativePos.getZ() == 0 && (relativePos.getX() == hs-1 || relativePos.getX() == -hs+1)) {
+        if (relativePos.getZ() == 0 && (relativePos.getX() == hs - 1 || relativePos.getX() == -hs + 1)) {
             return true;
         }
-        return relativePos.getX() == 0 && (relativePos.getZ() == hs-1 || relativePos.getZ() == -hs+1);
+        return relativePos.getX() == 0 && (relativePos.getZ() == hs - 1 || relativePos.getZ() == -hs + 1);
     }
 
-    private final static IDesiredBlock COBBLE = new IDesiredBlock() {
+    private static final IDesiredBlock COBBLE = new IDesiredBlock() {
         @Override
         public String getName() {
             return "cobblestone";
@@ -120,7 +123,7 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         }
     };
 
-    private final static IDesiredBlock GLASS = new IDesiredBlock() {
+    private static final IDesiredBlock GLASS = new IDesiredBlock() {
         @Override
         public String getName() {
             return "glass";
@@ -137,7 +140,7 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         }
     };
 
-    private final static IDesiredBlock AIR = new IDesiredBlock() {
+    private static final IDesiredBlock AIR = new IDesiredBlock() {
         @Override
         public String getName() {
             return "air";
@@ -154,7 +157,29 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         }
     };
 
-    private final static IDesiredBlock DOOR = new IDesiredBlock() {
+    private static final IDesiredBlock DOOR = new IDesiredBlock() {
+        @Override
+        public String getName() {
+            return "door";
+        }
+
+        @Override
+        public int getPass() {
+            return 1;
+        }
+
+        @Override
+        public Predicate<ItemStack> getMatcher() {
+            return stack -> stack.getItem() instanceof ItemDoor;
+        }
+
+        @Override
+        public Predicate<IBlockState> getStateMatcher() {
+            return blockState -> blockState.getBlock() instanceof BlockDoor;
+        }
+    };
+
+    private static final IDesiredBlock DOORTOP = new IDesiredBlock() {
         @Override
         public String getName() {
             return "door";
@@ -171,27 +196,15 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         }
     };
 
-    private final static IDesiredBlock DOORTOP = new IDesiredBlock() {
-        @Override
-        public String getName() {
-            return "door";
-        }
-
-        @Override
-        public Predicate<ItemStack> getMatcher() {
-            return stack -> stack.getItem() instanceof ItemDoor;
-        }
-
-        @Override
-        public Predicate<IBlockState> getStateMatcher() {
-            return blockState -> blockState.getBlock() instanceof BlockDoor;
-        }
-    };
-
-    private final static IDesiredBlock TORCH = new IDesiredBlock() {
+    private static final IDesiredBlock TORCH = new IDesiredBlock() {
         @Override
         public String getName() {
             return "torch";
+        }
+
+        @Override
+        public int getPass() {
+            return 1;
         }
 
         @Override
@@ -257,21 +270,25 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         int hs = (getSize() - 1) / 2;
 
         List<BlockPos> todo = new ArrayList<>();
-        for (int x = -hs ; x <= hs ; x++) {
-            for (int z = -hs ; z <= hs ; z++) {
+        for (int x = -hs; x <= hs; x++) {
+            for (int z = -hs; z <= hs; z++) {
                 BlockPos relativePos = new BlockPos(x, stage, z);
                 BlockPos p = tpos.add(relativePos);
                 IBlockState state = entity.getWorld().getBlockState(p);
                 IDesiredBlock desired = getDesiredState(relativePos);
-                if (!desired.getStateMatcher().test(state)) {
+                if (desired.getPass() == pass && !desired.getStateMatcher().test(state)) {
                     todo.add(relativePos);
                 }
             }
         }
         if (todo.isEmpty()) {
-            stage++;
-            if (stage >= 6) {
-                return null;    // Done
+            pass++;
+            if (pass >= 2) {
+                pass = 0;
+                stage++;
+                if (stage >= 6) {
+                    return null;    // Done
+                }
             }
             return findSpotToBuild();
         }
@@ -292,8 +309,8 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         int hs = (getSize() - 1) / 2;
 
         List<BlockPos> todo = new ArrayList<>();
-        for (int x = -hs ; x <= hs ; x++) {
-            for (int y = 1 ; y <= 5 ; y++) {
+        for (int x = -hs; x <= hs; x++) {
+            for (int y = 1; y <= 5; y++) {
                 for (int z = -hs; z <= hs; z++) {
                     BlockPos relativePos = new BlockPos(x, y, z);
                     BlockPos p = tpos.add(relativePos);
@@ -318,27 +335,109 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         return todo.get(0);
     }
 
+    /**
+     * Return true if the given postion is air, the postion below is not and the postion above is also air
+     */
+    private boolean isStandable(BlockPos pos) {
+        World world = entity.getWorld();
+        return !world.isAirBlock(pos.down()) && world.isAirBlock(pos) && world.isAirBlock(pos.up());
+    }
+
+    /**
+     * Find the nearest suitable spot to stand on at this x,z
+     * Or null if there is no suitable position
+     */
+    private BlockPos findSuitableSpot(BlockPos pos) {
+        if (isStandable(pos)) {
+            return pos;
+        }
+        if (isStandable(pos.down())) {
+            return pos.down();
+        }
+        if (isStandable(pos.up())) {
+            return pos.up();
+        }
+        if (isStandable(pos.down(2))) {
+            return pos.down(2);
+        }
+        return null;
+    }
+
+    /**
+     * Calculate the best spot to move too for reaching the given position
+     */
+    private BlockPos findBestNavigationSpot(BlockPos pos) {
+        Entity ent = entity.getEntity();
+        World world = entity.getWorld();
+
+        BlockPos spotN = findSuitableSpot(pos.north());
+        BlockPos spotS = findSuitableSpot(pos.south());
+        BlockPos spotW = findSuitableSpot(pos.west());
+        BlockPos spotE = findSuitableSpot(pos.east());
+
+        double dn = spotN == null ? Double.MAX_VALUE : spotN.distanceSqToCenter(ent.posX, ent.posY, ent.posZ);
+        double ds = spotS == null ? Double.MAX_VALUE : spotS.distanceSqToCenter(ent.posX, ent.posY, ent.posZ);
+        double de = spotE == null ? Double.MAX_VALUE : spotE.distanceSqToCenter(ent.posX, ent.posY, ent.posZ);
+        double dw = spotW == null ? Double.MAX_VALUE : spotW.distanceSqToCenter(ent.posX, ent.posY, ent.posZ);
+        BlockPos p;
+        if (dn <= ds && dn <= de && dn <= dw) {
+            p = spotN;
+        } else if (ds <= de && ds <= dw && ds <= dn) {
+            p = spotS;
+        } else if (de <= dn && de <= dw && de <= ds) {
+            p = spotE;
+        } else {
+            p = spotW;
+        }
+
+        if (p == null) {
+            // No suitable spot. Try standing on top
+            p = findSuitableSpot(pos);
+        }
+
+        return p;
+    }
+
     @Override
     public void tick(boolean timeToWrapUp) {
         if (timeToWrapUp) {
             helper.done();
-        } if (stage == 0) {
+            return;
+        }
+        if (stage == 0) {
             BlockPos flatSpot = findSpotToFlatten();
             if (flatSpot == null) {
                 stage = 1;
                 helper.setSpeed(5);
             } else {
-                helper.navigateTo(flatSpot.north(), p -> helper.harvestAndDrop(flatSpot));
+                BlockPos navigate = findBestNavigationSpot(flatSpot);
+                if (navigate != null) {
+                    helper.navigateTo(navigate, p -> helper.harvestAndDrop(flatSpot));
+                } else {
+                    // We couldn't reach it. Just drop the block
+                    helper.harvestAndDrop(flatSpot);
+                }
             }
         } else {
             BlockPos relativePos = findSpotToBuild();
             if (relativePos != null) {
                 IDesiredBlock desired = getDesiredState(relativePos);
                 if (!entity.hasItem(desired.getMatcher())) {
-                    helper.findItemOnGroundOrInChest(desired.getMatcher(), "I cannot find any " + desired.getName());
+                    if (entity.hasRoom(desired.getMatcher())) {
+                        helper.findItemOnGroundOrInChest(desired.getMatcher(), "I cannot find any " + desired.getName());
+                    } else {
+                        // First put away stuff
+                        helper.putStuffAway();
+                    }
                 } else {
                     BlockPos buildPos = relativePos.add(options.getTargetPos());
-                    helper.navigateTo(buildPos.north(), p -> placeBuildingBlock(buildPos, desired));
+                    BlockPos navigate = findBestNavigationSpot(buildPos);
+                    if (navigate != null) {
+                        helper.navigateTo(navigate, p -> placeBuildingBlock(buildPos, desired));
+                    } else {
+                        // We couldn't reach it. Just build the block
+                        placeBuildingBlock(buildPos, desired);
+                    }
                 }
             } else {
                 helper.taskIsDone();
@@ -349,10 +448,12 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
     @Override
     public void readFromNBT(NBTTagCompound tag) {
         stage = tag.getInteger("stage");
+        pass = tag.getInteger("pass");
     }
 
     @Override
     public void writeToNBT(NBTTagCompound tag) {
         tag.setInteger("stage", stage);
+        tag.setInteger("pass", pass);
     }
 }
