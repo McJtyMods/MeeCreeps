@@ -1,0 +1,6 @@
+{
+  "recipes": {
+    "insert_cartridge_factory": "mcjty.meecreeps.items.InsertCartridgeFactory",
+    "remove_cartridge_factory": "mcjty.meecreeps.items.RemoveCartridgeFactory"
+  }
+}

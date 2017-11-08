@@ -1,0 +1,14 @@
+{
+  "result": {
+    "item": "meecreeps:cartridge"
+  },
+  "pattern": [
+    "e"
+  ],
+  "type": "meecreeps:remove_cartridge_factory",
+  "key": {
+    "e": {
+      "item": "meecreeps:portalgun"
+    }
+  }
+}

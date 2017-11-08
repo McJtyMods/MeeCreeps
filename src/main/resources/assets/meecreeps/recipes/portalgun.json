@@ -3,20 +3,16 @@
     "item": "meecreeps:portalgun"
   },
   "pattern": [
-    "g  ",
-    " gd",
-    "edg"
+    "ec",
+    "  "
   ],
-  "type": "minecraft:crafting_shaped",
+  "type": "meecreeps:insert_cartridge_factory",
   "key": {
     "e": {
-      "item": "minecraft:ender_pearl"
+      "item": "meecreeps:emptyportalgun"
     },
-    "d": {
-      "item": "minecraft:diamond"
-    },
-    "g": {
-      "item": "minecraft:gold_ingot"
+    "c": {
+      "item": "meecreeps:cartridge"
     }
   }
 }

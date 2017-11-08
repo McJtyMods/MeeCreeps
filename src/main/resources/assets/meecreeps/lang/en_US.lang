@@ -1,5 +1,7 @@
 item.meecreeps.creepcube.name=Creep Cube
 item.meecreeps.portalgun.name=Portal Gun
+item.meecreeps.emptyportalgun.name=Portal Gun (empty)
+item.meecreeps.cartridge.name=Portal Gun Cartridge
 entity.MeeCreeps.name=MeeCreeps
 entity.meecreeps_projectile.name=Portal Gun Projectile
 
