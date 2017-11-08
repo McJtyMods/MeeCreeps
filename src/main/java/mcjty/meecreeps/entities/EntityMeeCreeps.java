@@ -29,7 +29,7 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
 
     public static final ResourceLocation LOOT = new ResourceLocation(MeeCreeps.MODID, "entities/meecreeps");
 
-    public static final int INVENTORY_SIZE = 3;
+    public static final int INVENTORY_SIZE = 4;
 
     private int actionId = 0;
     private NonNullList<ItemStack> inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);

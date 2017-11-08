@@ -119,6 +119,11 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         }
 
         @Override
+        public int getAmount() {
+            return 128;
+        }
+
+        @Override
         public Predicate<ItemStack> getMatcher() {
             return stack -> stack.getItem() == Item.getItemFromBlock(Blocks.COBBLESTONE);
         }
@@ -133,6 +138,11 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         @Override
         public String getName() {
             return "glass";
+        }
+
+        @Override
+        public int getAmount() {
+            return 64;
         }
 
         @Override
@@ -153,6 +163,11 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         }
 
         @Override
+        public int getAmount() {
+            return 0;
+        }
+
+        @Override
         public Predicate<ItemStack> getMatcher() {
             return ItemStack::isEmpty;
         }
@@ -167,6 +182,11 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         @Override
         public String getName() {
             return "door";
+        }
+
+        @Override
+        public int getAmount() {
+            return 1;
         }
 
         @Override
@@ -197,6 +217,11 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         }
 
         @Override
+        public int getAmount() {
+            return 0;
+        }
+
+        @Override
         public int getPass() {
             return -1;          // That way this is ignored
         }
@@ -221,6 +246,11 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
         @Override
         public String getName() {
             return "torch";
+        }
+
+        @Override
+        public int getAmount() {
+            return 4;
         }
 
         @Override
@@ -383,12 +413,12 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
             if (!entity.hasItem(desired.getMatcher())) {
                 if (entity.hasRoom(desired.getMatcher())) {
                     if (desired.isOptional()) {
-                        if (!helper.findItemOnGroundOrInChest(desired.getMatcher())) {
+                        if (!helper.findItemOnGroundOrInChest(desired.getMatcher(), desired.getAmount())) {
                             // We don't have any of these. Just skip them
                             toSkip.add(relativePos);
                         }
                     } else {
-                        helper.findItemOnGroundOrInChest(desired.getMatcher(), "I cannot find any " + desired.getName());
+                        helper.findItemOnGroundOrInChest(desired.getMatcher(), "I cannot find any " + desired.getName(), desired.getAmount());
                     }
                 } else {
                     // First put away stuff

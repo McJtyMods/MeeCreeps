@@ -367,9 +367,9 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
-    public void findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message) {
+    public void findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message, int maxAmount) {
         if (!findItemOnGround(worker.getActionBox(), matcher, this::pickup)) {
-            if (!findInventoryContainingMost(worker.getActionBox(), matcher, p -> fetchFromInventory(p, matcher))) {
+            if (!findInventoryContainingMost(worker.getActionBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
                 showMessage(message);
             } else {
                 clearMessage();
@@ -380,9 +380,9 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
-    public boolean findItemOnGroundOrInChest(Predicate<ItemStack> matcher) {
+    public boolean findItemOnGroundOrInChest(Predicate<ItemStack> matcher, int maxAmount) {
         if (!findItemOnGround(worker.getActionBox(), matcher, this::pickup)) {
-            if (!findInventoryContainingMost(worker.getActionBox(), matcher, p -> fetchFromInventory(p, matcher))) {
+            if (!findInventoryContainingMost(worker.getActionBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
                 return false;
             }
         }
@@ -424,15 +424,19 @@ public class WorkerHelper implements IWorkerHelper {
         entity.getInventory().clear();
     }
 
-    protected void fetchFromInventory(BlockPos pos, Predicate<ItemStack> matcher) {
+    private void fetchFromInventory(BlockPos pos, Predicate<ItemStack> matcher, int maxAmount) {
         materialChest = pos;
         TileEntity te = entity.getEntityWorld().getTileEntity(pos);
         IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
         for (int i = 0 ; i < handler.getSlots() ; i++) {
+            if (maxAmount <= 0) {
+                return;
+            }
             ItemStack stack = handler.getStackInSlot(i);
             if (!stack.isEmpty() && matcher.test(stack)) {
-                ItemStack extracted = handler.extractItem(i, stack.getCount(), false);
+                ItemStack extracted = handler.extractItem(i, Math.min(maxAmount, stack.getCount()), false);
                 ItemStack remaining = entity.addStack(extracted);
+                maxAmount -= extracted.getCount() - remaining.getCount();
                 if (!remaining.isEmpty()) {
                     handler.insertItem(i, remaining, false);
                 }

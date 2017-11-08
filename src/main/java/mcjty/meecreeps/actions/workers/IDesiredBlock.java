@@ -11,6 +11,9 @@ public interface IDesiredBlock {
 
     default boolean isOptional() { return false; }
 
+    /// Return the amount of items to get at max
+    int getAmount();
+
     String getName();
 
     Predicate<ItemStack> getMatcher();
