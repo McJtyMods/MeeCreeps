@@ -12,8 +12,10 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
@@ -31,6 +33,24 @@ public class TeleportationTools {
         }
     }
 
+    private static boolean canPlacePortal(World world, BlockPos pos) {
+        if (world.isAirBlock(pos)) {
+            return true;
+        }
+        if (world.getBlockState(pos).getBlock().isReplaceable(world, pos)) {
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean canCollideWith(World world, BlockPos pos) {
+        if (world.isAirBlock(pos)) {
+            return false;
+        }
+        AxisAlignedBB box = world.getBlockState(pos).getCollisionBoundingBox(world, pos);
+        return box != null;
+    }
+
     public static void makePortalPair(EntityPlayer player, BlockPos selectedBlock, EnumFacing selectedSide, TeleportDestination dest) {
         World sourceWorld = player.getEntityWorld();
         BlockPos sourcePortalPos = findBestPosition(sourceWorld, selectedBlock, selectedSide);
@@ -45,12 +65,12 @@ public class TeleportationTools {
             return;
         }
         if (dest.getSide() == EnumFacing.DOWN) {
-            if (!destWorld.isAirBlock(dest.getPos()) || !destWorld.isAirBlock(dest.getPos().down())) {
+            if (!canPlacePortal(destWorld, dest.getPos()) || canCollideWith(destWorld, dest.getPos().down())) {
                 PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("The destination seems obstructed!"), (EntityPlayerMP) player);
                 return;
             }
         } else {
-            if (!destWorld.isAirBlock(dest.getPos()) || !destWorld.isAirBlock(dest.getPos().up())) {
+            if (!canPlacePortal(destWorld, dest.getPos()) || canCollideWith(destWorld, dest.getPos().up())) {
                 PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("The destination seems obstructed!"), (EntityPlayerMP) player);
                 return;
             }

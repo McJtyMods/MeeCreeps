@@ -60,6 +60,7 @@ public class PortalGunItem extends Item {
         tooltip.add(TextFormatting.GREEN + "Sneak right click: " + TextFormatting.WHITE + "manage destinations");
         tooltip.add(TextFormatting.GREEN + "Right click: " + TextFormatting.WHITE + "create portal to current destination");
         tooltip.add(TextFormatting.GREEN + "Right click on portal: " + TextFormatting.WHITE + "remove portal");
+        tooltip.add(TextFormatting.GREEN + "Charges left: " + TextFormatting.YELLOW + getCharge(stack));
     }
 
     @SideOnly(Side.CLIENT)

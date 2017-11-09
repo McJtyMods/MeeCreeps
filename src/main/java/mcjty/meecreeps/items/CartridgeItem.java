@@ -39,8 +39,9 @@ public class CartridgeItem extends Item {
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
         tooltip.add(TextFormatting.GREEN + "Cartridge for the portal gun");
-        tooltip.add(TextFormatting.GREEN + "Right click to charge by consuming");
-        tooltip.add(TextFormatting.GREEN + "ender pearls in inventory");
+        tooltip.add(TextFormatting.WHITE + "Right click to charge by consuming");
+        tooltip.add(TextFormatting.WHITE + "ender pearls in inventory");
+        tooltip.add(TextFormatting.GREEN + "Charges left: " + TextFormatting.YELLOW + getCharge(stack));
     }
 
 
