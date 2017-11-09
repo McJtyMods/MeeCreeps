@@ -3,9 +3,9 @@
     "item": "meecreeps:creepcube"
   },
   "pattern": [
-    " d ",
+    "dgd",
     "gCg",
-    " g "
+    "ggg"
   ],
   "type": "minecraft:crafting_shaped",
   "key": {
