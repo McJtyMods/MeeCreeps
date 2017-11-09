@@ -41,6 +41,7 @@ public class PortalGunItem extends Item {
         setRegistryName("portalgun");
         setUnlocalizedName(MeeCreeps.MODID + ".portalgun");
         setMaxStackSize(1);
+        setCreativeTab(MeeCreeps.creativeTab);
     }
 
     public static ItemStack getGun(EntityPlayer player) {

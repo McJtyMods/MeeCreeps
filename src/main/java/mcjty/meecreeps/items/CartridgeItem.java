@@ -34,6 +34,7 @@ public class CartridgeItem extends Item {
         setRegistryName("cartridge");
         setUnlocalizedName(MeeCreeps.MODID + ".cartridge");
         setMaxStackSize(1);
+        setCreativeTab(MeeCreeps.creativeTab);
     }
 
     @Override

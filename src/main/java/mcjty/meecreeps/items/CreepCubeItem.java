@@ -27,6 +27,7 @@ public class CreepCubeItem extends Item {
         setRegistryName("creepcube");
         setUnlocalizedName(MeeCreeps.MODID + ".creepcube");
         setMaxStackSize(1);
+        setCreativeTab(MeeCreeps.creativeTab);
     }
 
     @SideOnly(Side.CLIENT)

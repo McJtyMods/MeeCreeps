@@ -3,8 +3,11 @@ package mcjty.meecreeps;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.api.IMeeCreepsApi;
 import mcjty.meecreeps.commands.CommandTestApi;
+import mcjty.meecreeps.items.ModItems;
 import mcjty.meecreeps.proxy.CommonProxy;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.*;
@@ -31,7 +34,14 @@ public class MeeCreeps {
     public static MeeCreepsApi api = new MeeCreepsApi();
 
     public static Logger logger;
-    public static CreativeTabs creativeTab;
+
+    public static CreativeTabs creativeTab = new CreativeTabs("meecreeps") {
+        @Override
+        public ItemStack getTabIconItem() {
+            return new ItemStack(ModItems.portalGunItem);
+        }
+    };
+
 
     /**
      * Run before anything else. Read your config, create blocks, items, etc, and
@@ -40,12 +50,6 @@ public class MeeCreeps {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
         logger = e.getModLog();
-//        creativeTab = new CompatCreativeTabs("meecreeps") {
-//            @Override
-//            protected Item getItem() {
-//                return ModItems.manual;
-//            }
-//        };
         this.proxy.preInit(e);
     }
 
