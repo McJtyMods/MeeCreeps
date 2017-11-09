@@ -2,6 +2,7 @@ package mcjty.meecreeps.items;
 
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
+import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.gui.GuiBalloon;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
@@ -70,7 +71,7 @@ public class CartridgeItem extends Item {
 
     @Override
     public double getDurabilityForDisplay(ItemStack stack) {
-        int max = 32;
+        int max = Config.maxCharge;
         int stored = getCharge(stack);
         return (max - stored) / (double) max;
     }
@@ -94,14 +95,14 @@ public class CartridgeItem extends Item {
     private void chargeCartridge(EntityPlayer player, World world, BlockPos pos, EnumHand hand) {
         ItemStack heldItem = player.getHeldItem(hand);
         int charge = getCharge(heldItem);
-        if (charge >= 29) {
+        if (charge >= (Config.maxCharge-Config.chargesPerEnderpearl+1)) {
             PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("This cartridge is full!"), (EntityPlayerMP) player);
         } else {
             for (int i = 0 ; i < player.inventory.getSizeInventory() ; i++) {
                 ItemStack stack = player.inventory.getStackInSlot(i);
                 if (stack.getItem() == Items.ENDER_PEARL) {
                     ItemStack splitted = stack.splitStack(1);
-                    charge += 4;
+                    charge += Config.chargesPerEnderpearl;
                     setCharge(heldItem, charge);
                     return;
                 }

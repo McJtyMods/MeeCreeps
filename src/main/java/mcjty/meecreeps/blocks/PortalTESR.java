@@ -84,10 +84,10 @@ public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
         double half = 1.0;
         faces[EnumFacing.DOWN.ordinal()] =  new Face(0.5, 0.9, 0.5,    -1, 0, -1,       -1, 0, 1,      1, 0, 1,      1, 0, -1);
         faces[EnumFacing.UP.ordinal()] =    new Face(0.5, 0.1, 0.5,    -1, 0, -1,       -1, 0, 1,      1, 0, 1,      1, 0, -1);
-        faces[EnumFacing.SOUTH.ordinal()] = new Face(half, 1, 0.1,     -half, -1, 0,    -half, 1, 0,   half, 1, 0,   half, -1, 0);
-        faces[EnumFacing.NORTH.ordinal()] = new Face(half, 1, 0.9,     -half, -1, 0,    -half, 1, 0,   half, 1, 0,   half, -1, 0);
-        faces[EnumFacing.EAST.ordinal()] =  new Face(0.1, 1, half,      0, -1, -half,   0, 1, -half,   0, 1, half,   0, -1, half);
-        faces[EnumFacing.WEST.ordinal()] =  new Face(0.9, 1, half,      0, -1, -half,   0, 1, -half,   0, 1, half,   0, -1, half);
+        faces[EnumFacing.SOUTH.ordinal()] = new Face(0.5, 1, 0.1,      -half, -1, 0,    -half, 1, 0,   half, 1, 0,   half, -1, 0);
+        faces[EnumFacing.NORTH.ordinal()] = new Face(0.5, 1, 0.9,      -half, -1, 0,    -half, 1, 0,   half, 1, 0,   half, -1, 0);
+        faces[EnumFacing.EAST.ordinal()] =  new Face(0.1, 1, 0.5,       0, -1, -half,   0, 1, -half,   0, 1, half,   0, -1, half);
+        faces[EnumFacing.WEST.ordinal()] =  new Face(0.9, 1, 0.5,       0, -1, -half,   0, 1, -half,   0, 1, half,   0, -1, half);
         for (EnumFacing facing : EnumFacing.VALUES) {
             revertedfaces[facing.ordinal()] = faces[facing.ordinal()].reverse();
         }

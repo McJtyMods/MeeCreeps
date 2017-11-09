@@ -3,6 +3,7 @@ package mcjty.meecreeps.items;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.blocks.ModBlocks;
+import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.entities.EntityProjectile;
 import mcjty.meecreeps.gui.GuiBalloon;
 import mcjty.meecreeps.gui.GuiWheel;
@@ -206,7 +207,7 @@ public class PortalGunItem extends Item {
 
     @Override
     public double getDurabilityForDisplay(ItemStack stack) {
-        int max = 32;
+        int max = Config.maxCharge;
         int stored = getCharge(stack);
         return (max - stored) / (double) max;
     }
