@@ -28,6 +28,11 @@ public class Config {
     public static int maxCharge = 64;
     public static int chargesPerEnderpearl = 4;
 
+    // @todo
+    public static int meeCreepBoxMaxUsage = -1;
+    // @todo
+    // config for type of pickaxe
+
     private static void initGeneralConfig(Configuration cfg) {
         cfg.addCustomCategoryComment(CATEGORY_GENERAL, "General configuration");
         portalTimeout = cfg.getInt("portalTimeout", CATEGORY_GENERAL, portalTimeout, 1, 1000000, "Amount of ticks until the portalpair disappears");

@@ -301,12 +301,18 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public boolean allowedToHarvest(IBlockState state, World world, BlockPos pos, EntityPlayer entityPlayer) {
+        if (state.getBlock().getBlockHardness(state, world, pos) < 0) {
+            return false;
+        }
         if (!state.getBlock().canEntityDestroy(state, world, pos, entityPlayer)) {
             return false;
         }
         BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(world, pos, state, entityPlayer);
         MinecraftForge.EVENT_BUS.post(event);
-        return !event.isCanceled();
+        if (event.isCanceled()) {
+            return false;
+        }
+        return state.getBlock().canHarvestBlock(world, pos, entityPlayer);
     }
 
     @Override

@@ -2,6 +2,9 @@ package mcjty.meecreeps.varia;
 
 import com.mojang.authlib.GameProfile;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -21,6 +24,8 @@ public class GeneralTools {
         if (harvester == null) {
             harvester = FakePlayerFactory.get(DimensionManager.getWorld(0), new GameProfile(new UUID(656, 123), "meecreps"));
         }
+        // @todo config, make it possible to specify lesser pickaxe in config
+        harvester.setHeldItem(EnumHand.MAIN_HAND, new ItemStack(Items.DIAMOND_PICKAXE));
         return harvester;
     }
 

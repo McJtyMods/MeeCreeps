@@ -78,6 +78,7 @@ public class MeeCreepsApi implements IMeeCreepsApi {
         registerActionFactory("meecreeps.dig_down", "Dig straight down to bedrock", new DigdownActionFactory());
         registerActionFactory("meecreeps.dig_down_stairs", "Dig down to bedrock using stairs", new DigdownStairsActionFactory());
         registerActionFactory("meecreeps.mine_ores", "Find and mine all nearby ores", new MineOresActionFactory());
+        registerActionFactory("meecreeps.dig_tunnel", "Dig a 3x3 tunnel, 32 blocks long", new DigTunnelActionFactory());
         registerActionFactory("meecreeps.chop_tree_collect", "Chop this tree and get the drops", new ChopTreeAndCollectActionFactory());
         registerActionFactory("meecreeps.harvest_replant", "Harvest and replant those crops", new HarvestReplantActionFactory());
         registerActionFactory("meecreeps.harvest", "Harvest those crops", new HarvestActionFactory());

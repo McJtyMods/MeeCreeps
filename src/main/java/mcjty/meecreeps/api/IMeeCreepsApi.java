@@ -25,6 +25,7 @@ public interface IMeeCreepsApi {
      *      * meecreeps.make_house (9x9, 11x11, 13x13)
      *      * meecreeps.flatten_area (9x9, 11x11, 13x13)
      *      * meecreeps.mine_ores
+     *      * meecreeps.dig_tunnel
      *      * meecreeps.chop_tree_collect
      *      * meecreeps.harvest_replant
      *      * meecreeps.harvest

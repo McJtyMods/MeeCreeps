@@ -65,7 +65,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         World world = entity.getWorld();
         BlockPos p = findTopSpotNotDiggedYet();
         IBlockState state = world.getBlockState(p);
-        if (state.getBlock().getBlockHardness(state, world, p) >= 0 && helper.allowedToHarvest(state, world, p, GeneralTools.getHarvester())) {
+        if (helper.allowedToHarvest(state, world, p, GeneralTools.getHarvester())) {
             helper.harvestAndDrop(p);
             placeLadder(p);
         } else {
