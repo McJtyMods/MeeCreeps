@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 /**
  * This interface indicates what kind of block one needs for building. Buildings are
  * built from the bottom layer to the top layer
+ * See IBuildSchematic
  */
 public interface IDesiredBlock {
 

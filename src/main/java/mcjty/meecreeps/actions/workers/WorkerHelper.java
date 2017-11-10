@@ -17,6 +17,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -36,10 +37,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -94,6 +92,203 @@ public class WorkerHelper implements IWorkerHelper {
     @Override
     public IMeeCreep getMeeCreep() {
         return entity;
+    }
+
+    private static final IDesiredBlock AIR = new IDesiredBlock() {
+        @Override
+        public String getName() {
+            return "air";
+        }
+
+        @Override
+        public int getAmount() {
+            return 0;
+        }
+
+        @Override
+        public Predicate<ItemStack> getMatcher() {
+            return ItemStack::isEmpty;
+        }
+
+        @Override
+        public Predicate<IBlockState> getStateMatcher() {
+            return blockState -> blockState.getBlock() == Blocks.AIR;
+        }
+    };
+
+
+    private static final IDesiredBlock IGNORE = new IDesiredBlock() {
+        @Override
+        public String getName() {
+            return "IGNORE";
+        }
+
+        @Override
+        public int getAmount() {
+            return 0;
+        }
+
+        @Override
+        public int getPass() {
+            return -1;          // That way this is ignored
+        }
+
+        @Override
+        public boolean isOptional() {
+            return true;
+        }
+
+        @Override
+        public Predicate<ItemStack> getMatcher() {
+            return stack -> false;
+        }
+
+        @Override
+        public Predicate<IBlockState> getStateMatcher() {
+            return blockState -> false;
+        }
+    };
+
+
+    @Override
+    public IDesiredBlock getAirBlock() {
+        return AIR;
+    }
+
+    @Override
+    public IDesiredBlock getIgnoreBlock() {
+        return IGNORE;
+    }
+
+    /**
+     * Returns absolute position
+     */
+    @Override
+    public BlockPos findSpotToFlatten(@Nonnull IBuildSchematic schematic) {
+        BlockPos tpos = options.getTargetPos();
+        BlockPos minPos = schematic.getMinPos();
+        BlockPos maxPos = schematic.getMaxPos();
+
+        List<BlockPos> todo = new ArrayList<>();
+        for (int x = minPos.getX(); x <= maxPos.getX(); x++) {
+            for (int y = minPos.getY(); y <= maxPos.getY(); y++) {
+                for (int z = minPos.getZ(); z <= maxPos.getZ(); z++) {
+                    BlockPos relativePos = new BlockPos(x, y, z);
+                    BlockPos p = tpos.add(relativePos);
+                    IBlockState state = entity.getWorld().getBlockState(p);
+                    IDesiredBlock desired = schematic.getDesiredBlock(relativePos);
+                    if (desired != IGNORE) {
+                        if (!desired.getStateMatcher().test(state) && !entity.getWorld().isAirBlock(p)) {
+                            todo.add(p);
+                        }
+                    }
+                }
+            }
+        }
+        if (todo.isEmpty()) {
+            return null;
+        }
+
+        BlockPos position = entity.getEntity().getPosition();
+        todo.sort((o1, o2) -> {
+            double d1 = position.distanceSq(o1);
+            double d2 = position.distanceSq(o2);
+            return Double.compare(d1, d2);
+        });
+        return todo.get(0);
+    }
+
+    /**
+     * Return the relative spot to build
+     */
+    @Override
+    public BlockPos findSpotToBuild(@Nonnull IBuildSchematic schematic, @Nonnull BuildProgress progress, @Nonnull Set<BlockPos> toSkip) {
+        BlockPos tpos = options.getTargetPos();
+        BlockPos minPos = schematic.getMinPos();
+        BlockPos maxPos = schematic.getMaxPos();
+
+        List<BlockPos> todo = new ArrayList<>();
+        for (int x = minPos.getX(); x <= maxPos.getX(); x++) {
+            for (int z = minPos.getZ(); z <= maxPos.getZ(); z++) {
+                BlockPos relativePos = new BlockPos(x, progress.getHeight(), z);
+                if (toSkip == null || !toSkip.contains(relativePos)) {
+                    BlockPos p = tpos.add(relativePos);
+                    IBlockState state = entity.getWorld().getBlockState(p);
+                    IDesiredBlock desired = schematic.getDesiredBlock(relativePos);
+                    if (desired.getPass() == progress.getPass() && !desired.getStateMatcher().test(state)) {
+                        todo.add(relativePos);
+                    }
+                }
+            }
+        }
+        if (todo.isEmpty()) {
+            if (!progress.next(schematic)) {
+                return null;    // Done
+            }
+            return findSpotToBuild(schematic, progress, toSkip);
+        }
+        BlockPos position = entity.getEntity().getPosition().subtract(tpos);        // Make entity position relative for distance calculation
+        todo.sort((o1, o2) -> {
+            double d1 = position.distanceSq(o1);
+            double d2 = position.distanceSq(o2);
+            return Double.compare(d1, d2);
+        });
+        return todo.get(0);
+    }
+
+    @Override
+    public boolean handleFlatten(@Nonnull IBuildSchematic schematic) {
+        BlockPos flatSpot = findSpotToFlatten(schematic);
+        if (flatSpot == null) {
+            return false;
+        } else {
+            BlockPos navigate = findBestNavigationSpot(flatSpot);
+            if (navigate != null) {
+                navigateTo(navigate, p -> harvestAndDrop(flatSpot));
+            } else {
+                // We couldn't reach it. Just drop the block
+                harvestAndDrop(flatSpot);
+            }
+            return true;
+        }
+    }
+
+
+    @Override
+    public boolean handleBuilding(@Nonnull IBuildSchematic schematic, @Nonnull BuildProgress progress, @Nonnull Set<BlockPos> toSkip) {
+        BlockPos relativePos = findSpotToBuild(schematic, progress, toSkip);
+        if (relativePos != null) {
+            IDesiredBlock desired = schematic.getDesiredBlock(relativePos);
+            if (!entity.hasItem(desired.getMatcher())) {
+                if (entity.hasRoom(desired.getMatcher())) {
+                    if (desired.isOptional()) {
+                        if (!findItemOnGroundOrInChest(desired.getMatcher(), desired.getAmount())) {
+                            // We don't have any of these. Just skip them
+                            toSkip.add(relativePos);
+                        }
+                    } else {
+                        findItemOnGroundOrInChest(desired.getMatcher(), "I cannot find any " + desired.getName(), desired.getAmount());
+                    }
+                } else {
+                    // First put away stuff
+                    putStuffAway();
+                }
+            } else {
+                BlockPos buildPos = relativePos.add(options.getTargetPos());
+                BlockPos navigate = findBestNavigationSpot(buildPos);
+                if (navigate != null) {
+                    navigateTo(navigate, p -> {
+                        placeBuildingBlock(buildPos, desired);
+                    });
+                } else {
+                    // We couldn't reach it. Just build the block
+                    placeBuildingBlock(buildPos, desired);
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override

@@ -10,7 +10,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -30,6 +32,17 @@ public interface IWorkerHelper {
     IMeeCreep getMeeCreep();
 
     /**
+     * Get a desired block (for use in a build schematic) representing air (or where you want to have
+     * nothing)
+     */
+    IDesiredBlock getAirBlock();
+
+    /**
+     * Get a desired block (for use in a build schematic) representing a position to ignore
+     */
+    IDesiredBlock getIgnoreBlock();
+
+    /**
      * Return true if it is legal to harvest this block
      */
     boolean allowedToHarvest(IBlockState state, World world, BlockPos pos, EntityPlayer entityPlayer);
@@ -38,6 +51,38 @@ public interface IWorkerHelper {
      * Place a building block at the specified location
      */
     void placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock);
+
+    /**
+     * Given a schematic, find the closest block that needs flattening. The position returned
+     * is an absolute position and not a relative one!
+     */
+    BlockPos findSpotToFlatten(@Nonnull IBuildSchematic schematic);
+
+    /**
+     * Given a schematic find the closest block on the current height level that we have to build.
+     * The position returned is a relative position (to the target where the MeeCreep was spawned on)
+     * The progress instance is modified to track the current height and pass
+     * The toSkip set contains relative positions that were skipped due to lack of optional blocks. This set
+     * will be modified if another such block is found
+     */
+    BlockPos findSpotToBuild(@Nonnull IBuildSchematic schematic, @Nonnull BuildProgress progress, @Nonnull Set<BlockPos> toSkip);
+
+    /**
+     * Conveniance method to handle flattening of an area based on a schematic. This will call findSpotToFlatten()
+     * to find the next location for flattening. If there is still work to do then this will return true.
+     * Otherwise it will return false in which case you can stop work or continue to another task.
+     * The destroyed blocks are left on the ground
+     */
+    boolean handleFlatten(@Nonnull IBuildSchematic schematic);
+
+    /**
+     * Conveniance method to handle building automatically. This will call findSpotToBuild() to find the next
+     * location for building. If there is still work to do then this will return true. Otherwise it will return
+     * false in which case you might want to call taskIsDone() or optionally perform further tasks.
+     * This function will try to find building blocks from the ground or a nearby chest. If it cannot find
+     * a (non optional) block it will wait.
+     */
+    boolean handleBuilding(@Nonnull IBuildSchematic schematic, @Nonnull BuildProgress progress, @Nonnull Set<BlockPos> toSkip);
 
     /**
      * Harvest the given block and give the drops to the MeeCreep. If there is no room the
