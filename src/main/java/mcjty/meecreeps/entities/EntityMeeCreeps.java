@@ -303,6 +303,12 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     }
 
     @Override
+    public boolean isPushedByWater()
+    {
+        return false;
+    }
+
+    @Override
     public void setDead() {
         super.setDead();
         dropInventory();

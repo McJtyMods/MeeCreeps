@@ -59,7 +59,7 @@ public class WorkerHelper implements IWorkerHelper {
     protected List<EntityItem> itemsToPickup = new ArrayList<>();
     private BlockPos materialChest;
 
-    private boolean messageShown = false;
+    private String lastMessage = "";
 
     public WorkerHelper(EntityMeeCreeps entity, IActionContext options) {
         this.options = (ActionOptions) options;
@@ -105,18 +105,16 @@ public class WorkerHelper implements IWorkerHelper {
         }
     }
 
-    protected void showMessage(String message) {
-        if (!messageShown) {
-            messageShown = true;
+    @Override
+    public void showMessage(String message) {
+        if (lastMessage.equals(message)) {
+            return;
+        }
+        lastMessage = message;
             EntityPlayerMP player = getPlayer();
             if (player != null) {
                 PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient(message), player);
             }
-        }
-    }
-
-    protected void clearMessage() {
-        messageShown = false;
     }
 
     @Override
@@ -377,11 +375,7 @@ public class WorkerHelper implements IWorkerHelper {
         if (!findItemOnGround(worker.getActionBox(), matcher, this::pickup)) {
             if (!findInventoryContainingMost(worker.getActionBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
                 showMessage(message);
-            } else {
-                clearMessage();
             }
-        } else {
-            clearMessage();
         }
     }
 

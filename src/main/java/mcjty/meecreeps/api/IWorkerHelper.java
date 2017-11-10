@@ -72,6 +72,12 @@ public interface IWorkerHelper {
     void speedUp(int t);
 
     /**
+     * Show a message to the player. Calling this two times after each other with the same
+     * message will not show the message again
+     */
+    void showMessage(String message);
+
+    /**
      * Give the list of items to the meecreeps. If the meecreeps cannot hold them they are
      * dropped and the meecreeps will try to fetch them later
      */

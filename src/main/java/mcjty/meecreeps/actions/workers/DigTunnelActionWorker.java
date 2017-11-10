@@ -4,6 +4,9 @@ import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockDynamicLiquid;
+import net.minecraft.block.BlockLiquid;
+import net.minecraft.block.BlockStaticLiquid;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
@@ -31,6 +34,11 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
 
     public DigTunnelActionWorker(IWorkerHelper helper) {
         super(helper);
+    }
+
+    @Override
+    public void init() {
+        helper.setSpeed(5);
     }
 
     @Override
@@ -148,20 +156,15 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
         EnumFacing facing = helper.getContext().getTargetSide().getOpposite();
         BlockPos p = helper.getContext().getTargetPos().offset(facing, this.offset);
 
-        if (checkForSupport(p.down(2))) {
-            return;
-        }
-        if (checkForSupport(p.down(2).offset(facing.rotateY()))) {
-            return;
-        }
-        if (checkForSupport(p.down(2).offset(facing.rotateYCCW()))) {
+        if (checkSupports(facing, p)) {
             return;
         }
 
-        if (offset % 7 == 0 && entity.getWorld().getBlockState(p.down()).getBlock() != Blocks.TORCH) {
+        BlockPos torchPos = p.down().offset(facing.getOpposite());
+        if (this.offset % 7 == 0 && entity.getWorld().getBlockState(torchPos).getBlock() != Blocks.TORCH) {
             // Time to place a torch if we have any
             if (entity.hasItem(this::isTorch)) {
-                placeTorch(p.down());
+                placeTorch(torchPos);
             }
         }
 
@@ -171,23 +174,120 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
 
         blockidx++;
         if (blockidx >= 9) {
-            offset++;
-            blockidx = 0;
-            if (offset >= 32) {
-                helper.taskIsDone();
+            // Before we continue lets first see if things are ok
+            if (checkClear(p, facing)) {
+                this.offset++;
+                blockidx = 0;
+                if (this.offset >= 32) {
+                    helper.taskIsDone();
+                }
+            } else {
+                // Restart here
+                blockidx = 0;
             }
         }
     }
 
+    private boolean checkClear(BlockPos p, EnumFacing facing) {
+        World world = entity.getWorld();
+        if (!world.isAirBlock(p)) {
+            return false;
+        }
+        if (!world.isAirBlock(p.offset(facing.rotateY()))) {
+            return false;
+        }
+        if (!world.isAirBlock(p.offset(facing.rotateYCCW()))) {
+            return false;
+        }
+        if (!world.isAirBlock(p.up())) {
+            return false;
+        }
+        if (!world.isAirBlock(p.up().offset(facing.rotateY()))) {
+            return false;
+        }
+        if (!world.isAirBlock(p.up().offset(facing.rotateYCCW()))) {
+            return false;
+        }
+        if (!world.isAirBlock(p.down())) {
+            return false;
+        }
+        if (!world.isAirBlock(p.down().offset(facing.rotateY()))) {
+            return false;
+        }
+        if (!world.isAirBlock(p.down().offset(facing.rotateYCCW()))) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkSupports(EnumFacing facing, BlockPos p) {
+        if (checkForSupport(p.down(2))) {
+            return true;
+        }
+        if (checkForSupport(p.down(2).offset(facing.rotateY()))) {
+            return true;
+        }
+        if (checkForSupport(p.down(2).offset(facing.rotateYCCW()))) {
+            return true;
+        }
+
+        if (checkForLiquid(p.down(1).offset(facing.rotateY(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.offset(facing.rotateY(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.up(1).offset(facing.rotateY(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.down(1).offset(facing.rotateYCCW(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.offset(facing.rotateYCCW(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.up(1).offset(facing.rotateYCCW(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.up(2))) {
+            return true;
+        }
+        if (checkForLiquid(p.up(2).offset(facing.rotateY()))) {
+            return true;
+        }
+        if (checkForLiquid(p.up(2).offset(facing.rotateYCCW()))) {
+            return true;
+        }
+        return false;
+    }
+
     private boolean checkForSupport(BlockPos p) {
-        if (entity.getWorld().isAirBlock(p)) {
+        if (entity.getWorld().isAirBlock(p) || isLiquid(p)) {
             if (!helper.findItemOnGround(getActionBox(), this::isSupportBlock, entityItem -> buildSupport(p, entityItem))) {
-                // We cannot continue like this
+                // We cannot continu like this
+                helper.showMessage("I cannot continue this way");
                 helper.taskIsDone();
             }
             return true;
         }
         return false;
+    }
+
+    private boolean checkForLiquid(BlockPos p) {
+        if (isLiquid(p)) {
+            if (!helper.findItemOnGround(getActionBox(), this::isSupportBlock, entityItem -> buildSupport(p, entityItem))) {
+                // We cannot continue like this
+                helper.showMessage("I cannot continue this way");
+                helper.taskIsDone();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isLiquid(BlockPos p) {
+        Block block = entity.getWorld().getBlockState(p).getBlock();
+        return block instanceof BlockLiquid || block instanceof BlockDynamicLiquid || block instanceof BlockStaticLiquid;
     }
 
     @Override
