@@ -28,8 +28,8 @@ public class Config {
     public static int maxCharge = 64;
     public static int chargesPerEnderpearl = 4;
 
-    // @todo
     public static int meeCreepBoxMaxUsage = -1;
+
     // @todo
     // config for type of pickaxe
 
@@ -39,6 +39,7 @@ public class Config {
         portalTimeoutAfterEntry = cfg.getInt("portalTimeoutAfterEntry", CATEGORY_GENERAL, portalTimeoutAfterEntry, 1, 1000000, "Amount of ticks until the portalpair disappears after an entity has gone through");
         maxCharge = cfg.getInt("maxCharge", CATEGORY_GENERAL, maxCharge, 1, 1000000, "Maximum charge in a portalgun/cartridge");
         chargesPerEnderpearl = cfg.getInt("chargesPerEnderpearl", CATEGORY_GENERAL, chargesPerEnderpearl, 1, 1000000, "Number of charges per enderpearl");
+        meeCreepBoxMaxUsage = cfg.getInt("meeCreepBoxMaxUsage", CATEGORY_GENERAL, meeCreepBoxMaxUsage, -1, 1000000, "Maximum number of uses for a single MeeCreep box (-1 means unlimited)");
     }
 
 }

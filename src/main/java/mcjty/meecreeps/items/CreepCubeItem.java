@@ -1,12 +1,17 @@
 package mcjty.meecreeps.items;
 
 import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.actions.ServerActionManager;
+import mcjty.meecreeps.config.Config;
+import mcjty.meecreeps.network.PacketHandler;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
@@ -39,8 +44,41 @@ public class CreepCubeItem extends Item {
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
 //        tooltip.add(TextFormatting.GREEN + "Sneak right click: " + TextFormatting.WHITE + "remember destination");
         tooltip.add(TextFormatting.GREEN + "Right click: " + TextFormatting.WHITE + "spawn MeeCreep");
+        if (isLimited()) {
+            tooltip.add(TextFormatting.GREEN + "Uses left: " + TextFormatting.YELLOW + (Config.meeCreepBoxMaxUsage - getUsages(stack)));
+        }
     }
 
+    @Override
+    public boolean showDurabilityBar(ItemStack stack) {
+        return isLimited();
+    }
+
+    private boolean isLimited() {
+        return Config.meeCreepBoxMaxUsage > 0;
+    }
+
+    public static void setUsages(ItemStack stack, int uses) {
+        if (stack.getTagCompound() == null) {
+            stack.setTagCompound(new NBTTagCompound());
+        }
+        stack.getTagCompound().setInteger("uses", uses);
+    }
+
+    public static int getUsages(ItemStack stack) {
+        if (stack.getTagCompound() == null) {
+            return 0;
+        }
+        return stack.getTagCompound().getInteger("uses");
+    }
+
+
+    @Override
+    public double getDurabilityForDisplay(ItemStack stack) {
+        int max = Config.meeCreepBoxMaxUsage;
+        int usages = getUsages(stack);
+        return usages / (double) max;
+    }
 
     @Override
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
@@ -48,6 +86,14 @@ public class CreepCubeItem extends Item {
             return EnumActionResult.SUCCESS;
         }
 
+        if (isLimited()) {
+            ItemStack heldItem = player.getHeldItem(hand);
+            if (getUsages(heldItem) >= Config.meeCreepBoxMaxUsage) {
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("This MeeCreep box has become unusable"), (EntityPlayerMP) player);
+                return EnumActionResult.SUCCESS;
+            }
+            setUsages(heldItem, getUsages(heldItem)+1);
+        }
         ServerActionManager.getManager().createActionOptions(world, pos, side, player);
         return EnumActionResult.SUCCESS;
     }
