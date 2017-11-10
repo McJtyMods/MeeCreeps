@@ -17,10 +17,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -257,6 +259,28 @@ public class WorkerHelper implements IWorkerHelper {
             worker.tick(timeToWrapUp);
         }
     }
+
+    @Override
+    public void placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock) {
+        World world = entity.getWorld();
+        ItemStack blockStack = entity.consumeItem(desiredBlock.getMatcher(), 1);
+        if (!blockStack.isEmpty()) {
+            if (blockStack.getItem() instanceof ItemBlock) {
+                Block block = ((ItemBlock) blockStack.getItem()).getBlock();
+                IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, blockStack.getItem().getMetadata(blockStack), GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
+                entity.getWorld().setBlockState(pos, stateForPlacement, 3);
+                SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+            } else {
+                GeneralTools.getHarvester().setPosition(entity.getEntity().posX, entity.getEntity().posY, entity.getEntity().posZ);
+                blockStack.getItem().onItemUse(GeneralTools.getHarvester(), world, pos, EnumHand.MAIN_HAND, EnumFacing.UP, 0, 0, 0);
+            }
+            boolean jump = !entity.isNotColliding();
+            if (jump) {
+                entity.getEntity().getJumpHelper().setJumping();
+            }
+        }
+    }
+
 
     @Override
     public void harvestAndPickup(BlockPos pos) {

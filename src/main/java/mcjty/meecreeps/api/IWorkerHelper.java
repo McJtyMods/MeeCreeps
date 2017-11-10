@@ -35,6 +35,11 @@ public interface IWorkerHelper {
     boolean allowedToHarvest(IBlockState state, World world, BlockPos pos, EntityPlayer entityPlayer);
 
     /**
+     * Place a building block at the specified location
+     */
+    void placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock);
+
+    /**
      * Harvest the given block and give the drops to the MeeCreep. If there is no room the
      * MeeCreep will drop the remaining items and try to fetch them later
      */

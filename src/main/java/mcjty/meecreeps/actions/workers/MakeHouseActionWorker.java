@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IDesiredBlock;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
@@ -58,25 +59,6 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
             actionBox = new AxisAlignedBB(options.getTargetPos().add(-12, -5, -12), options.getTargetPos().add(12, 5, 12));
         }
         return actionBox;
-    }
-
-    private void placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock, boolean jump) {
-        World world = entity.getWorld();
-        ItemStack blockStack = entity.consumeItem(desiredBlock.getMatcher(), 1);
-        if (!blockStack.isEmpty()) {
-            if (blockStack.getItem() instanceof ItemBlock) {
-                Block block = ((ItemBlock) blockStack.getItem()).getBlock();
-                IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, blockStack.getItem().getMetadata(blockStack), GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
-                entity.getWorld().setBlockState(pos, stateForPlacement, 3);
-                SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
-            } else {
-                GeneralTools.getHarvester().setPosition(entity.getEntity().posX, entity.getEntity().posY, entity.getEntity().posZ);
-                blockStack.getItem().onItemUse(GeneralTools.getHarvester(), world, pos, EnumHand.MAIN_HAND, EnumFacing.UP, 0, 0, 0);
-            }
-            if (jump) {
-                entity.getEntity().getJumpHelper().setJumping();
-            }
-        }
     }
 
     private int getSize() {
@@ -374,8 +356,10 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
                     BlockPos p = tpos.add(relativePos);
                     IBlockState state = entity.getWorld().getBlockState(p);
                     IDesiredBlock desired = getDesiredState(relativePos);
-                    if (!desired.getStateMatcher().test(state) && !entity.getWorld().isAirBlock(p)) {
-                        todo.add(p);
+                    if (desired != AIR) {
+                        if (!desired.getStateMatcher().test(state) && !entity.getWorld().isAirBlock(p)) {
+                            todo.add(p);
+                        }
                     }
                 }
             }
@@ -429,12 +413,11 @@ public class MakeHouseActionWorker extends AbstractActionWorker {
                 BlockPos navigate = helper.findBestNavigationSpot(buildPos);
                 if (navigate != null) {
                     helper.navigateTo(navigate, p -> {
-                        boolean jump = buildPos.up().equals(navigate);
-                        placeBuildingBlock(buildPos, desired, jump);
+                        helper.placeBuildingBlock(buildPos, desired);
                     });
                 } else {
                     // We couldn't reach it. Just build the block
-                    placeBuildingBlock(buildPos, desired, false);
+                    helper.placeBuildingBlock(buildPos, desired);
                 }
             }
         } else {
