@@ -108,11 +108,13 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     @Override
     public void onEntityUpdate() {
         super.onEntityUpdate();
-        ServerActionManager manager = ServerActionManager.getManager();
-        if (actionId != 0) {
-            ActionOptions options = manager.getOptions(actionId);
-            if (options == null) {
-                this.setDead();
+        if (!world.isRemote) {
+            ServerActionManager manager = ServerActionManager.getManager();
+            if (actionId != 0) {
+                ActionOptions options = manager.getOptions(actionId);
+                if (options == null) {
+                    this.setDead();
+                }
             }
         }
     }
