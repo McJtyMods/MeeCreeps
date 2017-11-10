@@ -55,9 +55,10 @@ public class PortalTileEntity extends TileEntity implements ITickable {
 
             if ((!soundEnd) && timeout < 10) {
                 soundEnd = true;
-                SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "portal"));
-                // @todo config
-                SoundTools.playSound(world, sound, pos.getX(), pos.getY(), pos.getZ(), 1, 1);
+                if (Config.teleportVolume > 0.01f) {
+                    SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "portal"));
+                    SoundTools.playSound(world, sound, pos.getX(), pos.getY(), pos.getZ(), Config.teleportVolume, 1);
+                }
             }
 
             getOther().ifPresent(otherPortal -> {
@@ -77,9 +78,10 @@ public class PortalTileEntity extends TileEntity implements ITickable {
                         otherPortal.setTimeout(Config.portalTimeoutAfterEntry);
 
                         if (entity instanceof EntityPlayer) {
-                            SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "teleport"));
-                            // @todo config
-                            SoundTools.playSound(otherPortal.getWorld(), sound, otherX, otherY, otherZ, 1, 1);
+                            if (Config.teleportVolume > 0.01f) {
+                                SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "teleport"));
+                                SoundTools.playSound(otherPortal.getWorld(), sound, otherX, otherY, otherZ, Config.teleportVolume, 1);
+                            }
                         }
                     }
                 }

@@ -3,6 +3,7 @@ package mcjty.meecreeps.actions;
 import io.netty.buffer.ByteBuf;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.api.IActionContext;
+import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.network.NetworkTools;
 import mcjty.meecreeps.network.PacketHandler;
@@ -387,9 +388,10 @@ public class ActionOptions implements IActionContext {
         entity.setActionId(actionId);
         world.spawnEntity(entity);
 
-        SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "intro1"));
-        // @todo config
-        SoundTools.playSound(world, sound, p.getX(), p.getY(), p.getZ(), 1, 1);
+        if (Config.meeCreepVolume > 0.01f) {
+            SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "intro1"));
+            SoundTools.playSound(world, sound, p.getX(), p.getY(), p.getZ(), Config.meeCreepVolume, 1);
+        }
 
         return true;
     }

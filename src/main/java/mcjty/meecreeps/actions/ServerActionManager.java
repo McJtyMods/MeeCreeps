@@ -2,6 +2,7 @@ package mcjty.meecreeps.actions;
 
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
+import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -95,7 +96,6 @@ public class ServerActionManager extends WorldSavedData {
 
     public void performAction(@Nullable EntityPlayerMP player, int id, MeeCreepActionType type, @Nullable String furtherQuestionId) {
         MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(type);
-        System.out.println("ServerActionManager.performAction: " + factory.getMessage());
         ActionOptions option = getOptions(id);
         if (option != null) {
             option.setStage(Stage.WORKING);
@@ -103,15 +103,15 @@ public class ServerActionManager extends WorldSavedData {
             save();
 
             if (player != null) {
-                SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "ok"));
-                // @todo config
-                SoundTools.playSound(player.getEntityWorld(), sound, player.posX, player.posY, player.posZ, 1, 1);
+                if (Config.meeCreepVolume > 0.01f) {
+                    SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "ok"));
+                    SoundTools.playSound(player.getEntityWorld(), sound, player.posX, player.posY, player.posZ, Config.meeCreepVolume, 1);
+                }
             }
         }
     }
 
     public void cancelAction(EntityPlayerMP player, int id) {
-        System.out.println("ServerActionManager.cancelAction");
         ActionOptions option = getOptions(id);
         if (option != null) {
             option.setStage(Stage.DONE);
@@ -120,7 +120,6 @@ public class ServerActionManager extends WorldSavedData {
     }
 
     public void resumeAction(EntityPlayerMP player, int id) {
-        System.out.println("ServerActionManager.resumeAction");
         ActionOptions option = getOptions(id);
         if (option != null) {
             option.setPaused(false);
