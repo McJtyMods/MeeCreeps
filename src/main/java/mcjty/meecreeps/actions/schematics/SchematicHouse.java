@@ -130,6 +130,38 @@ public class SchematicHouse implements IBuildSchematic {
         }
     };
 
+    private static final IDesiredBlock DOORTOP = new IDesiredBlock() {
+        @Override
+        public String getName() {
+            return "door";
+        }
+
+        @Override
+        public int getAmount() {
+            return 0;
+        }
+
+        @Override
+        public int getPass() {
+            return 1;
+        }
+
+        @Override
+        public boolean isOptional() {
+            return true;
+        }
+
+        @Override
+        public Predicate<ItemStack> getMatcher() {
+            return stack -> false;
+        }
+
+        @Override
+        public Predicate<IBlockState> getStateMatcher() {
+            return blockState -> blockState.getBlock() instanceof BlockDoor;
+        }
+    };
+
     private static final IDesiredBlock TORCH = new IDesiredBlock() {
         @Override
         public String getName() {
@@ -180,7 +212,7 @@ public class SchematicHouse implements IBuildSchematic {
                 }
             case 2:
                 if (isDoorPos(relativePos, hs)) {
-                    return ignore;
+                    return DOORTOP;
                 } else if (isBorderPos(relativePos, hs)) {
                     return COBBLE;
                 } else {

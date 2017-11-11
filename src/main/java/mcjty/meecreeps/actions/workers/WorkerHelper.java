@@ -52,8 +52,15 @@ public class WorkerHelper implements IWorkerHelper {
     protected int waitABit = 10;
     private int speed = 10;
 
-    protected BlockPos movingToPos;
-    protected Entity movingToEntity;
+    private BlockPos movingToPos;
+    private Entity movingToEntity;
+
+    // To detect if we're stuck
+    private double prevPosX;
+    private double prevPosY;
+    private double prevPosZ;
+    private int stuckCounter;
+
     private int pathTries = 0;
     protected Consumer<BlockPos> job;
     protected List<EntityItem> itemsToPickup = new ArrayList<>();
@@ -333,6 +340,11 @@ public class WorkerHelper implements IWorkerHelper {
             this.movingToEntity = null;
             pathTries = 1;
             this.job = job;
+            prevPosX = entity.posX;
+            prevPosY = entity.posY;
+            prevPosZ = entity.posZ;
+            stuckCounter = 0;
+//            prevPosX = entity.posX;
         }
     }
 
@@ -360,7 +372,6 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     private static double getSquareDist(Entity source, BlockPos dest) {
-        BlockPos position = source.getPosition();
         double d0 = dest.distanceSqToCenter(source.posX, source.posY - 1, source.posZ);
         double d1 = dest.distanceSqToCenter(source.posX, source.posY, source.posZ);
         double d2 = dest.distanceSqToCenter(source.posX, source.posY + source.getEyeHeight(), source.posZ);
@@ -380,6 +391,10 @@ public class WorkerHelper implements IWorkerHelper {
     @Override
     public boolean navigateTo(Entity dest, Consumer<BlockPos> job) {
         return navigateTo(dest, job, 1000000000);
+    }
+
+    private boolean isStuck() {
+        return Math.abs(entity.posX-prevPosX) < 0.01 && Math.abs(entity.posY-prevPosY) < 0.01 && Math.abs(entity.posZ-prevPosZ) < 0.01;
     }
 
     public void tick(boolean timeToWrapUp) {
@@ -407,6 +422,14 @@ public class WorkerHelper implements IWorkerHelper {
                         } else {
                             pathTries++;
                             entity.getNavigator().tryMoveToEntityLiving(movingToEntity, 2.0);
+                            stuckCounter = 0;
+                        }
+                    } else if (isStuck()) {
+                        stuckCounter++;
+                        if (stuckCounter > 5) {
+                            entity.setPositionAndUpdate(movingToEntity.posX, movingToEntity.posY, movingToEntity.posZ);
+                            job.accept(movingToEntity.getPosition());
+                            job = null;
                         }
                     }
                 }
@@ -423,9 +446,20 @@ public class WorkerHelper implements IWorkerHelper {
                     } else {
                         pathTries++;
                         entity.getNavigator().tryMoveToXYZ(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5, 2.0);
+                        stuckCounter = 0;
+                    }
+                } else if (isStuck()) {
+                    stuckCounter++;
+                    if (stuckCounter > 5) {
+                        entity.setPositionAndUpdate(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5);
+                        job.accept(movingToPos);
+                        job = null;
                     }
                 }
             }
+            prevPosX = entity.posX;
+            prevPosY = entity.posY;
+            prevPosZ = entity.posZ;
         } else if (!options.getDrops().isEmpty()) {
             // There are drops we need to collect first.
             for (Pair<BlockPos, ItemStack> pair : options.getDrops()) {
@@ -480,6 +514,9 @@ public class WorkerHelper implements IWorkerHelper {
     @Override
     public void harvestAndPickup(BlockPos pos) {
         World world = entity.getEntityWorld();
+        if (world.isAirBlock(pos)) {
+            return;
+        }
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
@@ -493,6 +530,9 @@ public class WorkerHelper implements IWorkerHelper {
     @Override
     public void harvestAndDrop(BlockPos pos) {
         World world = entity.getEntityWorld();
+        if (world.isAirBlock(pos)) {
+            return;
+        }
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
