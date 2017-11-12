@@ -34,7 +34,7 @@ public class LightupActionWorker extends AbstractActionWorker {
         World world = entity.getWorld();
         AxisAlignedBB box = getActionBox();
         return GeneralTools.traverseBoxFirst(box, p -> {
-            if (WorldEntitySpawner.canCreatureTypeSpawnAtLocation(EntityLiving.SpawnPlacementType.ON_GROUND, world, p)) {
+            if (world.isAirBlock(p) && WorldEntitySpawner.canCreatureTypeSpawnAtLocation(EntityLiving.SpawnPlacementType.ON_GROUND, world, p)) {
                 int light = world.getLightFromNeighbors(p);
                 if (light < 7) {
                     return p;
