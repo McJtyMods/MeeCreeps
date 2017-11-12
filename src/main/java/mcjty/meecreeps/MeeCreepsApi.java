@@ -73,13 +73,14 @@ public class MeeCreepsApi implements IMeeCreepsApi {
 
     public void registerFactories() {
         registerActionFactory("meecreeps.make_house", "Build a house", new MakeHouseActionFactory());
+        registerActionFactory("meecreeps.make_platform", "Build a platform", new MakePlatformActionFactory());
         registerActionFactory("meecreeps.flatten_area", "Flatten an area", new FlattenAreaActionFactory());
         registerActionFactory("meecreeps.chop_tree", "Chop this tree", new ChopTreeActionFactory());
+        registerActionFactory("meecreeps.chop_tree_collect", "Chop this tree and get the drops", new ChopTreeAndCollectActionFactory());
         registerActionFactory("meecreeps.dig_down", "Dig straight down to bedrock", new DigdownActionFactory());
         registerActionFactory("meecreeps.dig_down_stairs", "Dig down to bedrock using stairs", new DigdownStairsActionFactory());
         registerActionFactory("meecreeps.mine_ores", "Find and mine all nearby ores", new MineOresActionFactory());
         registerActionFactory("meecreeps.dig_tunnel", "Dig a 3x3 tunnel, 32 blocks long", new DigTunnelActionFactory());
-        registerActionFactory("meecreeps.chop_tree_collect", "Chop this tree and get the drops", new ChopTreeAndCollectActionFactory());
         registerActionFactory("meecreeps.harvest_replant", "Harvest and replant those crops", new HarvestReplantActionFactory());
         registerActionFactory("meecreeps.harvest", "Harvest those crops", new HarvestActionFactory());
         registerActionFactory("meecreeps.torches", "Light up the area", new LightupActionFactory());

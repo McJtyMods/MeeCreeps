@@ -48,7 +48,8 @@ public interface IWorkerHelper {
     boolean allowedToHarvest(IBlockState state, World world, BlockPos pos, EntityPlayer entityPlayer);
 
     /**
-     * Place a building block at the specified location
+     * Place a building block at the specified location. If there is already a block there it will
+     * be removed first
      */
     void placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock);
 

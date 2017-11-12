@@ -492,6 +492,9 @@ public class WorkerHelper implements IWorkerHelper {
     @Override
     public void placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock) {
         World world = entity.getWorld();
+        if (!world.isAirBlock(pos) && !world.getBlockState(pos).getBlock().isReplaceable(world, pos)) {
+            harvestAndDrop(pos);
+        }
         ItemStack blockStack = entity.consumeItem(desiredBlock.getMatcher(), 1);
         if (!blockStack.isEmpty()) {
             if (blockStack.getItem() instanceof ItemBlock) {
