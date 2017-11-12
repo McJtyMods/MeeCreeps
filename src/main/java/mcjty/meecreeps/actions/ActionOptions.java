@@ -304,6 +304,10 @@ public class ActionOptions implements IActionContext {
                     if (spawn(world, getTargetPos(), getTargetSide(), getActionId())) {
                         setStage(Stage.OPENING_GUI);
                     } else {
+                        EntityPlayer player = getPlayer();
+                        if (player != null) {
+                            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("Can't find a good spot to spawn a MeeCreep!"), (EntityPlayerMP) player);
+                        }
                         return false;
                     }
                     break;
