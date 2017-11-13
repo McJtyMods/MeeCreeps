@@ -32,6 +32,7 @@ public interface IMeeCreepsApi {
      *      * meecreeps.harvest
      *      * meecreeps.torches
      *      * meecreeps.pickup
+     *      * meecreeps.idle
      */
     void registerActionFactory(String id, String message, IActionFactory factory);
 
