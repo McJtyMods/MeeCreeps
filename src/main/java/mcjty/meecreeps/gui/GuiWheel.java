@@ -1,6 +1,7 @@
 package mcjty.meecreeps.gui;
 
 import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.actions.ClientActionManager;
 import mcjty.meecreeps.items.PortalGunItem;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
@@ -97,9 +98,10 @@ public class GuiWheel extends GuiScreen {
                 } else {
                     BlockPos bestPosition = TeleportationTools.findBestPosition(mc.world, selectedBlock, selectedSide);
                     if (bestPosition == null) {
-                        GuiBalloon.message = "Can't find a good spot to make a portal!";
+//                        GuiBalloon.message = "Can't find a good spot to make a portal!";
                         closeThis();
-                        mc.player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, mc.world, selectedBlock.getX(), selectedBlock.getY(), selectedBlock.getZ());
+                        ClientActionManager.showProblem("Can't find a good spot to make a portal!");
+//                        mc.player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, mc.world, selectedBlock.getX(), selectedBlock.getY(), selectedBlock.getZ());
                         return;
                     } else {
                         GuiAskName.destinationIndex = q;

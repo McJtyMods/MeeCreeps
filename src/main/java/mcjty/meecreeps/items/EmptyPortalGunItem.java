@@ -1,6 +1,7 @@
 package mcjty.meecreeps.items;
 
 import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.actions.ClientActionManager;
 import mcjty.meecreeps.gui.GuiBalloon;
 import mcjty.meecreeps.proxy.GuiProxy;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -45,8 +46,9 @@ public class EmptyPortalGunItem extends Item {
     @Override
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
         if (world.isRemote) {
-            GuiBalloon.message = "This gun does not have a cartridge!";
-            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
+//            GuiBalloon.message = "This gun does not have a cartridge!";
+//            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
+            ClientActionManager.showProblem("This gun does not have a cartridge!");
             return EnumActionResult.SUCCESS;
         }
 
@@ -61,9 +63,10 @@ public class EmptyPortalGunItem extends Item {
     @Override
     public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
         if (world.isRemote) {
-            GuiBalloon.message = "This gun does not have a cartridge!";
-            BlockPos pos = player.getPosition();
-            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
+//            GuiBalloon.message = "This gun does not have a cartridge!";
+//            BlockPos pos = player.getPosition();
+//            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
+            ClientActionManager.showProblem("This gun does not have a cartridge!");
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, player.getHeldItem(hand));
     }

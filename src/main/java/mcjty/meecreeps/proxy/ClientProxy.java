@@ -55,6 +55,10 @@ public class ClientProxy extends CommonProxy {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void renderGameOverlayEvent(RenderGameOverlayEvent.Pre event) {
+        if (event.getType() != RenderGameOverlayEvent.ElementType.TEXT) {
+            return;
+        }
+
         BalloonRenderer.renderBalloon();
     }
 

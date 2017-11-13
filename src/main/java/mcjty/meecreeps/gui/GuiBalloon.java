@@ -6,6 +6,7 @@ import net.minecraft.util.ResourceLocation;
 
 import java.io.IOException;
 
+@Deprecated
 public class GuiBalloon extends GuiScreen {
 
     private static final int WIDTH = 256;

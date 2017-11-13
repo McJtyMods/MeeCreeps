@@ -585,6 +585,35 @@ public class RenderHelper {
         return width;
     }
 
+    public static int renderText(Minecraft mc, int x, int y, String txt, int color) {
+        GlStateManager.color(1.0F, 1.0F, 1.0F);
+
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(0.0F, 0.0F, 32.0F);
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.enableRescaleNormal();
+        GlStateManager.enableLighting();
+        net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();
+
+        GlStateManager.disableLighting();
+        GlStateManager.disableDepth();
+        GlStateManager.disableBlend();
+        int width = mc.fontRenderer.getStringWidth(txt);
+        mc.fontRenderer.drawString(txt, x, y, color);
+        GlStateManager.enableLighting();
+        GlStateManager.enableDepth();
+        // Fixes opaque cooldown overlay a bit lower
+        // TODO: check if enabled blending still screws things up down the line.
+        GlStateManager.enableBlend();
+
+
+        GlStateManager.popMatrix();
+        GlStateManager.disableRescaleNormal();
+        GlStateManager.disableLighting();
+
+        return width;
+    }
+
     public static class Vector {
         public final float x;
         public final float y;

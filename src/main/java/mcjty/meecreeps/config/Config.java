@@ -33,6 +33,10 @@ public class Config {
     public static float meeCreepVolume = 1.0f;
     public static float teleportVolume = 1.0f;
 
+    public static int balloonTimeout = 60;
+    public static int balloonX = 0;
+    public static int balloonY = 10;
+
     // @todo
     // config for type of pickaxe
 
@@ -46,6 +50,9 @@ public class Config {
 
         meeCreepVolume = cfg.getFloat("meeCreepVolume", CATEGORY_GENERAL, meeCreepVolume, 0, 1, "Volume of the MeeCreep");
         teleportVolume = cfg.getFloat("teleportVolume", CATEGORY_GENERAL, teleportVolume, 0, 1, "Volume of the Portal Gun");
-    }
+
+        balloonX = cfg.getInt("balloonX", CATEGORY_GENERAL, balloonX, -100, 100, "Balloon horizontal postion: 0 means centered, positive means percentage offset from left side, negative means percentage offset from right side");
+        balloonY = cfg.getInt("balloonY", CATEGORY_GENERAL, balloonY, -100, 100, "Balloon vertical position: 0 means centered, positive means percentage offset from top side, negative means percentage offset from bottom side");
+        balloonTimeout = cfg.getInt("balloonTimeout", CATEGORY_GENERAL, balloonTimeout, 1, 10000, "Number of ticks (20 ticks per second) before the balloon message disappears");    }
 
 }
