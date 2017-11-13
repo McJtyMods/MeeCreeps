@@ -34,12 +34,14 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     private int actionId = 0;
     private NonNullList<ItemStack> inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);
     private MeeCreepWorkerTask workerTask;
-    private int variation = 0;
+    private int variation_face = 0;
+    private int variation_hair = 0;
 
     public EntityMeeCreeps(World worldIn) {
         super(worldIn);
         setSize(0.6F, 1.95F);
-        variation = worldIn.rand.nextInt(9);
+        variation_face = worldIn.rand.nextInt(9);
+        variation_hair = worldIn.rand.nextInt(9);
     }
 
     @Override
@@ -62,8 +64,12 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
         super.entityInit();
     }
 
-    public int getVariation() {
-        return variation;
+    public int getVariationFace() {
+        return variation_face;
+    }
+    
+    public int getVariationHair() {
+        return variation_hair;
     }
 
     @Override
