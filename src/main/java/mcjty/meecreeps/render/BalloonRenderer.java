@@ -43,20 +43,23 @@ public class BalloonRenderer {
         int guiTop;
 
         if (Config.balloonX > 0) {
-            guiLeft = width * 100 / Config.balloonX;
+            guiLeft = width * Config.balloonX / 100;
         } else if (Config.balloonX < 0) {
-            guiLeft = (width + width * 100 / Config.balloonX) - WIDTH;
+            guiLeft = (width + width * Config.balloonX / 100) - WIDTH;
         } else {
             guiLeft = (width - WIDTH) / 2;
         }
 
         if (Config.balloonY > 0) {
-            guiTop = height * 100 / Config.balloonY;
+            guiTop = height * Config.balloonY / 100;
         } else if (Config.balloonY < 0) {
-            guiTop = (height + height * 100 / Config.balloonY) - HEIGHT;
+            guiTop = (height + height * Config.balloonY / 100) - HEIGHT;
         } else {
             guiTop = (height - HEIGHT) / 2;
         }
+
+        System.out.println("guiLeft = " + guiLeft);
+        System.out.println("guiTop = " + guiTop);
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.disableLighting();
