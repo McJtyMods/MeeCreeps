@@ -75,7 +75,7 @@ public class MeeCreepsModel extends ModelBiped {
         }
         
         for (int i = 0 ; i < 9 ; i++) {
-            this.hairVariation[i] = new ModelRenderer(this, 36, 0);
+            this.hairVariation[i] = new ModelRenderer(this, 36, getTextureV(i));
             this.hairVariation[i].setRotationPoint(0.0F, -8.0F, 0.0F);
             this.hairVariation[i].addBox(-1.0F, 0.5F, -1.0F, 2, 2, 2, 0.0F);
         }
@@ -335,6 +335,7 @@ public class MeeCreepsModel extends ModelBiped {
         this.bipedRightLeg.render(f5);
         this.bipedRightArm.render(f5);
         this.faceVariation[meeCreeps.getVariationFace()].render(f5);
+        this.hairVariation[meeCreeps.getVariationHair()].render(f5);
         this.bipedLeftLeg.render(f5);
         this.bipedBody.render(f5);
     }
@@ -432,6 +433,7 @@ public class MeeCreepsModel extends ModelBiped {
 
         EntityMeeCreeps meeCreeps = (EntityMeeCreeps) entity;
         copyModelAngles(bipedHead, faceVariation[meeCreeps.getVariationFace()]);
+        copyModelAngles(bipedHead, hairVariation[meeCreeps.getVariationHair()]);
     }
 }
 
