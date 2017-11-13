@@ -33,7 +33,7 @@ public class Config {
     public static float meeCreepVolume = 1.0f;
     public static float teleportVolume = 1.0f;
 
-    public static int balloonTimeout = 60;
+    public static int balloonTimeout = 80;
     public static int balloonX = 0;
     public static int balloonY = 10;
 
