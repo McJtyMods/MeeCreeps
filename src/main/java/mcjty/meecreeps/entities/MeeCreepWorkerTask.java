@@ -75,12 +75,14 @@ public class MeeCreepWorkerTask extends EntityAIBase {
     }
 
     public void readFromNBT(NBTTagCompound tag) {
-        ServerActionManager manager = ServerActionManager.getManager();
-        int actionId = meeCreeps.getActionId();
-        if (actionId != 0) {
-            ActionOptions options = manager.getOptions(actionId);
-            if (options != null) {
-                getHelper(options).readFromNBT(tag);
+        if (!meeCreeps.getWorld().isRemote) {
+            ServerActionManager manager = ServerActionManager.getManager();
+            int actionId = meeCreeps.getActionId();
+            if (actionId != 0) {
+                ActionOptions options = manager.getOptions(actionId);
+                if (options != null) {
+                    getHelper(options).readFromNBT(tag);
+                }
             }
         }
     }
