@@ -65,7 +65,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
         World world = entity.getWorld();
         BlockPos p = findTopSpotNotDiggedYet();
         IBlockState state = world.getBlockState(p);
-        if (world.isAirBlock(p) || state.getBlock() == Blocks.LADDER) {
+        if (p.getY() < 1 || world.isAirBlock(p) || state.getBlock() == Blocks.LADDER) {
             helper.taskIsDone();
         } else if (helper.allowedToHarvest(state, world, p, GeneralTools.getHarvester())) {
             helper.harvestAndDrop(p);
