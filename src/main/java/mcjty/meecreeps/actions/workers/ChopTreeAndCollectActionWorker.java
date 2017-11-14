@@ -55,7 +55,7 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
         if (timeToWrapUp) {
             if (entity.hasStuffInInventory()) {
                 // We need to find a suitable chest
-                if (!helper.findSuitableInventory(getActionBox(), entity.getInventoryMatcher(), helper::putInventoryInChest)) {
+                if (!helper.findSuitableInventory(getSearchBox(), entity.getInventoryMatcher(), helper::putInventoryInChest)) {
                     if (!helper.navigateTo(options.getPlayer(), (p) -> helper.giveToPlayerOrDrop(), 12)) {
                         entity.dropInventory();
                     }

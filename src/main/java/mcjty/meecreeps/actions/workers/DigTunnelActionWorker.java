@@ -263,7 +263,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
 
     private boolean checkForSupport(BlockPos p) {
         if (entity.getWorld().isAirBlock(p) || isLiquid(p)) {
-            if (!helper.findItemOnGround(getActionBox(), this::isSupportBlock, entityItem -> buildSupport(p, entityItem))) {
+            if (!helper.findItemOnGround(getSearchBox(), this::isSupportBlock, entityItem -> buildSupport(p, entityItem))) {
                 // We cannot continu like this
                 helper.showMessage("I cannot continue this way");
                 helper.taskIsDone();
@@ -275,7 +275,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
 
     private boolean checkForLiquid(BlockPos p) {
         if (isLiquid(p)) {
-            if (!helper.findItemOnGround(getActionBox(), this::isSupportBlock, entityItem -> buildSupport(p, entityItem))) {
+            if (!helper.findItemOnGround(getSearchBox(), this::isSupportBlock, entityItem -> buildSupport(p, entityItem))) {
                 // We cannot continue like this
                 helper.showMessage("I cannot continue this way");
                 helper.taskIsDone();

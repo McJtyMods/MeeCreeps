@@ -33,6 +33,7 @@ public interface IMeeCreepsApi {
      *      * meecreeps.torches
      *      * meecreeps.pickup
      *      * meecreeps.idle
+     *      * meecreeps.angry
      */
     void registerActionFactory(String id, String message, IActionFactory factory);
 

@@ -1,0 +1,11 @@
+{
+  "forge_marker": 1,
+  "defaults": {
+    "model": "meecreeps:creepcube",
+    "transform": { "scale": 1.8 }
+  },
+  "variants": {
+    "normal": [{}],
+    "inventory": [{}]
+  }
+}

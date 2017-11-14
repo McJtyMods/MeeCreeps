@@ -9,9 +9,13 @@ public class ModBlocks {
     @GameRegistry.ObjectHolder("meecreeps:portalblock")
     public static PortalBlock portalBlock;
 
+    @GameRegistry.ObjectHolder("meecreeps:creepcube")
+    public static HeldCubeBlock heldCubeBlock;
+
     @SideOnly(Side.CLIENT)
     public static void initModels() {
         portalBlock.initModel();
+        heldCubeBlock.initModel();
     }
 
 }

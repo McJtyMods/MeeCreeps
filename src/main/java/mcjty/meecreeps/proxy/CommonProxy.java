@@ -3,6 +3,7 @@ package mcjty.meecreeps.proxy;
 import com.google.common.util.concurrent.ListenableFuture;
 import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.blocks.HeldCubeBlock;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.blocks.PortalBlock;
 import mcjty.meecreeps.blocks.PortalTileEntity;
@@ -62,6 +63,7 @@ public class CommonProxy {
 
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
+        event.getRegistry().register(new HeldCubeBlock());
         event.getRegistry().register(new PortalBlock());
         GameRegistry.registerTileEntity(PortalTileEntity.class, MeeCreeps.MODID + "_portalblock");
     }

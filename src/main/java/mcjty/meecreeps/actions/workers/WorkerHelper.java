@@ -1,11 +1,9 @@
 package mcjty.meecreeps.actions.workers;
 
 import mcjty.meecreeps.ForgeEventHandlers;
-import mcjty.meecreeps.actions.ActionOptions;
-import mcjty.meecreeps.actions.PacketShowBalloonToClient;
-import mcjty.meecreeps.actions.ServerActionManager;
-import mcjty.meecreeps.actions.Stage;
+import mcjty.meecreeps.actions.*;
 import mcjty.meecreeps.api.*;
+import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.items.CreepCubeItem;
 import mcjty.meecreeps.network.PacketHandler;
@@ -401,6 +399,10 @@ public class WorkerHelper implements IWorkerHelper {
         return Math.abs(entity.posX-prevPosX) < 0.01 && Math.abs(entity.posY-prevPosY) < 0.01 && Math.abs(entity.posZ-prevPosZ) < 0.01;
     }
 
+    private boolean isCube(ItemStack stack) {
+        return stack.getItem() instanceof CreepCubeItem;
+    }
+
     public void tick(boolean timeToWrapUp) {
         waitABit--;
         if (waitABit > 0) {
@@ -410,87 +412,117 @@ public class WorkerHelper implements IWorkerHelper {
         waitABit = speed;
 
         if (job != null) {
-            if (movingToEntity != null) {
-                if (movingToEntity.isDead) {
-                    job = null;
-                } else {
-                    double d = getSquareDist(entity, movingToEntity);
-                    if (d < DISTANCE_TOLERANCE) {
-                        job.accept(movingToEntity.getPosition());
-                        job = null;
-                    } else if (entity.getNavigator().noPath()) {
-                        if (pathTries > 2) {
-                            entity.setPositionAndUpdate(movingToEntity.posX, movingToEntity.posY, movingToEntity.posZ);
-                            job.accept(movingToEntity.getPosition());
-                            job = null;
-                        } else {
-                            pathTries++;
-                            entity.getNavigator().tryMoveToEntityLiving(movingToEntity, 2.0);
-                            stuckCounter = 0;
-                        }
-                    } else if (isStuck()) {
-                        stuckCounter++;
-                        if (stuckCounter > 5) {
-                            entity.setPositionAndUpdate(movingToEntity.posX, movingToEntity.posY, movingToEntity.posZ);
-                            job.accept(movingToEntity.getPosition());
-                            job = null;
-                        }
-                    }
-                }
-            } else {
-                double d = getSquareDist(entity, movingToPos);
-                if (d < DISTANCE_TOLERANCE) {
-                    job.accept(movingToPos);
-                    job = null;
-                } else if (entity.getNavigator().noPath()) {
-                    if (pathTries > 2) {
-                        entity.setPositionAndUpdate(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5);
-                        job.accept(movingToPos);
-                        job = null;
-                    } else {
-                        pathTries++;
-                        entity.getNavigator().tryMoveToXYZ(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5, 2.0);
-                        stuckCounter = 0;
-                    }
-                } else if (isStuck()) {
-                    stuckCounter++;
-                    if (stuckCounter > 5) {
-                        entity.setPositionAndUpdate(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5);
-                        job.accept(movingToPos);
-                        job = null;
-                    }
-                }
-            }
-            prevPosX = entity.posX;
-            prevPosY = entity.posY;
-            prevPosZ = entity.posZ;
+            handleJob();
+        } else if (entity.hasItem(this::isCube)) {
+            spawnAngryCreep();
+        } else if (findMeeCreepBoxOnGround()) {
+            entity.dropInventory();
+            setSpeed(20);
         } else if (!options.getDrops().isEmpty()) {
-            // There are drops we need to collect first.
-            for (Pair<BlockPos, ItemStack> pair : options.getDrops()) {
-                ItemStack drop = pair.getValue();
-                if (!drop.isEmpty()) {
-                    ItemStack remaining = entity.addStack(drop);
-                    if (!remaining.isEmpty()) {
-                        entity.entityDropItem(remaining, 0.0f);
-                        needsToPutAway = true;
-                    }
-                }
-            }
-            options.clearDrops();
-            ServerActionManager.getManager().save();
-            waitABit = 1;   // Process faster
+            handleDropCollection();
         } else if (needToFindChest(timeToWrapUp)) {
-            if (!findChestToPutItemsIn()) {
-                if (!navigateTo(getPlayer(), (p) -> giveToPlayerOrDrop(), 12)) {
-                    entity.dropInventory();
-                }
-            }
-            needsToPutAway = false;
+            handlePutAway();
         } else if (!itemsToPickup.isEmpty()) {
             tryFindingItemsToPickup();
         } else {
             worker.tick(timeToWrapUp);
         }
+    }
+
+    private void spawnAngryCreep() {
+        entity.setHeldBlockState(ModBlocks.heldCubeBlock.getDefaultState());
+        entity.setVariationFace(1);
+        ServerActionManager manager = ServerActionManager.getManager();
+        World world = entity.getWorld();
+
+        Random r = entity.getRandom();
+        BlockPos targetPos = new BlockPos(entity.posX + r.nextFloat()*8 - 4, entity.posY, entity.posZ + r.nextFloat()*8 - 4);
+        int actionId = manager.createActionOptions(world, targetPos, EnumFacing.UP, getPlayer());
+        ActionOptions.spawn(world, targetPos, EnumFacing.UP, actionId);
+        manager.performAction(getPlayer(), actionId, new MeeCreepActionType("meecreeps.angry"), null);
+    }
+
+    private void handlePutAway() {
+        if (!findChestToPutItemsIn()) {
+            if (!navigateTo(getPlayer(), (p) -> giveToPlayerOrDrop(), 12)) {
+                entity.dropInventory();
+            }
+        }
+        needsToPutAway = false;
+    }
+
+    private void handleDropCollection() {
+        // There are drops we need to collect first.
+        for (Pair<BlockPos, ItemStack> pair : options.getDrops()) {
+            ItemStack drop = pair.getValue();
+            if (!drop.isEmpty()) {
+                ItemStack remaining = entity.addStack(drop);
+                if (!remaining.isEmpty()) {
+                    entity.entityDropItem(remaining, 0.0f);
+                    needsToPutAway = true;
+                }
+            }
+        }
+        options.clearDrops();
+        ServerActionManager.getManager().save();
+        waitABit = 1;   // Process faster
+    }
+
+    private void handleJob() {
+        if (movingToEntity != null) {
+            if (movingToEntity.isDead) {
+                job = null;
+            } else {
+                double d = getSquareDist(entity, movingToEntity);
+                if (d < DISTANCE_TOLERANCE) {
+                    job.accept(movingToEntity.getPosition());
+                    job = null;
+                } else if (entity.getNavigator().noPath()) {
+                    if (pathTries > 2) {
+                        entity.setPositionAndUpdate(movingToEntity.posX, movingToEntity.posY, movingToEntity.posZ);
+                        job.accept(movingToEntity.getPosition());
+                        job = null;
+                    } else {
+                        pathTries++;
+                        entity.getNavigator().tryMoveToEntityLiving(movingToEntity, 2.0);
+                        stuckCounter = 0;
+                    }
+                } else if (isStuck()) {
+                    stuckCounter++;
+                    if (stuckCounter > 5) {
+                        entity.setPositionAndUpdate(movingToEntity.posX, movingToEntity.posY, movingToEntity.posZ);
+                        job.accept(movingToEntity.getPosition());
+                        job = null;
+                    }
+                }
+            }
+        } else {
+            double d = getSquareDist(entity, movingToPos);
+            if (d < DISTANCE_TOLERANCE) {
+                job.accept(movingToPos);
+                job = null;
+            } else if (entity.getNavigator().noPath()) {
+                if (pathTries > 2) {
+                    entity.setPositionAndUpdate(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5);
+                    job.accept(movingToPos);
+                    job = null;
+                } else {
+                    pathTries++;
+                    entity.getNavigator().tryMoveToXYZ(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5, 2.0);
+                    stuckCounter = 0;
+                }
+            } else if (isStuck()) {
+                stuckCounter++;
+                if (stuckCounter > 5) {
+                    entity.setPositionAndUpdate(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5);
+                    job.accept(movingToPos);
+                    job = null;
+                }
+            }
+        }
+        prevPosX = entity.posX;
+        prevPosY = entity.posY;
+        prevPosZ = entity.posZ;
     }
 
     @Override
@@ -638,9 +670,9 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message, int maxAmount) {
-        List<BlockPos> meeCreepChests = findMeeCreepChests(worker.getActionBox());
-        if (!findItemOnGround(worker.getActionBox(), matcher, this::pickup)) {
-            if (!findInventoryContainingMost(worker.getActionBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
+        List<BlockPos> meeCreepChests = findMeeCreepChests(worker.getSearchBox());
+        if (!findItemOnGround(worker.getSearchBox(), matcher, this::pickup)) {
+            if (!findInventoryContainingMost(worker.getSearchBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
                 showMessage(message);
             }
         }
@@ -648,10 +680,10 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public boolean findItemOnGroundOrInChest(Predicate<ItemStack> matcher, int maxAmount) {
-        List<BlockPos> meeCreepChests = findMeeCreepChests(worker.getActionBox());
+        List<BlockPos> meeCreepChests = findMeeCreepChests(worker.getSearchBox());
         if (meeCreepChests.isEmpty()) {
-            if (!findItemOnGround(worker.getActionBox(), matcher, this::pickup)) {
-                if (!findInventoryContainingMost(worker.getActionBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
+            if (!findItemOnGround(worker.getSearchBox(), matcher, this::pickup)) {
+                if (!findInventoryContainingMost(worker.getSearchBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
                     return false;
                 }
             }
@@ -677,6 +709,23 @@ public class WorkerHelper implements IWorkerHelper {
             return false;
         });
         return frames.stream().map(EntityHanging::getHangingPosition).collect(Collectors.toList());
+    }
+
+    private boolean findMeeCreepBoxOnGround() {
+        BlockPos position = entity.getEntity().getPosition();
+        List<EntityItem> items = entity.getWorld().getEntitiesWithinAABB(EntityItem.class, worker.getSearchBox(),
+                input -> !input.getItem().isEmpty() && input.getItem().getItem() instanceof CreepCubeItem);
+        if (!items.isEmpty()) {
+            items.sort((o1, o2) -> {
+                double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
+                double d2 = position.distanceSq(o2.posX, o2.posY, o2.posZ);
+                return Double.compare(d1, d2);
+            });
+            EntityItem entityItem = items.get(0);
+            navigateTo(entityItem, (pos) -> pickup(entityItem));
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -815,7 +864,7 @@ public class WorkerHelper implements IWorkerHelper {
                     }
                     break;
                 case FIND_MATCHING_INVENTORY:
-                    if (findSuitableInventory(worker.getActionBox(), entity.getInventoryMatcher(), this::putInventoryInChest)) {
+                    if (findSuitableInventory(worker.getSearchBox(), entity.getInventoryMatcher(), this::putInventoryInChest)) {
                         return true;
                     }
                     break;

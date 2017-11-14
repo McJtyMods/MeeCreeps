@@ -3,6 +3,7 @@ package mcjty.meecreeps.api;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -23,11 +24,18 @@ public interface IActionWorker {
     default void init() { }
 
     /**
-     * Optionally return a box on which this action should operate and where the IWorkerHelper can look for
-     * stuff (like inventories and items on the ground).
+     * Optionally return a box on which this action should operate. This is optional in case the action does
+     * not require such a box
      */
     @Nullable
     AxisAlignedBB getActionBox();
+
+    /**
+     * Return a box where the IWorkerHelper can look for stuff (like inventories and items on the ground).
+     * This must be provided.
+     */
+    @Nonnull
+    AxisAlignedBB getSearchBox();
 
     /**
      * If this returns true the MeeCreep will only finish when the task is done. Not earlier

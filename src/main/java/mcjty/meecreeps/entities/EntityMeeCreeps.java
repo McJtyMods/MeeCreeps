@@ -1,5 +1,6 @@
 package mcjty.meecreeps.entities;
 
+import com.google.common.base.Optional;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.actions.PacketActionOptionToClient;
@@ -7,7 +8,9 @@ import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
-import net.minecraft.entity.*;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAILookIdle;
 import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.ai.EntityAIWatchClosest;
@@ -17,6 +20,9 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.*;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
@@ -27,6 +33,9 @@ import java.util.function.Predicate;
 
 public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
 
+    private static final DataParameter<Optional<IBlockState>> CARRIED_BLOCK = EntityDataManager.<Optional<IBlockState>>createKey(EntityMeeCreeps.class, DataSerializers.OPTIONAL_BLOCK_STATE);
+    private static final DataParameter<Integer> FACE_VARIATION = EntityDataManager.<Integer>createKey(EntityMeeCreeps.class, DataSerializers.VARINT);
+
     public static final ResourceLocation LOOT = new ResourceLocation(MeeCreeps.MODID, "entities/meecreeps");
 
     public static final int INVENTORY_SIZE = 4;
@@ -34,13 +43,11 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     private int actionId = 0;
     private NonNullList<ItemStack> inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);
     private MeeCreepWorkerTask workerTask;
-    private int variation_face = 0;
     private int variation_hair = 0;
 
     public EntityMeeCreeps(World worldIn) {
         super(worldIn);
         setSize(0.6F, 1.95F);
-        variation_face = worldIn.rand.nextInt(9);
         variation_hair = worldIn.rand.nextInt(9);
     }
 
@@ -62,14 +69,25 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     @Override
     protected void entityInit() {
         super.entityInit();
+        int variation_face = world.rand.nextInt(9);
+        // Avoid the engry face
+        while (variation_face == 1) {
+            variation_face = world.rand.nextInt(9);
+        }
+        this.dataManager.register(CARRIED_BLOCK, Optional.absent());
+        this.dataManager.register(FACE_VARIATION, variation_face);
     }
 
     public int getVariationFace() {
-        return variation_face;
+        return this.dataManager.get(FACE_VARIATION);
     }
-    
+
     public int getVariationHair() {
         return variation_hair;
+    }
+
+    public void setVariationFace(int variation_face) {
+        this.dataManager.set(FACE_VARIATION, variation_face);
     }
 
     @Override
@@ -130,6 +148,16 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     protected ResourceLocation getLootTable() {
         return LOOT;
     }
+
+    public void setHeldBlockState(@Nullable IBlockState state) {
+        this.dataManager.set(CARRIED_BLOCK, Optional.fromNullable(state));
+    }
+
+    @Nullable
+    public IBlockState getHeldBlockState() {
+        return (IBlockState) ((Optional) this.dataManager.get(CARRIED_BLOCK)).orNull();
+    }
+
 
     // Add an itemstack to the internal inventory and return what could not be added
     @Override
@@ -304,15 +332,14 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     }
 
     private void spawnDeathParticles() {
-        for (int i = 0 ; i < 40 ; i++) {
-            world.spawnParticle(EnumParticleTypes.CLOUD, posX, posY+.5, posZ, (rand.nextDouble()-.5)*.2, (rand.nextDouble()-.5)*.5, (rand.nextDouble()-.5)*.2);
+        for (int i = 0; i < 40; i++) {
+            world.spawnParticle(EnumParticleTypes.CLOUD, posX, posY + .5, posZ, (rand.nextDouble() - .5) * .2, (rand.nextDouble() - .5) * .5, (rand.nextDouble() - .5) * .2);
         }
         world.playSound(posX, posY, posZ, SoundEvents.ENTITY_CREEPER_HURT, this.getSoundCategory(), 1.0F, 1.0F, false);
     }
 
     @Override
-    public boolean isPushedByWater()
-    {
+    public boolean isPushedByWater() {
         return false;
     }
 
