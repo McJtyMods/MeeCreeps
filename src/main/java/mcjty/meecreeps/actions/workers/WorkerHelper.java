@@ -638,6 +638,7 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message, int maxAmount) {
+        List<BlockPos> meeCreepChests = findMeeCreepChests(worker.getActionBox());
         if (!findItemOnGround(worker.getActionBox(), matcher, this::pickup)) {
             if (!findInventoryContainingMost(worker.getActionBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
                 showMessage(message);
@@ -647,8 +648,15 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public boolean findItemOnGroundOrInChest(Predicate<ItemStack> matcher, int maxAmount) {
-        if (!findItemOnGround(worker.getActionBox(), matcher, this::pickup)) {
-            if (!findInventoryContainingMost(worker.getActionBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
+        List<BlockPos> meeCreepChests = findMeeCreepChests(worker.getActionBox());
+        if (meeCreepChests.isEmpty()) {
+            if (!findItemOnGround(worker.getActionBox(), matcher, this::pickup)) {
+                if (!findInventoryContainingMost(worker.getActionBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
+                    return false;
+                }
+            }
+        } else {
+            if (!findInventoryContainingMost(meeCreepChests, matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
                 return false;
             }
         }
@@ -728,6 +736,38 @@ public class WorkerHelper implements IWorkerHelper {
 
     private float calculateScore(int countMatching, int countFreeForMatching) {
         return 2.0f * countMatching + countFreeForMatching;
+    }
+
+    protected boolean findInventoryContainingMost(List<BlockPos> inventoryList, Predicate<ItemStack> matcher, Consumer<BlockPos> job) {
+        World world = entity.getEntityWorld();
+        List<BlockPos> inventories = new ArrayList<>();
+        Map<BlockPos, Float> countMatching = new HashMap<>();
+        for (BlockPos pos : inventoryList) {
+            IBlockState state = world.getBlockState(pos);
+            TileEntity te = world.getTileEntity(pos);
+            IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+            int cnt = 0;
+            for (int i = 0; i < handler.getSlots(); i++) {
+                ItemStack stack = handler.getStackInSlot(i);
+                if (!stack.isEmpty()) {
+                    if (matcher.test(stack)) {
+                        cnt += stack.getCount();
+                    }
+                }
+            }
+            if (cnt > 0) {
+                inventories.add(pos);
+                countMatching.put(pos, (float) cnt);
+            }
+        }
+        if (inventories.isEmpty()) {
+            return false;
+        } else {
+            // Sort so that highest score goes first
+            inventories.sort((p1, p2) -> Float.compare(countMatching.get(p2), countMatching.get(p1)));
+            navigateTo(inventories.get(0), job);
+            return true;
+        }
     }
 
     protected boolean findInventoryContainingMost(AxisAlignedBB box, Predicate<ItemStack> matcher, Consumer<BlockPos> job) {

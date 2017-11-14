@@ -44,7 +44,7 @@ public abstract class AbstractBuildActionWorker extends AbstractActionWorker {
         return actionBox;
     }
 
-    abstract protected IBuildSchematic getSchematic();
+    protected abstract IBuildSchematic getSchematic();
 
     @Override
     public void tick(boolean timeToWrapUp) {
