@@ -7,6 +7,7 @@ import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.actions.Stage;
 import mcjty.meecreeps.api.*;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
+import mcjty.meecreeps.items.CreepCubeItem;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.InventoryTools;
@@ -14,7 +15,9 @@ import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
@@ -40,6 +43,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class WorkerHelper implements IWorkerHelper {
 
@@ -649,6 +653,22 @@ public class WorkerHelper implements IWorkerHelper {
             }
         }
         return true;
+    }
+
+    /**
+     * Find all chests that have an item frame attached to them with an meecreep cube in them
+     */
+    private List<BlockPos> findMeeCreepChests(AxisAlignedBB box) {
+        List<EntityItemFrame> frames = entity.getEntityWorld().getEntitiesWithinAABB(EntityItemFrame.class, box, input -> {
+            if (!input.getDisplayedItem().isEmpty() && input.getDisplayedItem().getItem() instanceof CreepCubeItem) {
+                BlockPos position = input.getHangingPosition();
+                if (InventoryTools.isInventory(entity.getEntityWorld(), position)) {
+                    return true;
+                }
+            }
+            return false;
+        });
+        return frames.stream().map(EntityHanging::getHangingPosition).collect(Collectors.toList());
     }
 
     /**
