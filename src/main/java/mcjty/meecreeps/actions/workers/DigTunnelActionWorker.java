@@ -154,7 +154,8 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
         }
 
         EnumFacing facing = helper.getContext().getTargetSide().getOpposite();
-        BlockPos p = helper.getContext().getTargetPos().offset(facing, this.offset);
+        // Target is bottom position but we need it to be at the center so that's why we do up()
+        BlockPos p = helper.getContext().getTargetPos().up().offset(facing, this.offset);
 
         if (checkSupports(facing, p)) {
             return;

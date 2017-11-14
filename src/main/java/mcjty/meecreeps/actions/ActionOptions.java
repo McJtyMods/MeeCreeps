@@ -367,7 +367,7 @@ public class ActionOptions implements IActionContext {
     }
 
     private static boolean validSpawnPoint(World world, BlockPos p) {
-        return world.isAirBlock(p) && (!world.isAirBlock(p.down())) && world.isAirBlock(p.up());
+        return world.isAirBlock(p) && (!world.isAirBlock(p.down()) || !world.isAirBlock(p.down(2))) && world.isAirBlock(p.up());
     }
 
     public static boolean spawn(World world, BlockPos targetPos, EnumFacing targetSide, int actionId) {
