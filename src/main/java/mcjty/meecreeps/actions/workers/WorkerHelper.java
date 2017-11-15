@@ -4,6 +4,7 @@ import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.actions.*;
 import mcjty.meecreeps.api.*;
 import mcjty.meecreeps.blocks.ModBlocks;
+import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.items.CreepCubeItem;
 import mcjty.meecreeps.network.PacketHandler;
@@ -13,7 +14,6 @@ import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityHanging;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.player.EntityPlayer;
@@ -434,6 +434,11 @@ public class WorkerHelper implements IWorkerHelper {
         entity.setVariationFace(1);
         ServerActionManager manager = ServerActionManager.getManager();
         World world = entity.getWorld();
+
+        int cnt = world.countEntities(EntityMeeCreeps.class);
+        if (cnt >= Config.maxSpawnCount) {
+            return;
+        }
 
         Random r = entity.getRandom();
         BlockPos targetPos = new BlockPos(entity.posX + r.nextFloat()*8 - 4, entity.posY, entity.posZ + r.nextFloat()*8 - 4);
