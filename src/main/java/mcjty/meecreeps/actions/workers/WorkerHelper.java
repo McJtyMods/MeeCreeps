@@ -671,8 +671,14 @@ public class WorkerHelper implements IWorkerHelper {
     @Override
     public void findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message, int maxAmount) {
         List<BlockPos> meeCreepChests = findMeeCreepChests(worker.getSearchBox());
-        if (!findItemOnGround(worker.getSearchBox(), matcher, this::pickup)) {
-            if (!findInventoryContainingMost(worker.getSearchBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
+        if (meeCreepChests.isEmpty()) {
+            if (!findItemOnGround(worker.getSearchBox(), matcher, this::pickup)) {
+                if (!findInventoryContainingMost(worker.getSearchBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
+                    showMessage(message);
+                }
+            }
+        } else {
+            if (!findInventoryContainingMost(meeCreepChests, matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
                 showMessage(message);
             }
         }
@@ -701,14 +707,14 @@ public class WorkerHelper implements IWorkerHelper {
     private List<BlockPos> findMeeCreepChests(AxisAlignedBB box) {
         List<EntityItemFrame> frames = entity.getEntityWorld().getEntitiesWithinAABB(EntityItemFrame.class, box, input -> {
             if (!input.getDisplayedItem().isEmpty() && input.getDisplayedItem().getItem() instanceof CreepCubeItem) {
-                BlockPos position = input.getHangingPosition();
+                BlockPos position = input.getHangingPosition().offset(input.facingDirection.getOpposite());
                 if (InventoryTools.isInventory(entity.getEntityWorld(), position)) {
                     return true;
                 }
             }
             return false;
         });
-        return frames.stream().map(EntityHanging::getHangingPosition).collect(Collectors.toList());
+        return frames.stream().map(entityItemFrame -> entityItemFrame.getHangingPosition().offset(entityItemFrame.facingDirection.getOpposite())).collect(Collectors.toList());
     }
 
     private boolean findMeeCreepBoxOnGround() {
@@ -856,6 +862,13 @@ public class WorkerHelper implements IWorkerHelper {
     protected boolean findChestToPutItemsIn() {
         for (PreferedChest chest : worker.getPreferedChests()) {
             switch (chest) {
+                case MARKED:
+                    List<BlockPos> meeCreepChests = findMeeCreepChests(worker.getSearchBox());
+                    if (!meeCreepChests.isEmpty()) {
+                        navigateTo(meeCreepChests.get(0), this::putInventoryInChest);
+                        return true;
+                    }
+                    break;
                 case TARGET:
                     BlockPos pos = options.getTargetPos();
                     if (InventoryTools.isInventory(entity.getEntityWorld(), pos)) {

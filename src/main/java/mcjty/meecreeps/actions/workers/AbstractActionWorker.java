@@ -9,6 +9,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
 
     private static final PreferedChest[] PREFERED_CHESTS = new PreferedChest[]{
             PreferedChest.TARGET,
+            PreferedChest.MARKED,
             PreferedChest.LAST_CHEST};
 
     private AxisAlignedBB searchBox = null;

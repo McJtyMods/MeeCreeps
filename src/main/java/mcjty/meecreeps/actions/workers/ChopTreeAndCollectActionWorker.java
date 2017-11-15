@@ -13,7 +13,9 @@ import java.util.Map;
 
 public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
 
-    private static final PreferedChest[] PREFERED_CHESTS = new PreferedChest[]{PreferedChest.FIND_MATCHING_INVENTORY};
+    private static final PreferedChest[] PREFERED_CHESTS = new PreferedChest[]{
+            PreferedChest.MARKED,
+            PreferedChest.FIND_MATCHING_INVENTORY};
 
     private AxisAlignedBB actionBox = null;
 
