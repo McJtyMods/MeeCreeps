@@ -29,6 +29,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 public class ActionOptions implements IActionContext {
@@ -301,7 +302,7 @@ public class ActionOptions implements IActionContext {
             timeout = 20;
             switch (stage) {
                 case WAITING_FOR_SPAWN:
-                    if (spawn(world, getTargetPos(), getTargetSide(), getActionId())) {
+                    if (spawn(world, getTargetPos(), getTargetSide(), getActionId(), true)) {
                         setStage(Stage.OPENING_GUI);
                     } else {
                         EntityPlayer player = getPlayer();
@@ -370,7 +371,9 @@ public class ActionOptions implements IActionContext {
         return world.isAirBlock(p) && (!world.isAirBlock(p.down()) || !world.isAirBlock(p.down(2))) && world.isAirBlock(p.up());
     }
 
-    public static boolean spawn(World world, BlockPos targetPos, EnumFacing targetSide, int actionId) {
+    private static Random random = new Random();
+
+    public static boolean spawn(World world, BlockPos targetPos, EnumFacing targetSide, int actionId, boolean doSound) {
         BlockPos p;
         if (validSpawnPoint(world, targetPos.offset(targetSide))) {
             p = targetPos.offset(targetSide);
@@ -392,8 +395,23 @@ public class ActionOptions implements IActionContext {
         entity.setActionId(actionId);
         world.spawnEntity(entity);
 
-        if (Config.meeCreepVolume > 0.01f) {
-            SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "intro1"));
+        if (doSound && Config.meeCreepVolume > 0.01f) {
+            String snd = "intro1";
+            switch (entity.getRandom().nextInt(4)) {
+                case 0:
+                    snd = "intro1";
+                    break;
+                case 1:
+                    snd = "intro2";
+                    break;
+                case 2:
+                    snd = "intro3";
+                    break;
+                case 3:
+                    snd = "intro4";
+                    break;
+            }
+            SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, snd));
             SoundTools.playSound(world, sound, p.getX(), p.getY(), p.getZ(), Config.meeCreepVolume, 1);
         }
 

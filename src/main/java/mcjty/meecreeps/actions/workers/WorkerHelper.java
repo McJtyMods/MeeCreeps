@@ -438,8 +438,8 @@ public class WorkerHelper implements IWorkerHelper {
         Random r = entity.getRandom();
         BlockPos targetPos = new BlockPos(entity.posX + r.nextFloat()*8 - 4, entity.posY, entity.posZ + r.nextFloat()*8 - 4);
         int actionId = manager.createActionOptions(world, targetPos, EnumFacing.UP, getPlayer());
-        ActionOptions.spawn(world, targetPos, EnumFacing.UP, actionId);
-        manager.performAction(getPlayer(), actionId, new MeeCreepActionType("meecreeps.angry"), null);
+        ActionOptions.spawn(world, targetPos, EnumFacing.UP, actionId, false);
+        manager.performAction(null, actionId, new MeeCreepActionType("meecreeps.angry"), null);
     }
 
     private void handlePutAway() {

@@ -23,10 +23,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ServerActionManager extends WorldSavedData {
 
@@ -94,8 +91,9 @@ public class ServerActionManager extends WorldSavedData {
         return actionId;
     }
 
+    private static Random random = new Random();
+
     public void performAction(@Nullable EntityPlayerMP player, int id, MeeCreepActionType type, @Nullable String furtherQuestionId) {
-        MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(type);
         ActionOptions option = getOptions(id);
         if (option != null) {
             option.setStage(Stage.WORKING);
@@ -104,7 +102,16 @@ public class ServerActionManager extends WorldSavedData {
 
             if (player != null) {
                 if (Config.meeCreepVolume > 0.01f) {
-                    SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "ok"));
+                    String snd = "ok";
+                    switch (random.nextInt(2)) {
+                        case 0:
+                            snd = "ok";
+                            break;
+                        case 1:
+                            snd = "ok2";
+                            break;
+                    }
+                    SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, snd));
                     SoundTools.playSound(player.getEntityWorld(), sound, player.posX, player.posY, player.posZ, Config.meeCreepVolume, 1);
                 }
             }

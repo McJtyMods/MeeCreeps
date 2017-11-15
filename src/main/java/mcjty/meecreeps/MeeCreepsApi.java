@@ -58,7 +58,7 @@ public class MeeCreepsApi implements IMeeCreepsApi {
     public boolean spawnMeeCreep(String id, String furtherQuestionId, World world, BlockPos targetPos, EnumFacing targetSide, @Nullable EntityPlayerMP player) {
         ServerActionManager manager = ServerActionManager.getManager();
         int actionId = manager.createActionOptions(world, targetPos, targetSide, player);
-        ActionOptions.spawn(world, targetPos, targetSide, actionId);
+        ActionOptions.spawn(world, targetPos, targetSide, actionId, true);
         manager.performAction(player, actionId, new MeeCreepActionType(id), furtherQuestionId);
         return true;
     }

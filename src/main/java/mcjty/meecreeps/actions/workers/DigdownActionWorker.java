@@ -54,7 +54,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
         BlockPos p = options.getTargetPos();
         World world = entity.getWorld();
         IBlockState state = world.getBlockState(p);
-        while (p.getY() > 0 && world.isAirBlock(p) || state.getBlock() == Blocks.LADDER) {
+        while (p.getY() > 0 && (world.isAirBlock(p) || state.getBlock() == Blocks.LADDER)) {
             p = p.down();
             state = world.getBlockState(p);
         }

@@ -9,11 +9,14 @@ import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.EntityAILookIdle;
-import net.minecraft.entity.ai.EntityAISwimming;
-import net.minecraft.entity.ai.EntityAIWatchClosest;
+import net.minecraft.entity.ai.*;
+import net.minecraft.entity.monster.AbstractSkeleton;
+import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.entity.passive.EntityRabbit;
+import net.minecraft.entity.passive.EntitySheep;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
@@ -97,6 +100,7 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
         this.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(35.0D);
         this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.13D);
         this.getEntityAttribute(SharedMonsterAttributes.ARMOR).setBaseValue(2.0D);
+        this.getAttributeMap().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(2.0D);
     }
 
     @Override
@@ -104,10 +108,13 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
         this.tasks.addTask(0, new EntityAISwimming(this));
 //        this.tasks.addTask(5, new EntityAIMoveTowardsRestriction(this, 1.0D));
 //        this.tasks.addTask(7, new EntityAIWander(this, 1.0D));
+//        this.tasks.addTask(2, new EntityAIAttackMelee(this, 1.0D, true));
+
         workerTask = new MeeCreepWorkerTask(this);
         this.tasks.addTask(3, workerTask);
         this.tasks.addTask(8, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
         this.tasks.addTask(8, new EntityAILookIdle(this));
+//        this.targetTasks.addTask(2, new EntityAINearestAttackableTarget(this, EntityMeeCreeps.class, false));
     }
 
 

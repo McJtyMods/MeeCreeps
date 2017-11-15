@@ -20,8 +20,10 @@ public class ForgeEventHandlers {
         registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "teleport")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "teleport")));
         registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "portal")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "portal")));
         registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "intro1")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "intro1")));
-        registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "ok")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "ok")));
         registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "intro2")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "intro2")));
+        registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "intro3")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "intro3")));
+        registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "intro4")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "intro4")));
+        registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "ok")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "ok")));
         registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "ok2")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "ok2")));
     }
 
