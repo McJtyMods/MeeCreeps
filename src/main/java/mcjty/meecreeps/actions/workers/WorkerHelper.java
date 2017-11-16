@@ -761,21 +761,30 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void putInventoryInChest(BlockPos pos) {
-        TileEntity te = entity.getEntityWorld().getTileEntity(pos);
-        IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
-        for (ItemStack stack : entity.getInventory()) {
-            if (!stack.isEmpty()) {
-                ItemStack remaining = ItemHandlerHelper.insertItem(handler, stack, false);
-                if (!remaining.isEmpty()) {
-                    entity.entityDropItem(remaining, 0.0f);
+        if (!InventoryTools.isInventory(entity.getEntityWorld(), pos)) {
+            // No longer an inventory here. Just drop the items on the ground here
+            entity.dropInventory();
+        } else {
+            TileEntity te = entity.getEntityWorld().getTileEntity(pos);
+            IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+            for (ItemStack stack : entity.getInventory()) {
+                if (!stack.isEmpty()) {
+                    ItemStack remaining = ItemHandlerHelper.insertItem(handler, stack, false);
+                    if (!remaining.isEmpty()) {
+                        entity.entityDropItem(remaining, 0.0f);
+                    }
                 }
             }
+            entity.getInventory().clear();
         }
-        entity.getInventory().clear();
     }
 
     private void fetchFromInventory(BlockPos pos, Predicate<ItemStack> matcher, int maxAmount) {
         materialChest = pos;
+        if (!InventoryTools.isInventory(entity.getEntityWorld(), pos)) {
+            // No longer an inventory. We cannot get the items from here
+            return;
+        }
         TileEntity te = entity.getEntityWorld().getTileEntity(pos);
         IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
         for (int i = 0 ; i < handler.getSlots() ; i++) {
