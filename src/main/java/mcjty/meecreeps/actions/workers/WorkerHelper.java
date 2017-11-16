@@ -68,6 +68,9 @@ public class WorkerHelper implements IWorkerHelper {
     protected List<EntityItem> itemsToPickup = new ArrayList<>();
     private BlockPos materialChest;
 
+    // While building or flattening this will contain positions that we want to skip because they are too hard or unbreakable
+    private Set<BlockPos> positionsToSkip = new HashSet<>();
+
     private String lastMessage = "";
 
     public WorkerHelper(EntityMeeCreeps entity, IActionContext options) {
@@ -187,7 +190,7 @@ public class WorkerHelper implements IWorkerHelper {
                     IBlockState state = entity.getWorld().getBlockState(p);
                     IDesiredBlock desired = schematic.getDesiredBlock(relativePos);
                     if (desired != IGNORE) {
-                        if (!desired.getStateMatcher().test(state) && !entity.getWorld().isAirBlock(p)) {
+                        if (!desired.getStateMatcher().test(state) && !entity.getWorld().isAirBlock(p) && !positionsToSkip.contains(p)) {
                             todo.add(p);
                         }
                     }
@@ -224,7 +227,7 @@ public class WorkerHelper implements IWorkerHelper {
                     BlockPos p = tpos.add(relativePos);
                     IBlockState state = entity.getWorld().getBlockState(p);
                     IDesiredBlock desired = schematic.getDesiredBlock(relativePos);
-                    if (desired.getPass() == progress.getPass() && !desired.getStateMatcher().test(state)) {
+                    if (desired.getPass() == progress.getPass() && !desired.getStateMatcher().test(state) && !positionsToSkip.contains(p)) {
                         todo.add(relativePos);
                     }
                 }
@@ -253,10 +256,16 @@ public class WorkerHelper implements IWorkerHelper {
         } else {
             BlockPos navigate = findBestNavigationSpot(flatSpot);
             if (navigate != null) {
-                navigateTo(navigate, p -> harvestAndDrop(flatSpot));
+                navigateTo(navigate, p -> {
+                    if (!harvestAndDrop(flatSpot)) {
+                        positionsToSkip.add(p);
+                    }
+                });
             } else {
                 // We couldn't reach it. Just drop the block
-                harvestAndDrop(flatSpot);
+                if (!harvestAndDrop(flatSpot)) {
+                    positionsToSkip.add(flatSpot);
+                }
             }
             return true;
         }
@@ -287,11 +296,15 @@ public class WorkerHelper implements IWorkerHelper {
                 BlockPos navigate = findBestNavigationSpot(buildPos);
                 if (navigate != null) {
                     navigateTo(navigate, p -> {
-                        placeBuildingBlock(buildPos, desired);
+                        if (!placeBuildingBlock(buildPos, desired)) {
+                            positionsToSkip.add(buildPos);
+                        }
                     });
                 } else {
                     // We couldn't reach it. Just build the block
-                    placeBuildingBlock(buildPos, desired);
+                    if (!placeBuildingBlock(buildPos, desired)) {
+                        positionsToSkip.add(buildPos);
+                    }
                 }
             }
             return true;
@@ -531,10 +544,12 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
-    public void placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock) {
+    public boolean placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock) {
         World world = entity.getWorld();
         if (!world.isAirBlock(pos) && !world.getBlockState(pos).getBlock().isReplaceable(world, pos)) {
-            harvestAndDrop(pos);
+            if (!harvestAndDrop(pos)) {
+                return false;   // We cannot get rid of the block that is there
+            }
         }
         ItemStack blockStack = entity.consumeItem(desiredBlock.getMatcher(), 1);
         if (!blockStack.isEmpty()) {
@@ -552,32 +567,40 @@ public class WorkerHelper implements IWorkerHelper {
                 entity.getEntity().getJumpHelper().setJumping();
             }
         }
+        return true;
     }
 
 
     @Override
-    public void harvestAndPickup(BlockPos pos) {
+    public boolean harvestAndPickup(BlockPos pos) {
         World world = entity.getEntityWorld();
         if (world.isAirBlock(pos)) {
-            return;
+            return true;
         }
         IBlockState state = world.getBlockState(pos);
+        if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester())) {
+            return false;
+        }
         Block block = state.getBlock();
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
         net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
         SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
         entity.getEntityWorld().setBlockToAir(pos);
         giveDropsToMeeCreeps(drops);
+        return true;
     }
 
 
     @Override
-    public void harvestAndDrop(BlockPos pos) {
+    public boolean harvestAndDrop(BlockPos pos) {
         World world = entity.getEntityWorld();
         if (world.isAirBlock(pos)) {
-            return;
+            return true;
         }
         IBlockState state = world.getBlockState(pos);
+        if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester())) {
+            return false;
+        }
         Block block = state.getBlock();
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
         net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
@@ -586,6 +609,7 @@ public class WorkerHelper implements IWorkerHelper {
         for (ItemStack stack : drops) {
             entity.entityDropItem(stack, 0.0f);
         }
+        return true;
     }
 
 

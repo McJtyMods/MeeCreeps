@@ -31,6 +31,9 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     private int blockidx = 0;
 
     private int torchChecker = 40;
+    // We cannot break those so skip them
+    private Set<BlockPos> positionsToSkip = new HashSet();
+
 
     public DigTunnelActionWorker(IWorkerHelper helper) {
         super(helper);
@@ -81,14 +84,15 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     private void dig(BlockPos p) {
         World world = entity.getWorld();
         IBlockState state = world.getBlockState(p);
-        if (helper.allowedToHarvest(state, world, p, GeneralTools.getHarvester())) {
-            if (isNotInterestedIn(state.getBlock())) {
-                helper.harvestAndDrop(p);
-            } else {
-                helper.harvestAndPickup(p);
-            }
+        boolean result;
+        if (isNotInterestedIn(state.getBlock())) {
+            result = helper.harvestAndDrop(p);
         } else {
-            // Too hard or not allowed. Ignore this one
+            result = helper.harvestAndPickup(p);
+        }
+        if (!result) {
+            // Too hard or not allowed. Skip it
+            positionsToSkip.add(p);
         }
     }
 
@@ -191,34 +195,38 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
 
     private boolean checkClear(BlockPos p, EnumFacing facing) {
         World world = entity.getWorld();
-        if (!world.isAirBlock(p)) {
+        if (canDig(p, world)) {
             return false;
         }
-        if (!world.isAirBlock(p.offset(facing.rotateY()))) {
+        if (canDig(p.offset(facing.rotateY()), world)) {
             return false;
         }
-        if (!world.isAirBlock(p.offset(facing.rotateYCCW()))) {
+        if (canDig(p.offset(facing.rotateYCCW()), world)) {
             return false;
         }
-        if (!world.isAirBlock(p.up())) {
+        if (canDig(p.up(), world)) {
             return false;
         }
-        if (!world.isAirBlock(p.up().offset(facing.rotateY()))) {
+        if (canDig(p.up().offset(facing.rotateY()), world)) {
             return false;
         }
-        if (!world.isAirBlock(p.up().offset(facing.rotateYCCW()))) {
+        if (canDig(p.up().offset(facing.rotateYCCW()), world)) {
             return false;
         }
-        if (!world.isAirBlock(p.down())) {
+        if (canDig(p.down(), world)) {
             return false;
         }
-        if (!world.isAirBlock(p.down().offset(facing.rotateY()))) {
+        if (canDig(p.down().offset(facing.rotateY()), world)) {
             return false;
         }
-        if (!world.isAirBlock(p.down().offset(facing.rotateYCCW()))) {
+        if (canDig(p.down().offset(facing.rotateYCCW()), world)) {
             return false;
         }
         return true;
+    }
+
+    private boolean canDig(BlockPos p, World world) {
+        return !world.isAirBlock(p) && !positionsToSkip.contains(p);
     }
 
     private boolean checkSupports(EnumFacing facing, BlockPos p) {
