@@ -50,8 +50,9 @@ public interface IWorkerHelper {
     /**
      * Place a building block at the specified location. If there is already a block there it will
      * be removed first
+     * Return true if the placement was succesful
      */
-    void placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock);
+    boolean placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock);
 
     /**
      * Given a schematic, find the closest block that needs flattening. The position returned
@@ -88,13 +89,15 @@ public interface IWorkerHelper {
     /**
      * Harvest the given block and give the drops to the MeeCreep. If there is no room the
      * MeeCreep will drop the remaining items and try to fetch them later
+     * Return false if the block could not be harvested for some reason
      */
-    void harvestAndPickup(BlockPos pos);
+    boolean harvestAndPickup(BlockPos pos);
 
     /**
      * Harvest the given block and drop the drops
+     * Return false if the block could not be harvested for some reason
      */
-    void harvestAndDrop(BlockPos pos);
+    boolean harvestAndDrop(BlockPos pos);
 
     /**
      * Pick up as much of the entity item as possible. If everything was picked up the entity item

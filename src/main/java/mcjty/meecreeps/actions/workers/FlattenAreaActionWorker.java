@@ -7,11 +7,16 @@ import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class FlattenAreaActionWorker extends AbstractActionWorker {
 
     private int size = 0;
+    // We cannot break those so skip them
+    private Set<BlockPos> positionsToSkip = new HashSet();
+
 
     public FlattenAreaActionWorker(IWorkerHelper helper) {
         super(helper);
@@ -60,8 +65,7 @@ public class FlattenAreaActionWorker extends AbstractActionWorker {
                 for (int z = -hs; z <= hs; z++) {
                     BlockPos relativePos = new BlockPos(x, y, z);
                     BlockPos p = tpos.add(relativePos);
-                    IBlockState state = entity.getWorld().getBlockState(p);
-                    if (!entity.getWorld().isAirBlock(p)) {
+                    if (!entity.getWorld().isAirBlock(p) && !positionsToSkip.contains(p)) {
                         todo.add(p);
                     }
                 }
@@ -96,10 +100,16 @@ public class FlattenAreaActionWorker extends AbstractActionWorker {
         } else {
             BlockPos navigate = helper.findBestNavigationSpot(flatSpot);
             if (navigate != null) {
-                helper.navigateTo(navigate, p -> helper.harvestAndDrop(flatSpot));
+                helper.navigateTo(navigate, p -> {
+                    if (!helper.harvestAndDrop(flatSpot)) {
+                        positionsToSkip.add(flatSpot);
+                    }
+                });
             } else {
                 // We couldn't reach it. Just drop the block
-                helper.harvestAndDrop(flatSpot);
+                if (!helper.harvestAndDrop(flatSpot)) {
+                    positionsToSkip.add(flatSpot);
+                }
             }
         }
     }
