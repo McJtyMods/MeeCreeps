@@ -47,5 +47,5 @@ public interface IMeeCreepsApi {
      * Return false if the task was not possible for some reason (or invalid)
      */
     boolean spawnMeeCreep(String id, @Nullable String furtherQuestionId, World world, BlockPos targetPos, EnumFacing targetSide,
-                          @Nullable EntityPlayerMP player);
+                          @Nullable EntityPlayerMP player, boolean doSound);
 }

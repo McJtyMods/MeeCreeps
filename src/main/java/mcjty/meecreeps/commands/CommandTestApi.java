@@ -35,7 +35,7 @@ public class CommandTestApi implements ICommand {
         if (sender instanceof EntityPlayerMP) {
             EntityPlayerMP player = (EntityPlayerMP) sender;
             MeeCreeps.api.spawnMeeCreep("meecreeps.dig_down", null, player.getEntityWorld(), player.getPosition().down(),
-                    EnumFacing.UP, null);
+                    EnumFacing.UP, null, true);
         }
     }
 

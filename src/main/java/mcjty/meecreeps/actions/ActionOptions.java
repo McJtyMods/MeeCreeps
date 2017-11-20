@@ -371,8 +371,6 @@ public class ActionOptions implements IActionContext {
         return world.isAirBlock(p) && (!world.isAirBlock(p.down()) || !world.isAirBlock(p.down(2))) && world.isAirBlock(p.up());
     }
 
-    private static Random random = new Random();
-
     public static boolean spawn(World world, BlockPos targetPos, EnumFacing targetSide, int actionId, boolean doSound) {
         BlockPos p;
         if (validSpawnPoint(world, targetPos.offset(targetSide))) {

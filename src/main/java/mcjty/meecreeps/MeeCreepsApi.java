@@ -55,10 +55,10 @@ public class MeeCreepsApi implements IMeeCreepsApi {
     }
 
     @Override
-    public boolean spawnMeeCreep(String id, String furtherQuestionId, World world, BlockPos targetPos, EnumFacing targetSide, @Nullable EntityPlayerMP player) {
+    public boolean spawnMeeCreep(String id, String furtherQuestionId, World world, BlockPos targetPos, EnumFacing targetSide, @Nullable EntityPlayerMP player, boolean doSound) {
         ServerActionManager manager = ServerActionManager.getManager();
         int actionId = manager.createActionOptions(world, targetPos, targetSide, player);
-        ActionOptions.spawn(world, targetPos, targetSide, actionId, true);
+        ActionOptions.spawn(world, targetPos, targetSide, actionId, doSound);
         manager.performAction(player, actionId, new MeeCreepActionType(id), furtherQuestionId);
         return true;
     }

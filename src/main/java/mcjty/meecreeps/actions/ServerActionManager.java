@@ -3,6 +3,7 @@ package mcjty.meecreeps.actions;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.config.Config;
+import mcjty.meecreeps.items.CreepCubeItem;
 import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -101,6 +102,12 @@ public class ServerActionManager extends WorldSavedData {
             save();
 
             if (player != null) {
+                // Remember the last used action in the MeeCreep cube
+                ItemStack cube = CreepCubeItem.getCube(player);
+                if (!cube.isEmpty()) {
+                    CreepCubeItem.setLastAction(cube, type, furtherQuestionId);
+                }
+
                 if (Config.meeCreepVolume > 0.01f) {
                     String snd = "ok";
                     switch (random.nextInt(2)) {

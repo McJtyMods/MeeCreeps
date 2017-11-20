@@ -1,6 +1,8 @@
 package mcjty.meecreeps.items;
 
 import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.MeeCreepsApi;
+import mcjty.meecreeps.actions.MeeCreepActionType;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.config.Config;
@@ -12,7 +14,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -42,8 +43,13 @@ public class CreepCubeItem extends Item {
 
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-//        tooltip.add(TextFormatting.GREEN + "Sneak right click: " + TextFormatting.WHITE + "remember destination");
         tooltip.add(TextFormatting.GREEN + "Right click: " + TextFormatting.WHITE + "spawn MeeCreep");
+        tooltip.add(TextFormatting.GREEN + "Sneak right click: " + TextFormatting.WHITE + "repeat last action");
+        MeeCreepActionType lastAction = getLastAction(stack);
+        if (lastAction != null) {
+            MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(lastAction);
+            tooltip.add(TextFormatting.YELLOW + "    (" + factory.getMessage() + ")");
+        }
         if (isLimited()) {
             tooltip.add(TextFormatting.GREEN + "Uses left: " + TextFormatting.YELLOW + (Config.meeCreepBoxMaxUsage - getUsages(stack)));
         }
@@ -56,6 +62,39 @@ public class CreepCubeItem extends Item {
 
     private boolean isLimited() {
         return Config.meeCreepBoxMaxUsage > 0;
+    }
+
+    public static void setLastAction(ItemStack cube, MeeCreepActionType type, @Nullable String furtherQuestionId) {
+        if (cube.getTagCompound() == null) {
+            cube.setTagCompound(new NBTTagCompound());
+        }
+        cube.getTagCompound().setString("lastType", type.getId());
+        if (furtherQuestionId != null) {
+            cube.getTagCompound().setString("lastQuestion", furtherQuestionId);
+        }
+    }
+
+    @Nullable
+    public static MeeCreepActionType getLastAction(ItemStack cube) {
+        if (cube.getTagCompound() == null) {
+            return null;
+        }
+        if (!cube.getTagCompound().hasKey("lastType")) {
+            return null;
+        }
+        String lastType = cube.getTagCompound().getString("lastType");
+        return new MeeCreepActionType(lastType);
+    }
+
+    @Nullable
+    public static String getLastQuestionId(ItemStack cube) {
+        if (cube.getTagCompound() == null) {
+            return null;
+        }
+        if (!cube.getTagCompound().hasKey("lastQuestion")) {
+            return null;
+        }
+        return cube.getTagCompound().getString("lastQuestion");
     }
 
     public static void setUsages(ItemStack stack, int uses) {
@@ -80,6 +119,19 @@ public class CreepCubeItem extends Item {
         return usages / (double) max;
     }
 
+    public static ItemStack getCube(EntityPlayer player) {
+        ItemStack heldItem = player.getHeldItem(EnumHand.MAIN_HAND);
+        if (heldItem.getItem() != ModItems.creepCubeItem) {
+            heldItem = player.getHeldItem(EnumHand.OFF_HAND);
+            if (heldItem.getItem() != ModItems.creepCubeItem) {
+                // Something went wrong
+                return ItemStack.EMPTY;
+            }
+        }
+        return heldItem;
+    }
+
+
     @Override
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
         if (world.isRemote) {
@@ -94,17 +146,27 @@ public class CreepCubeItem extends Item {
             }
             setUsages(heldItem, getUsages(heldItem)+1);
         }
-        ServerActionManager.getManager().createActionOptions(world, pos, side, player);
+        if (player.isSneaking()) {
+            ItemStack heldItem = player.getHeldItem(hand);
+            MeeCreepActionType lastAction = getLastAction(heldItem);
+            if (lastAction == null) {
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("There is no last action!"), (EntityPlayerMP) player);
+            } else {
+                MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(lastAction);
+                if (factory.getFactory().isPossible(world, pos, side) || factory.getFactory().isPossibleSecondary(world, pos, side)) {
+                    MeeCreeps.api.spawnMeeCreep(lastAction.getId(), getLastQuestionId(heldItem), world, pos, side, (EntityPlayerMP) player, false);
+                } else {
+                    PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("The last action is not possible here!"), (EntityPlayerMP) player);
+                }
+            }
+        } else {
+            ServerActionManager.getManager().createActionOptions(world, pos, side, player);
+        }
         return EnumActionResult.SUCCESS;
     }
 
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
         return EnumActionResult.SUCCESS;
-    }
-
-    @Override
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand handIn) {
-        return super.onItemRightClick(worldIn, playerIn, handIn);
     }
 }
