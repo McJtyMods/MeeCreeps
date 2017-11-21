@@ -24,6 +24,11 @@ public class MoveStuffActionWorker extends AbstractActionWorker {
         return null;
     }
 
+    @Override
+    public boolean onlyStopWhenDone() {
+        return true;
+    }
+
     private BlockPos findSuitablePositionNearPlayer() {
         EntityMeeCreeps meeCreep = (EntityMeeCreeps) this.entity;
         BlockPos entityPos = meeCreep.getPosition();
