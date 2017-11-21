@@ -1,19 +1,25 @@
 package mcjty.meecreeps.config;
 
 import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.proxy.CommonProxy;
 import net.minecraftforge.common.config.Configuration;
 import org.apache.logging.log4j.Level;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class Config {
 
     private static final String CATEGORY_GENERAL = "general";
+    private static final String CATEGORY_PERMISSON = "permission";
 
     public static void readConfig() {
         Configuration cfg = CommonProxy.config;
         try {
             cfg.load();
             initGeneralConfig(cfg);
+            initPermissionConfig(cfg);
         } catch (Exception e1) {
             MeeCreeps.logger.log(Level.ERROR, "Problem loading config file!", e1);
         } finally {
@@ -39,6 +45,8 @@ public class Config {
 
     public static int maxSpawnCount = 60;
 
+    public static Set<String> allowedActions = new HashSet<>();
+
     // @todo
     // config for type of pickaxe
 
@@ -58,6 +66,16 @@ public class Config {
         balloonTimeout = cfg.getInt("balloonTimeout", CATEGORY_GENERAL, balloonTimeout, 1, 10000, "Number of ticks (20 ticks per second) before the balloon message disappears");
 
         maxSpawnCount = cfg.getInt("maxSpawnCount", CATEGORY_GENERAL, maxSpawnCount, 1, 200, "Spawn cap for an angry MeeCreep (a MeeCreep with a box)");
+    }
+
+    private static void initPermissionConfig(Configuration cfg) {
+        cfg.addCustomCategoryComment(CATEGORY_PERMISSON, "Permission configuration");
+        for (MeeCreepsApi.Factory factory : MeeCreeps.api.getFactories()) {
+            boolean allowed = cfg.getBoolean("allowed_" + factory.getId(), CATEGORY_PERMISSON, true, "");
+            if (allowed) {
+                allowedActions.add(factory.getId());
+            }
+        }
     }
 
 }

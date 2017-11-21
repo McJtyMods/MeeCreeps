@@ -39,6 +39,8 @@ public class CommonProxy {
     public void preInit(FMLPreInitializationEvent e) {
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandlers());
 
+        MeeCreeps.api.registerFactories();
+
         File directory = e.getModConfigurationDirectory();
         config = new Configuration(new File(directory.getPath(), "meecreeps.cfg"));
         Config.readConfig();
@@ -47,8 +49,6 @@ public class CommonProxy {
 
         // Initialization of blocks and items typically goes here:
         ModEntities.init();
-
-        MeeCreeps.api.registerFactories();
     }
 
     public void init(FMLInitializationEvent e) {

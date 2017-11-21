@@ -78,10 +78,12 @@ public class ServerActionManager extends WorldSavedData {
         List<MeeCreepActionType> types = new ArrayList<>();
         List<MeeCreepActionType> maybeTypes = new ArrayList<>();
         for (MeeCreepsApi.Factory type : MeeCreeps.api.getFactories()) {
-            if (type.getFactory().isPossible(world, pos, side)) {
-                types.add(new MeeCreepActionType(type.getId()));
-            } else if (type.getFactory().isPossibleSecondary(world, pos, side)) {
-                maybeTypes.add(new MeeCreepActionType(type.getId()));
+            if (Config.allowedActions.contains(type.getId())) {
+                if (type.getFactory().isPossible(world, pos, side)) {
+                    types.add(new MeeCreepActionType(type.getId()));
+                } else if (type.getFactory().isPossibleSecondary(world, pos, side)) {
+                    maybeTypes.add(new MeeCreepActionType(type.getId()));
+                }
             }
         }
         int actionId = newId();
