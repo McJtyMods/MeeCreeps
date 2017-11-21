@@ -32,6 +32,7 @@ public interface IMeeCreepsApi {
      *      * meecreeps.harvest
      *      * meecreeps.torches
      *      * meecreeps.follow_and_lightup
+     *      * meecreeps.follow_and_pickup
      *      * meecreeps.pickup
      *      * meecreeps.move_stuff
      *      * meecreeps.idle

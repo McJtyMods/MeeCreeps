@@ -182,6 +182,11 @@ public interface IWorkerHelper {
     void dropAndPutAwayLater(ItemStack stack);
 
     /**
+     * Find a good position near the player (distance)
+     */
+    BlockPos findSuitablePositionNearPlayer(double distance);
+
+    /**
      * If the player is present and not too far this will setup navigation towards the player in order
      * to give the inventory to the player. If this fails the MeeCreep will simply drop the items
      */

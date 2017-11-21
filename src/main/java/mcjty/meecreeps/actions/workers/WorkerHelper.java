@@ -671,6 +671,20 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
+    public BlockPos findSuitablePositionNearPlayer(double distance) {
+        EntityMeeCreeps meeCreep = (EntityMeeCreeps) this.entity;
+        BlockPos entityPos = meeCreep.getPosition();
+        BlockPos playerPos = options.getPlayer().getPosition();
+        double dx = playerPos.getX() - entityPos.getX();
+        double dy = playerPos.getY() - entityPos.getY();
+        double dz = playerPos.getZ() - entityPos.getZ();
+        Vec3d v = new Vec3d(-dx, -dy, -dz);
+        v = v.normalize();
+        return playerPos.add(v.x * distance, v.y * distance, v.z * distance);
+    }
+
+
+    @Override
     public void giveToPlayerOrDrop() {
         EntityPlayerMP player = getPlayer();
         BlockPos position = entity.getPosition();

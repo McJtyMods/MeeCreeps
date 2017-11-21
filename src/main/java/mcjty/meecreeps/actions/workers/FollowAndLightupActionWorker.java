@@ -13,7 +13,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldEntitySpawner;
 
@@ -31,18 +30,6 @@ public class FollowAndLightupActionWorker extends AbstractActionWorker {
     @Override
     public boolean onlyStopWhenDone() {
         return true;
-    }
-
-    private BlockPos findSuitablePositionNearPlayer() {
-        EntityMeeCreeps meeCreep = (EntityMeeCreeps) this.entity;
-        BlockPos entityPos = meeCreep.getPosition();
-        BlockPos playerPos = options.getPlayer().getPosition();
-        double dx = playerPos.getX() - entityPos.getX();
-        double dy = playerPos.getY() - entityPos.getY();
-        double dz = playerPos.getZ() - entityPos.getZ();
-        Vec3d v = new Vec3d(-dx, -dy, -dz);
-        v = v.normalize();
-        return playerPos.add(v.x * 3, v.y * 3, v.z * 3);
     }
 
     private BlockPos findDarkSpot() {
@@ -95,11 +82,11 @@ public class FollowAndLightupActionWorker extends AbstractActionWorker {
                 helper.navigateTo(darkSpot, this::placeTorch);
             } else if (player.getEntityWorld().provider.getDimension() != meeCreep.getEntityWorld().provider.getDimension()) {
                 // Wrong dimension. Teleport to the player
-                BlockPos p = findSuitablePositionNearPlayer();
+                BlockPos p = helper.findSuitablePositionNearPlayer(3.0);
                 TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX(), p.getY(), p.getZ(), EnumFacing.NORTH);
             } else {
                 // Find a spot close to the player where we can navigate too
-                BlockPos p = findSuitablePositionNearPlayer();
+                BlockPos p = helper.findSuitablePositionNearPlayer(3.0);
                 helper.navigateTo(p, blockPos -> {});
             }
         }
