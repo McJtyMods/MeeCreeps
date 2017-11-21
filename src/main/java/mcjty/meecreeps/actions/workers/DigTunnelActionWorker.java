@@ -60,7 +60,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
 
     private static Set<Block> notInterestedInBlocks = null;
 
-    private static boolean isNotInterestedIn(Block block) {
+    public static boolean isNotInterestedIn(Block block) {
         if (notInterestedInBlocks == null) {
             Set<Block> b = new HashSet<>();
             b.add(Blocks.STONE);

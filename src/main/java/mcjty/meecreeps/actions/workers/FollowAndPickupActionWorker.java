@@ -5,6 +5,7 @@ import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -43,7 +44,16 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
         } else {
             BlockPos position = player.getPosition();
             AxisAlignedBB box = new AxisAlignedBB(position.add(-6, -4, -6), position.add(6, 4, 6));
-            List<EntityItem> items = entity.getWorld().getEntitiesWithinAABB(EntityItem.class, box);
+            List<EntityItem> items = entity.getWorld().getEntitiesWithinAABB(EntityItem.class, box, input -> {
+                if (!input.getItem().isEmpty()) {
+                    if (input.getItem().getItem() instanceof ItemBlock) {
+                        if (DigTunnelActionWorker.isNotInterestedIn(((ItemBlock) input.getItem().getItem()).getBlock())) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            });
             if (!items.isEmpty()) {
                 items.sort((o1, o2) -> {
                     double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
