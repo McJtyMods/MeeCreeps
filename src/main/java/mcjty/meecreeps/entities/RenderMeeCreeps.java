@@ -18,9 +18,6 @@ public class RenderMeeCreeps extends RenderLiving<EntityMeeCreeps> {
 
     public static final Factory FACTORY = new Factory();
 
-    //    public RenderMeeCreeps(RenderManager rendermanagerIn) {
-//        super(rendermanagerIn, new ModelEnderman(0), 0.5F);
-//    }
     public RenderMeeCreeps(RenderManager rendermanagerIn) {
         super(rendermanagerIn, new MeeCreepsModel(), 0.5F);
         this.addLayer(new LayerRenderHeldBlock(this));

@@ -6,17 +6,15 @@ import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.actions.PacketActionOptionToClient;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.api.IMeeCreep;
+import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.*;
-import net.minecraft.entity.monster.AbstractSkeleton;
-import net.minecraft.entity.passive.EntityAnimal;
-import net.minecraft.entity.passive.EntityRabbit;
-import net.minecraft.entity.passive.EntitySheep;
+import net.minecraft.entity.ai.EntityAILookIdle;
+import net.minecraft.entity.ai.EntityAISwimming;
+import net.minecraft.entity.ai.EntityAIWatchClosest;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
@@ -26,7 +24,9 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
@@ -46,12 +46,15 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     private int actionId = 0;
     private NonNullList<ItemStack> inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);
     private MeeCreepWorkerTask workerTask;
-    private int variation_hair = 0;
+    private int variationHair = 0;
+
+    // If we are carrying a TE then this contains the NBT data
+    private NBTTagCompound carriedNBT = null;
 
     public EntityMeeCreeps(World worldIn) {
         super(worldIn);
         setSize(0.6F, 1.95F);
-        variation_hair = worldIn.rand.nextInt(9);
+        variationHair = worldIn.rand.nextInt(9);
     }
 
     @Override
@@ -72,13 +75,13 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     @Override
     protected void entityInit() {
         super.entityInit();
-        int variation_face = world.rand.nextInt(9);
+        int variationFace = world.rand.nextInt(9);
         // Avoid the engry face
-        while (variation_face == 1) {
-            variation_face = world.rand.nextInt(9);
+        while (variationFace == 1) {
+            variationFace = world.rand.nextInt(9);
         }
         this.dataManager.register(CARRIED_BLOCK, Optional.absent());
-        this.dataManager.register(FACE_VARIATION, variation_face);
+        this.dataManager.register(FACE_VARIATION, variationFace);
     }
 
     public int getVariationFace() {
@@ -86,11 +89,11 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     }
 
     public int getVariationHair() {
-        return variation_hair;
+        return variationHair;
     }
 
-    public void setVariationFace(int variation_face) {
-        this.dataManager.set(FACE_VARIATION, variation_face);
+    public void setVariationFace(int variationFace) {
+        this.dataManager.set(FACE_VARIATION, variationFace);
     }
 
     @Override
@@ -165,6 +168,42 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
         return (IBlockState) ((Optional) this.dataManager.get(CARRIED_BLOCK)).orNull();
     }
 
+    @Nullable
+    public NBTTagCompound getCarriedNBT() {
+        return carriedNBT;
+    }
+
+    public void setCarriedNBT(NBTTagCompound carriedNBT) {
+        this.carriedNBT = carriedNBT;
+    }
+
+    public void placeDownBlock(BlockPos pos) {
+        // @todo what if this fails?
+        IBlockState state = getHeldBlockState();
+        if (state == null) {
+            return;
+        }
+        if (state.getBlock() == ModBlocks.heldCubeBlock) {
+            return;
+        }
+
+        world.setBlockState(pos, state, 3);
+        NBTTagCompound tc = getCarriedNBT();
+        if (tc != null) {
+            tc.setInteger("x", pos.getX());
+            tc.setInteger("y", pos.getY());
+            tc.setInteger("z", pos.getZ());
+            TileEntity tileEntity = TileEntity.create(world, tc);
+            if (tileEntity != null) {
+                world.getChunkFromBlockCoords(pos).addTileEntity(tileEntity);
+                tileEntity.markDirty();
+                world.notifyBlockUpdate(pos, state, state, 3);
+            }
+        }
+
+        carriedNBT = null;
+        setHeldBlockState(null);
+    }
 
     // Add an itemstack to the internal inventory and return what could not be added
     @Override
@@ -320,6 +359,9 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
         if (compound.hasKey("worker") && workerTask != null) {
             workerTask.readFromNBT(compound.getCompoundTag("worker"));
         }
+        if (compound.hasKey("carriedNBT")) {
+            carriedNBT = compound.getCompoundTag("carriedNBT");
+        }
     }
 
     @Override
@@ -335,6 +377,9 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
             NBTTagCompound workerTag = new NBTTagCompound();
             workerTask.writeToNBT(workerTag);
             compound.setTag("worker", workerTag);
+        }
+        if (carriedNBT != null) {
+            compound.setTag("carriedNBT", carriedNBT);
         }
     }
 
@@ -354,13 +399,15 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     public void setDead() {
         super.setDead();
         dropInventory();
+        placeDownBlock(getPosition());
         spawnDeathParticles();
     }
 
     @Override
-    public void onDeath(DamageSource cause) {
+    public void onDeath(@SuppressWarnings("NullableProblems") DamageSource cause) {
         super.onDeath(cause);
         dropInventory();
+        placeDownBlock(getPosition());
         spawnDeathParticles();
     }
 }

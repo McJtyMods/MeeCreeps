@@ -58,9 +58,6 @@ public class BalloonRenderer {
             guiTop = (height - HEIGHT) / 2;
         }
 
-        System.out.println("guiLeft = " + guiLeft);
-        System.out.println("guiTop = " + guiTop);
-
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.disableLighting();
 
