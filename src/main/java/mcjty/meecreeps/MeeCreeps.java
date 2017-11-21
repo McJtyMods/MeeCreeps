@@ -22,7 +22,7 @@ import java.util.function.Function;
         acceptedMinecraftVersions = "[1.12,1.13)")
 public class MeeCreeps {
     public static final String MODID = "meecreeps";
-    public static final String VERSION = "0.1.3beta";
+    public static final String VERSION = "0.1.4beta";
     public static final String MIN_FORGE_VER = "14.22.0.2464";
 
     @SidedProxy(clientSide = "mcjty.meecreeps.proxy.ClientProxy", serverSide = "mcjty.meecreeps.proxy.ServerProxy")
