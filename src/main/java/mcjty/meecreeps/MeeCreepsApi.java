@@ -84,6 +84,7 @@ public class MeeCreepsApi implements IMeeCreepsApi {
         registerActionFactory("meecreeps.harvest_replant", "Harvest and replant those crops", new HarvestReplantActionFactory());
         registerActionFactory("meecreeps.harvest", "Harvest those crops", new HarvestActionFactory());
         registerActionFactory("meecreeps.torches", "Light up the area", new LightupActionFactory());
+        registerActionFactory("meecreeps.follow_and_lightup", "Follow me and lightup the area", new FollowAndLightupActionFactory());
         registerActionFactory("meecreeps.pickup", "Pickup items", new PickupActionFactory());
         registerActionFactory("meecreeps.move_stuff", "Pick up and follow me", new MoveStuffActionFactory());
         registerActionFactory("meecreeps.idle", "Just idle a bit", new IdleActionFactory());

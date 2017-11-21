@@ -698,19 +698,22 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
-    public void findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message, int maxAmount) {
+    public boolean findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message, int maxAmount) {
         List<BlockPos> meeCreepChests = findMeeCreepChests(worker.getSearchBox());
         if (meeCreepChests.isEmpty()) {
             if (!findItemOnGround(worker.getSearchBox(), matcher, this::pickup)) {
                 if (!findInventoryContainingMost(worker.getSearchBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
                     showMessage(message);
+                    return false;
                 }
             }
         } else {
             if (!findInventoryContainingMost(meeCreepChests, matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
                 showMessage(message);
+                return false;
             }
         }
+        return true;
     }
 
     @Override

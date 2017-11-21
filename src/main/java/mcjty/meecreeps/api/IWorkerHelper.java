@@ -192,8 +192,9 @@ public interface IWorkerHelper {
      * a message to the player if no such items can be found (the player can then drop those items on the
      * ground or put them in a nearby chest)
      * It will try to fetch at most 'amount' items. Use MAXINT if you want to fill the inventory
+     * Returns false if it failed to find any torch
      */
-    void findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message, int maxAmount);
+    boolean findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message, int maxAmount);
 
     /**
      * Find items matching the predicate on the ground or else in a nearby chest (uses getActionBox()). Returns
