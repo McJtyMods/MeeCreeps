@@ -200,6 +200,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     private void handleNextPosition(EnumFacing facing, BlockPos p) {
         blockidx++;
         if (blockidx >= 12) {
+            blockidx = 11;      // Make sure we come here again next turn
             // Before we continue lets first see if things are ok
             if (checkClear(p, facing)) {
                 if (checkForStairs(p, facing)) {
@@ -219,9 +220,12 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
                     if (numStairs > 0) {
                         helper.navigateTo(p, blockPos -> placeStair(facing, p));
                     } else {
-                        if (!helper.findItemOnGround(getSearchBox(), this::isStair, entityItem -> placeStair(facing, p, entityItem))) {
+                        BlockPos position = entity.getEntity().getPosition();
+                        AxisAlignedBB box = new AxisAlignedBB(position.add(-15, -8, -15), position.add(15, 8, 15));
+
+                        if (!helper.findItemOnGround(box, this::isStair, entityItem -> placeStair(facing, p, entityItem))) {
                             // Collect cobble until we can make stairs
-                            if (!helper.findItemOnGround(getSearchBox(), this::isCobble, entityItem -> collectCobble(entityItem))) {
+                            if (!helper.findItemOnGround(box, this::isCobble, entityItem -> collectCobble(entityItem))) {
                                 helper.showMessage("I cannot find stairs or cobblestone!");
                             }
                         }
