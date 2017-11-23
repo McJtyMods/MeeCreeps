@@ -45,9 +45,9 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
                     IBlockState st = world.getBlockState(p);
                     if (st.getBlock().isLeaves(st, world, p)) {
                         if (st.getValue(BlockLeaves.DECAYABLE)) {
-                            if (getWoodType(st) == woodType) {
+//                            if (getWoodType(st) == woodType) {
                                 leavesToTick.put(p, 500);
-                            }
+//                            }
                         }
                     }
                 }
@@ -69,7 +69,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
         }
     }
 
-    protected void traverseTreeLogs(Set<BlockPos> alreadyDone, BlockPos pos, BlockPlanks.EnumType woodType) {
+    protected void traverseTreeLogs(Set<BlockPos> alreadyDone, BlockPos pos, BlockPlanks.EnumType woodType, Block woodBlock) {
         alreadyDone.add(pos);
         blocks.add(pos);
         // @todo config
@@ -84,10 +84,10 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
                         if (!alreadyDone.contains(p)) {
                             IBlockState log = entity.getWorld().getBlockState(p);
                             if (helper.allowedToHarvest(log, entity.getWorld(), p, GeneralTools.getHarvester())) {
-                                if (log.getBlock() instanceof BlockLog) {
-                                    if (woodType == getWoodType(log)) {
-                                        traverseTreeLogs(alreadyDone, p, woodType);
-                                    }
+                                if (log.getBlock() == woodBlock) {
+//                                    if (woodType == getWoodType(log)) {
+                                        traverseTreeLogs(alreadyDone, p, woodType, woodBlock);
+//                                    }
                                 }
                             }
                         }
@@ -105,7 +105,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
         IBlockState logBase = entity.getWorld().getBlockState(startPos);
         BlockPlanks.EnumType woodType = getWoodType(logBase);
         Set<BlockPos> alreadyDone = new HashSet<>();
-        traverseTreeLogs(alreadyDone, startPos, woodType);
+        traverseTreeLogs(alreadyDone, startPos, woodType, logBase.getBlock());
     }
 
     @Override
