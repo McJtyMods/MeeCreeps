@@ -44,6 +44,7 @@ public class Config {
     public static int balloonY = 10;
 
     public static int maxSpawnCount = 60;
+    public static int maxTreeBlocks = 2000;
 
     public static Set<String> allowedActions = new HashSet<>();
 
@@ -66,6 +67,7 @@ public class Config {
         balloonTimeout = cfg.getInt("balloonTimeout", CATEGORY_GENERAL, balloonTimeout, 1, 10000, "Number of ticks (20 ticks per second) before the balloon message disappears");
 
         maxSpawnCount = cfg.getInt("maxSpawnCount", CATEGORY_GENERAL, maxSpawnCount, 1, 200, "Spawn cap for an angry MeeCreep (a MeeCreep with a box)");
+        maxTreeBlocks = cfg.getInt("maxTreeBlocks", CATEGORY_GENERAL, maxTreeBlocks, 1, 100000, "Maximum number of tree blocks a single MeeCreep can chop down");
     }
 
     private static void initPermissionConfig(Configuration cfg) {

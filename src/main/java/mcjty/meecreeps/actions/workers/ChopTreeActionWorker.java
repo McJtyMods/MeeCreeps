@@ -1,6 +1,7 @@
 package mcjty.meecreeps.actions.workers;
 
 import mcjty.meecreeps.api.IWorkerHelper;
+import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.varia.Counter;
 import mcjty.meecreeps.varia.GeneralTools;
 import net.minecraft.block.*;
@@ -72,8 +73,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
     protected void traverseTreeLogs(Set<BlockPos> alreadyDone, BlockPos pos, BlockPlanks.EnumType woodType, Block woodBlock) {
         alreadyDone.add(pos);
         blocks.add(pos);
-        // @todo config
-        if (blocks.size() > 300) {
+        if (blocks.size() > Config.maxTreeBlocks) {
             return;
         }
         for (int y = -1 ; y <= 1 ; y++) {
