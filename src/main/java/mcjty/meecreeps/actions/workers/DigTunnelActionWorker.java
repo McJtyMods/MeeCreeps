@@ -121,10 +121,18 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
         if (blockStack.isEmpty()) {
             entityItem.setDead();
         }
-        World world = entity.getWorld();
+        if (actual.isEmpty()) {
+            return;
+        }
+        Item item = actual.getItem();
+        if (!(item instanceof ItemBlock)) {
+            // Safety
+            return;
+        }
 
-        Block block = ((ItemBlock) actual.getItem()).getBlock();
-        IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, actual.getItem().getMetadata(actual), GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
+        World world = entity.getWorld();
+        Block block = ((ItemBlock) item).getBlock();
+        IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, item.getMetadata(actual), GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
         world.setBlockState(pos, stateForPlacement, 3);
         SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
     }
