@@ -51,6 +51,11 @@ public interface IMeeCreep {
     boolean hasItem(Predicate<ItemStack> matcher);
 
     /**
+     * Return true if the MeeCreep has at least the given number of items matching the predicate
+     */
+    boolean hasItems(Predicate<ItemStack> matcher, int amount);
+
+    /**
      * Return true if the MeeCreep has room for an item matching the predicate
      */
     boolean hasRoom(Predicate<ItemStack> matcher);

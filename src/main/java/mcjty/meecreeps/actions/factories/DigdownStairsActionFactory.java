@@ -18,7 +18,7 @@ public class DigdownStairsActionFactory implements IActionFactory {
 
     @Override
     public boolean isPossible(World world, BlockPos pos, EnumFacing side) {
-        return false;   // @todo
+        return true;   // @todo
 
 //        TileEntity te = world.getTileEntity(pos);
 //        if (te != null) {

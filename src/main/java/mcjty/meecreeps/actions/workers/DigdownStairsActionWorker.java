@@ -3,13 +3,14 @@ package mcjty.meecreeps.actions.workers;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
-import net.minecraft.block.Block;
+import net.minecraft.block.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -20,148 +21,409 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class DigdownStairsActionWorker extends AbstractActionWorker {
-
     private AxisAlignedBB actionBox = null;
-    private BlockPos supportPosTodo = null;
 
-    @Override
-    public AxisAlignedBB getActionBox() {
-        if (actionBox == null) {
-            // @todo config
-            actionBox = new AxisAlignedBB(options.getTargetPos().add(-10, -5, -10), options.getTargetPos().add(10, 5, 10));
-        }
-        return actionBox;
-    }
+    private int offset = 0;     // Offset from starting point
+    private int blockidx = 0;
+    private int numStairs = 0;
+    private int numCobble = 0;
+
+    private EnumFacing direction = null;
+
+    // We cannot break those so skip them
+    private Set<BlockPos> positionsToSkip = new HashSet<BlockPos>();
+
 
     public DigdownStairsActionWorker(IWorkerHelper helper) {
         super(helper);
     }
 
-    private boolean isLadder(ItemStack stack) {
-        return stack.getItem() == Item.getItemFromBlock(Blocks.LADDER);
+    @Override
+    public void init() {
+        helper.setSpeed(5);
     }
 
-    private void placeLadder(BlockPos pos) {
+    @Override
+    public boolean onlyStopWhenDone() {
+        return true;
+    }
+
+    private EnumFacing getDirection() {
+        if (direction == null) {
+            String id = options.getFurtherQuestionId();
+            direction = EnumFacing.byName(id);
+        }
+        return direction;
+    }
+
+    @Override
+    public AxisAlignedBB getActionBox() {
+        if (actionBox == null) {
+            // @todo config
+            actionBox = new AxisAlignedBB(options.getTargetPos().add(-20, -5, -20), options.getTargetPos().add(20, 5, 20));
+        }
+        return actionBox;
+    }
+
+
+    private boolean isSupportBlock(ItemStack stack) {
+        return stack.getItem() instanceof ItemBlock ? DigTunnelActionWorker.isNotInterestedIn(((ItemBlock) stack.getItem()).getBlock()) : false;
+    }
+
+    private void dig(BlockPos p) {
         World world = entity.getWorld();
-        ItemStack ladder = entity.consumeItem(this::isLadder, 1);
-        if (!ladder.isEmpty()) {
-            world.setBlockState(pos, Blocks.LADDER.getDefaultState(), 3);
-            SoundTools.playSound(world, Blocks.LADDER.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        IBlockState state = world.getBlockState(p);
+        boolean result;
+        if (DigTunnelActionWorker.isNotInterestedIn(state.getBlock())) {
+            result = helper.harvestAndDrop(p);
+        } else {
+            result = helper.harvestAndPickup(p);
+        }
+        if (!result) {
+            // Too hard or not allowed. Skip it
+            positionsToSkip.add(p);
         }
     }
 
-    private BlockPos findTopSpotNotDiggedYet() {
-        BlockPos p = options.getTargetPos();
-        World world = entity.getWorld();
-        IBlockState state = world.getBlockState(p);
-        while (world.isAirBlock(p) || state.getBlock() == Blocks.LADDER) {
-            p = p.down();
-            state = world.getBlockState(p);
+    private BlockPos getBlockToDig(BlockPos p, EnumFacing facing, int blockidx) {
+        switch (blockidx) {
+            case 0:
+                return p.up(1).offset(facing.rotateY());
+            case 1:
+                return p.up(1);
+            case 2:
+                return p.up(1).offset(facing.rotateYCCW());
+            case 3:
+                return p.offset(facing.rotateY());
+            case 4:
+                return p;
+            case 5:
+                return p.offset(facing.rotateYCCW());
+            case 6:
+                return p.down(1).offset(facing.rotateYCCW());
+            case 7:
+                return p.down(1);
+            case 8:
+                return p.down(1).offset(facing.rotateY());
+            case 9:
+                return p.up(2).offset(facing.rotateY());
+            case 10:
+                return p.up(2);
+            case 11:
+                return p.up(2).offset(facing.rotateYCCW());
         }
         return p;
     }
 
-    private void digDown() {
-        World world = entity.getWorld();
-        BlockPos p = findTopSpotNotDiggedYet();
-        IBlockState state = world.getBlockState(p);
-        if (helper.allowedToHarvest(state, world, p, GeneralTools.getHarvester())) {
-            if (helper.harvestAndDrop(p)) {
-                placeLadder(p);
-            } else {
-                // Too hard or not allowed. We stop here
-                helper.taskIsDone();
-            }
-        }
-    }
-
-    private boolean needsSupportPillar(BlockPos p) {
-        supportPosTodo = null;
-        if (p.getY() < options.getTargetPos().getY()) {
-            World world = entity.getWorld();
-            int y = p.getY();
-            while (y < options.getTargetPos().getY()) {
-                BlockPos test = new BlockPos(p.getX(), y, p.getZ());
-                if (world.isAirBlock(test.south())) {
-                    supportPosTodo = test;
-                    return true;
-                }
-                y++;
-            }
-        }
-        return false;
-    }
-
-    private void buildSupportBlock(EntityItem entityItem) {
+    private void buildSupport(BlockPos pos, EntityItem entityItem) {
         ItemStack blockStack = entityItem.getItem();
         ItemStack actual = blockStack.splitStack(1);
         if (blockStack.isEmpty()) {
             entityItem.setDead();
         }
+        if (actual.isEmpty()) {
+            return;
+        }
+        Item item = actual.getItem();
+        if (!(item instanceof ItemBlock)) {
+            // Safety
+            return;
+        }
+
         World world = entity.getWorld();
-
-        Block block = ((ItemBlock) actual.getItem()).getBlock();
-        IBlockState stateForPlacement = block.getStateForPlacement(world, supportPosTodo.south(), EnumFacing.DOWN, 0, 0, 0, actual.getItem().getMetadata(actual), GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
-        world.setBlockState(supportPosTodo.south(), stateForPlacement, 3);
-        placeLadder(supportPosTodo);
-        supportPosTodo = null;
+        Block block = ((ItemBlock) item).getBlock();
+        IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, item.getMetadata(actual), GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
+        world.setBlockState(pos, stateForPlacement, 3);
+        SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
     }
 
-    private static Set<Block> buildingBlocks = null;
-
-    private static boolean isBuildingBlock(Block block) {
-        if (buildingBlocks == null) {
-            Set<Block> b = new HashSet<>();
-            b.add(Blocks.STONE);
-            b.add(Blocks.COBBLESTONE);
-            b.add(Blocks.DIRT);
-            b.add(Blocks.SANDSTONE);
-            b.add(Blocks.NETHERRACK);
-            b.add(Blocks.NETHER_BRICK);
-            b.add(Blocks.END_STONE);
-            b.add(Blocks.RED_SANDSTONE);
-            b.add(Blocks.PURPUR_BLOCK);
-            buildingBlocks = b;
-        }
-        return buildingBlocks.contains(block);
+    private void buildStairs(BlockPos pos) {
+        numStairs--;
+        World world = entity.getWorld();
+        Block block = Blocks.STONE_STAIRS;
+        IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, getDirection().getOpposite().ordinal()-2, GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
+        stateForPlacement = stateForPlacement.withProperty(BlockStairs.FACING, getDirection().getOpposite());
+        world.setBlockState(pos, stateForPlacement, 3);
+        SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
     }
 
-    private boolean isBuildingBlock(ItemStack stack) {
-        if (!stack.isEmpty()) {
-            Item item = stack.getItem();
-            if (item instanceof ItemBlock) {
-                ItemBlock itemBlock = (ItemBlock) item;
-                if (isBuildingBlock(itemBlock.getBlock())) {
-                    return true;
-                }
-            }
+    private void collectCobble(EntityItem entityItem) {
+        ItemStack blockStack = entityItem.getItem();
+        ItemStack actual = blockStack.splitStack(6);
+        if (blockStack.isEmpty()) {
+            entityItem.setDead();
         }
-        return false;
+        if (actual.isEmpty()) {
+            return;
+        }
+        Item item = actual.getItem();
+        if (!(item instanceof ItemBlock)) {
+            // Safety
+            return;
+        }
+        numCobble += actual.getCount();
+    }
+
+    private boolean isStair(ItemStack stack) {
+        return stack.getItem() instanceof ItemBlock && ((ItemBlock) stack.getItem()).getBlock() instanceof BlockStairs;
+    }
+
+    private boolean isCobble(ItemStack stack) {
+        return stack.getItem() instanceof ItemBlock && ((ItemBlock) stack.getItem()).getBlock() == Blocks.COBBLESTONE;
     }
 
     @Override
     public void tick(boolean timeToWrapUp) {
-        if (supportPosTodo != null) {
-            if (!helper.findItemOnGround(new AxisAlignedBB(entity.getEntity().getPosition().add(-3, -3, -3), entity.getEntity().getPosition().add(3, 3, 3)),
-                    this::isBuildingBlock, this::buildSupportBlock)) {
-                // We didn't find a suitable item to build support with. If it is time to wrap up
-                // then we will not find any suitable blocks later so we just stop then
-                if (timeToWrapUp) {
-                    helper.done();
-                    return;
-                }
-            }
+        if (timeToWrapUp) {
+            helper.done();
+            return;
         }
 
-        if (timeToWrapUp && supportPosTodo == null) {
-            helper.done();
-        } else if (!entity.hasItem(this::isLadder)) {
-            helper.findItemOnGroundOrInChest(this::isLadder, "I cannot find any ladders", 64);
-        } else {
-            BlockPos p = findTopSpotNotDiggedYet();
-            if (!needsSupportPillar(p)) {
-                helper.navigateTo(p, blockPos -> digDown());
+        EnumFacing facing = getDirection();
+
+        BlockPos p = helper.getContext().getTargetPos().up().offset(facing, this.offset).down(this.offset+1);
+        if (p.getY() < 6) {
+            helper.taskIsDone();
+            return;
+        }
+
+        if (checkSupports(facing, p)) {
+            return;
+        }
+
+        BlockPos digpos = getBlockToDig(p, facing, blockidx);
+        helper.navigateTo(p.offset(facing.getOpposite()), blockPos -> dig(digpos));
+
+        handleNextPosition(facing, p);
+    }
+
+    private void handleNextPosition(EnumFacing facing, BlockPos p) {
+        blockidx++;
+        if (blockidx >= 12) {
+            // Before we continue lets first see if things are ok
+            if (checkClear(p, facing)) {
+                if (checkForStairs(p, facing)) {
+                    this.offset++;
+                    blockidx = 0;
+                } else {
+                    // We still have to place down some stairs
+                    if (entity.hasItem(this::isStair)) {
+                        numStairs++;
+                        entity.consumeItem(this::isStair, 1);
+                    }
+                    if (numCobble >= 6) {
+                        // Craft stairs
+                        numStairs += 4;
+                        numCobble -= 6;
+                    }
+                    if (numStairs > 0) {
+                        helper.navigateTo(p, blockPos -> placeStair(facing, p));
+                    } else {
+                        if (!helper.findItemOnGround(getSearchBox(), this::isStair, entityItem -> placeStair(facing, p, entityItem))) {
+                            // Collect cobble until we can make stairs
+                            if (!helper.findItemOnGround(getSearchBox(), this::isCobble, entityItem -> collectCobble(entityItem))) {
+                                helper.showMessage("I cannot find stairs or cobblestone!");
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Restart here
+                blockidx = 0;
             }
         }
+    }
+
+    private void placeStair(EnumFacing facing, BlockPos pos, EntityItem entityItem) {
+        ItemStack blockStack = entityItem.getItem();
+        ItemStack actual = blockStack.splitStack(32);
+        numStairs += 32;
+        if (blockStack.isEmpty()) {
+            entityItem.setDead();
+        }
+        if (actual.isEmpty()) {
+            return;
+        }
+        Item item = actual.getItem();
+        if (!(item instanceof ItemBlock)) {
+            // Safety
+            return;
+        }
+
+        placeStair(facing, pos);
+    }
+
+    private void placeStair(EnumFacing facing, BlockPos p) {
+        World world = entity.getWorld();
+        if (!isStair(p.down(), world)) {
+            buildStairs(p.down());
+        } else if (!isStair(p.down().offset(facing.rotateY()), world)) {
+            buildStairs(p.down().offset(facing.rotateY()));
+        } else if (!isStair(p.down().offset(facing.rotateYCCW()), world)) {
+            buildStairs(p.down().offset(facing.rotateYCCW()));
+        }
+    }
+
+    private boolean needsStair() {
+        return blockidx >= 6 && blockidx <= 8;
+    }
+
+    private boolean checkClear(BlockPos p, EnumFacing facing) {
+        World world = entity.getWorld();
+        if (canDig(p, world)) {
+            return false;
+        }
+        if (canDig(p.offset(facing.rotateY()), world)) {
+            return false;
+        }
+        if (canDig(p.offset(facing.rotateYCCW()), world)) {
+            return false;
+        }
+        if (canDig(p.up(), world)) {
+            return false;
+        }
+        if (canDig(p.up().offset(facing.rotateY()), world)) {
+            return false;
+        }
+        if (canDig(p.up().offset(facing.rotateYCCW()), world)) {
+            return false;
+        }
+        if (canDig(p.up(2), world)) {
+            return false;
+        }
+        if (canDig(p.up(2).offset(facing.rotateY()), world)) {
+            return false;
+        }
+        if (canDig(p.up(2).offset(facing.rotateYCCW()), world)) {
+            return false;
+        }
+        if (canDigOrStair(p.down(), world)) {
+            return false;
+        }
+        if (canDigOrStair(p.down().offset(facing.rotateY()), world)) {
+            return false;
+        }
+        if (canDigOrStair(p.down().offset(facing.rotateYCCW()), world)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkForStairs(BlockPos p, EnumFacing facing) {
+        World world = entity.getWorld();
+        if (!isStair(p.down(), world)) {
+            return false;
+        }
+        if (!isStair(p.down().offset(facing.rotateY()), world)) {
+            return false;
+        }
+        if (!isStair(p.down().offset(facing.rotateYCCW()), world)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean canDig(BlockPos p, World world) {
+        return !world.isAirBlock(p) && !positionsToSkip.contains(p);
+    }
+
+    private boolean canDigOrStair(BlockPos p, World world) {
+        return !world.isAirBlock(p) && !positionsToSkip.contains(p) && !(world.getBlockState(p).getBlock() instanceof BlockStairs);
+    }
+
+    private boolean isStair(BlockPos p, World world) {
+        return positionsToSkip.contains(p) || world.getBlockState(p).getBlock() instanceof BlockStairs;
+    }
+
+    private boolean checkSupports(EnumFacing facing, BlockPos p) {
+//        if (checkForSupport(p.down(2))) {
+//            return true;
+//        }
+//        if (checkForSupport(p.down(2).offset(facing.rotateY()))) {
+//            return true;
+//        }
+//        if (checkForSupport(p.down(2).offset(facing.rotateYCCW()))) {
+//            return true;
+//        }
+
+        if (checkForLiquid(p.down(1).offset(facing.rotateY(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.offset(facing.rotateY(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.up(1).offset(facing.rotateY(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.up(2).offset(facing.rotateY(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.down(1).offset(facing.rotateYCCW(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.offset(facing.rotateYCCW(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.up(1).offset(facing.rotateYCCW(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.up(2).offset(facing.rotateYCCW(), 2))) {
+            return true;
+        }
+        if (checkForLiquid(p.up(3))) {
+            return true;
+        }
+        if (checkForLiquid(p.up(3).offset(facing.rotateY()))) {
+            return true;
+        }
+        if (checkForLiquid(p.up(3).offset(facing.rotateYCCW()))) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkForSupport(BlockPos p) {
+        if (entity.getWorld().isAirBlock(p) || isLiquid(p)) {
+            if (!helper.findItemOnGround(getSearchBox(), this::isSupportBlock, entityItem -> buildSupport(p, entityItem))) {
+                // We cannot continu like this
+                helper.showMessage("I cannot continue this way");
+                helper.taskIsDone();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkForLiquid(BlockPos p) {
+        if (isLiquid(p)) {
+            if (!helper.findItemOnGround(getSearchBox(), this::isSupportBlock, entityItem -> buildSupport(p, entityItem))) {
+                // We cannot continue like this
+                helper.showMessage("I cannot continue this way");
+                helper.taskIsDone();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isLiquid(BlockPos p) {
+        Block block = entity.getWorld().getBlockState(p).getBlock();
+        return block instanceof BlockLiquid || block instanceof BlockDynamicLiquid || block instanceof BlockStaticLiquid;
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound tag) {
+        offset = tag.getInteger("offset");
+        blockidx = tag.getInteger("blockidx");
+        numStairs = tag.getInteger("stairs");
+        numCobble = tag.getInteger("cobble");
+    }
+
+    @Override
+    public void writeToNBT(NBTTagCompound tag) {
+        tag.setInteger("offset", offset);
+        tag.setInteger("blockidx", blockidx);
+        tag.setInteger("stairs", numStairs);
+        tag.setInteger("cobble", numCobble);
     }
 }

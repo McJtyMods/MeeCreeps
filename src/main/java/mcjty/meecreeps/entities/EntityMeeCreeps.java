@@ -298,6 +298,20 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     }
 
     @Override
+    public boolean hasItems(Predicate<ItemStack> matcher, int amount) {
+        int cnt = 0;
+        for (ItemStack stack : inventory) {
+            if (!stack.isEmpty() && matcher.test(stack)) {
+                cnt += stack.getCount();
+                if (cnt >= amount) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
     public boolean hasRoom(Predicate<ItemStack> matcher) {
         for (ItemStack stack : inventory) {
             if (stack.isEmpty()) {

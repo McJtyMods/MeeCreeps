@@ -32,7 +32,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
 
     private int torchChecker = 40;
     // We cannot break those so skip them
-    private Set<BlockPos> positionsToSkip = new HashSet();
+    private Set<BlockPos> positionsToSkip = new HashSet<>();
 
 
     public DigTunnelActionWorker(IWorkerHelper helper) {
