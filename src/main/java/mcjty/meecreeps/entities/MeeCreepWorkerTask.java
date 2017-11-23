@@ -80,7 +80,7 @@ public class MeeCreepWorkerTask extends EntityAIBase {
             int actionId = meeCreeps.getActionId();
             if (actionId != 0) {
                 ActionOptions options = manager.getOptions(actionId);
-                if (options != null) {
+                if (options != null && options.getTask() != null) {
                     getHelper(options).readFromNBT(tag);
                 }
             }
