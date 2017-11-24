@@ -175,6 +175,14 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     @Override
     public void tick(boolean timeToWrapUp) {
         if (timeToWrapUp) {
+            if (numStairs > 0) {
+                entity.getEntity().entityDropItem(new ItemStack(Blocks.STONE_STAIRS, numStairs), 0.0f);
+                numStairs = 0;
+            }
+            if (numCobble > 0) {
+                entity.getEntity().entityDropItem(new ItemStack(Blocks.COBBLESTONE, numCobble), 0.0f);
+                numCobble = 0;
+            }
             helper.done();
             return;
         }
@@ -225,7 +233,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
 
                         if (!helper.findItemOnGround(box, this::isStair, entityItem -> placeStair(facing, p, entityItem))) {
                             // Collect cobble until we can make stairs
-                            if (!helper.findItemOnGround(box, this::isCobble, entityItem -> collectCobble(entityItem))) {
+                            if (!helper.findItemOnGround(box, this::isCobble, this::collectCobble)) {
                                 helper.showMessage("I cannot find stairs or cobblestone!");
                             }
                         }

@@ -34,9 +34,8 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
 
     private void harvest(BlockPos pos) {
         World world = entity.getWorld();
-        BlockPlanks.EnumType woodType = getWoodType(world.getBlockState(pos));
         helper.harvestAndPickup(pos);
-        findLeaves(pos, world, woodType);
+        findLeaves(pos, world);
     }
 
     @Override
@@ -46,7 +45,7 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
         }
         if (blocks.isEmpty() && leavesToTick.isEmpty()) {
             // There is nothing left to do
-            helper.done();
+            helper.taskIsDone();
             return;
         }
 
@@ -66,9 +65,8 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
                 helper.done();
             }
         } else if (!blocks.isEmpty()) {
-            harvest(blocks.remove(0));
-            // @todo config
-            helper.speedUp(5);
+            BlockPos toRemove = blocks.remove(0);
+            helper.navigateTo(options.getTargetPos(), blockPos -> harvest(toRemove));
         } else {
             helper.taskIsDone();
         }

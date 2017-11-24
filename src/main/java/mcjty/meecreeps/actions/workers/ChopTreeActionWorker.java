@@ -4,7 +4,8 @@ import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.varia.Counter;
 import mcjty.meecreeps.varia.GeneralTools;
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockLeaves;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -32,12 +33,21 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
 
     private void harvest(BlockPos pos) {
         World world = entity.getWorld();
-        BlockPlanks.EnumType woodType = getWoodType(world.getBlockState(pos));
         helper.harvestAndDrop(pos);
-        findLeaves(pos, world, woodType);
+        findLeaves(pos, world);
     }
 
-    protected void findLeaves(BlockPos pos, World world, BlockPlanks.EnumType woodType) {
+    @Override
+    public void init() {
+        helper.setSpeed(5);
+    }
+
+    @Override
+    public boolean onlyStopWhenDone() {
+        return true;
+    }
+
+    protected void findLeaves(BlockPos pos, World world) {
         int offs = 4;
         for (int x = -offs; x <= offs; x++) {
             for (int y = -offs; y <= offs; y++) {
@@ -46,9 +56,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
                     IBlockState st = world.getBlockState(p);
                     if (st.getBlock().isLeaves(st, world, p)) {
                         if (st.getValue(BlockLeaves.DECAYABLE)) {
-//                            if (getWoodType(st) == woodType) {
-                                leavesToTick.put(p, 500);
-//                            }
+                            leavesToTick.put(p, 500);
                         }
                     }
                 }
@@ -56,21 +64,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
         }
     }
 
-    protected BlockPlanks.EnumType getWoodType(IBlockState state) {
-        if (state.getBlock() instanceof BlockNewLog) {
-            return state.getValue(BlockNewLog.VARIANT);
-        } else if (state.getBlock() instanceof BlockOldLog) {
-            return state.getValue(BlockOldLog.VARIANT);
-        } else if (state.getBlock() instanceof BlockNewLeaf) {
-            return state.getValue(BlockNewLeaf.VARIANT);
-        } else if (state.getBlock() instanceof BlockOldLeaf) {
-            return state.getValue(BlockOldLeaf.VARIANT);
-        } else {
-            return null;
-        }
-    }
-
-    protected void traverseTreeLogs(Set<BlockPos> alreadyDone, BlockPos pos, BlockPlanks.EnumType woodType, Block woodBlock) {
+    protected void traverseTreeLogs(Set<BlockPos> alreadyDone, BlockPos pos, Block woodBlock) {
         alreadyDone.add(pos);
         blocks.add(pos);
         if (blocks.size() > Config.maxTreeBlocks) {
@@ -85,9 +79,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
                             IBlockState log = entity.getWorld().getBlockState(p);
                             if (helper.allowedToHarvest(log, entity.getWorld(), p, GeneralTools.getHarvester())) {
                                 if (log.getBlock() == woodBlock) {
-//                                    if (woodType == getWoodType(log)) {
-                                        traverseTreeLogs(alreadyDone, p, woodType, woodBlock);
-//                                    }
+                                    traverseTreeLogs(alreadyDone, p, woodBlock);
                                 }
                             }
                         }
@@ -103,9 +95,8 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
             return;
         }
         IBlockState logBase = entity.getWorld().getBlockState(startPos);
-        BlockPlanks.EnumType woodType = getWoodType(logBase);
         Set<BlockPos> alreadyDone = new HashSet<>();
-        traverseTreeLogs(alreadyDone, startPos, woodType, logBase.getBlock());
+        traverseTreeLogs(alreadyDone, startPos, logBase.getBlock());
     }
 
     @Override
@@ -126,9 +117,8 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
         if (timeToWrapUp) {
             helper.done();
         } else if (!blocks.isEmpty()) {
-            harvest(blocks.remove(0));
-            // @todo config
-            helper.speedUp(5);
+            BlockPos toRemove = blocks.remove(0);
+            helper.navigateTo(options.getTargetPos(), blockPos -> harvest(toRemove));
         } else {
             helper.taskIsDone();
         }
