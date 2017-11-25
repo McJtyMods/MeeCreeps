@@ -859,7 +859,6 @@ public class WorkerHelper implements IWorkerHelper {
         List<BlockPos> inventories = new ArrayList<>();
         Map<BlockPos, Float> countMatching = new HashMap<>();
         for (BlockPos pos : inventoryList) {
-            IBlockState state = world.getBlockState(pos);
             TileEntity te = world.getTileEntity(pos);
             IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
             int cnt = 0;
