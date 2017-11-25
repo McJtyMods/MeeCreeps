@@ -1,6 +1,7 @@
 package mcjty.meecreeps.actions.workers;
 
 import mcjty.meecreeps.ForgeEventHandlers;
+import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.*;
 import mcjty.meecreeps.api.*;
 import mcjty.meecreeps.blocks.ModBlocks;
@@ -822,18 +823,23 @@ public class WorkerHelper implements IWorkerHelper {
 
     private void fetchFromInventory(BlockPos pos, Predicate<ItemStack> matcher, int maxAmount) {
         materialChest = pos;
-        if (!InventoryTools.isInventory(entity.getEntityWorld(), pos)) {
+        World world = entity.getEntityWorld();
+        if (!InventoryTools.isInventory(world, pos)) {
             // No longer an inventory. We cannot get the items from here
             return;
         }
-        TileEntity te = entity.getEntityWorld().getTileEntity(pos);
+        TileEntity te = world.getTileEntity(pos);
         IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
         for (int i = 0 ; i < handler.getSlots() ; i++) {
             if (maxAmount <= 0) {
                 return;
             }
             ItemStack stack = handler.getStackInSlot(i);
-            if (!stack.isEmpty() && matcher.test(stack)) {
+            if (stack == null) {
+                // There are still bad mods!
+                String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
+                MeeCreeps.logger.warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
+            } else if (!stack.isEmpty() && matcher.test(stack)) {
                 ItemStack extracted = handler.extractItem(i, Math.min(maxAmount, stack.getCount()), false);
                 ItemStack remaining = entity.addStack(extracted);
                 maxAmount -= extracted.getCount() - remaining.getCount();
@@ -859,7 +865,11 @@ public class WorkerHelper implements IWorkerHelper {
             int cnt = 0;
             for (int i = 0; i < handler.getSlots(); i++) {
                 ItemStack stack = handler.getStackInSlot(i);
-                if (!stack.isEmpty()) {
+                if (stack == null) {
+                    // There are still bad mods!
+                    String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
+                    MeeCreeps.logger.warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
+                } else if (!stack.isEmpty()) {
                     if (matcher.test(stack)) {
                         cnt += stack.getCount();
                     }
@@ -892,7 +902,11 @@ public class WorkerHelper implements IWorkerHelper {
                     int cnt  = 0;
                     for (int i = 0 ; i < handler.getSlots() ; i++) {
                         ItemStack stack = handler.getStackInSlot(i);
-                        if (!stack.isEmpty()) {
+                        if (stack == null) {
+                            // There are still bad mods!
+                            String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
+                            MeeCreeps.logger.warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
+                        } else if (!stack.isEmpty()) {
                             if (matcher.test(stack)) {
                                 cnt += stack.getCount();
                             }
@@ -970,7 +984,11 @@ public class WorkerHelper implements IWorkerHelper {
                         int free = 0;
                         for (int i = 0 ; i < handler.getSlots() ; i++) {
                             ItemStack stack = handler.getStackInSlot(i);
-                            if (!stack.isEmpty()) {
+                            if (stack == null) {
+                                // There are still bad mods!
+                                String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
+                                MeeCreeps.logger.warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
+                            } else if (!stack.isEmpty()) {
                                 if (matcher.test(stack)) {
                                     cnt += stack.getCount();
                                     free += handler.getSlotLimit(i) - stack.getCount();
