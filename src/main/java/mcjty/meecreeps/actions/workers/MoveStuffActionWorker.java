@@ -5,6 +5,7 @@ import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -29,19 +30,6 @@ public class MoveStuffActionWorker extends AbstractActionWorker {
         return true;
     }
 
-    private BlockPos findSuitablePositionNearPlayer() {
-        EntityMeeCreeps meeCreep = (EntityMeeCreeps) this.entity;
-        BlockPos entityPos = meeCreep.getPosition();
-        BlockPos playerPos = options.getPlayer().getPosition();
-        double dx = playerPos.getX() - entityPos.getX();
-        double dy = playerPos.getY() - entityPos.getY();
-        double dz = playerPos.getZ() - entityPos.getZ();
-        Vec3d v = new Vec3d(-dx, -dy, -dz);
-        v = v.normalize();
-        return playerPos.add(v.x * 3, v.y * 3, v.z * 3);
-    }
-
-
     @Override
     public void tick(boolean timeToWrapUp) {
         EntityMeeCreeps meeCreep = (EntityMeeCreeps) this.entity;
@@ -56,11 +44,11 @@ public class MoveStuffActionWorker extends AbstractActionWorker {
                 helper.taskIsDone();
             } else if (player.getEntityWorld().provider.getDimension() != meeCreep.getEntityWorld().provider.getDimension()) {
                 // Wrong dimension. Teleport to the player
-                BlockPos p = findSuitablePositionNearPlayer();
+                BlockPos p = helper.findSuitablePositionNearPlayer(3.0);
                 TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX(), p.getY(), p.getZ(), EnumFacing.NORTH);
             } else {
                 // Find a spot close to the player where we can navigate too
-                BlockPos p = findSuitablePositionNearPlayer();
+                BlockPos p = helper.findSuitablePositionNearPlayer(3.0);
                 helper.navigateTo(p, blockPos -> {});
             }
         }

@@ -673,7 +673,7 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public BlockPos findSuitablePositionNearPlayer(double distance) {
-        EntityMeeCreeps meeCreep = (EntityMeeCreeps) this.entity;
+        EntityMeeCreeps meeCreep = this.entity;
         BlockPos entityPos = meeCreep.getPosition();
         BlockPos playerPos = options.getPlayer().getPosition();
         double dx = playerPos.getX() - entityPos.getX();
@@ -681,8 +681,66 @@ public class WorkerHelper implements IWorkerHelper {
         double dz = playerPos.getZ() - entityPos.getZ();
         Vec3d v = new Vec3d(-dx, -dy, -dz);
         v = v.normalize();
-        return playerPos.add(v.x * distance, v.y * distance, v.z * distance);
+        BlockPos pos = playerPos.add(v.x * distance, v.y * distance, v.z * distance);
+        // First find a good spot at the specific location
+        World world = meeCreep.getWorld();
+
+        // First try on the prefered spot
+        BlockPos p = scanSuitablePos(pos, world);
+        if (p != null) return p;
+        // No good spot to stand on found. Try other spots around the prefered spot
+        p = scanAround(pos, world);
+        if (p != null) return p;
+        // No good spot to stand on found. Try other spots around the player
+        p = scanAround(playerPos, world);
+        if (p != null) return p;
+
+        // If all else fails we go stand where the player is
+        return playerPos;
     }
+
+    private BlockPos scanAround(BlockPos pos, World world) {
+        for (int dx = -1 ; dx <= 1 ; dx++) {
+            for (int dz = -1 ; dz <= 1 ; dz++) {
+                BlockPos p = pos.add(dx, 0, dz);
+                p = scanSuitablePos(p, world);
+                if (p != null) {
+                    return p;
+                }
+            }
+        }
+        return null;
+    }
+
+    private BlockPos scanSuitablePos(BlockPos pos, World world) {
+        for (int d = 0 ; d < 6 ; d++) {
+            BlockPos p = pos.down(d);
+            if (isSuitableStandingPos(world, p)) {
+                return p;
+            }
+            p = pos.up(d);
+            if (isSuitableStandingPos(world, p)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    private boolean isSuitableStandingPos(World world, BlockPos p) {
+        boolean b = !world.isAirBlock(p.down()) && world.isAirBlock(p) && world.isAirBlock(p.up());
+        if (b) {
+            IBlockState state = world.getBlockState(p.down());
+            if (state.getBlock() == Blocks.LAVA || state.getBlock() == Blocks.FLOWING_LAVA) {
+                return false;
+            }
+            if (state.getBlock() == Blocks.FIRE) {
+                return false;
+            }
+        }
+        return b;
+    }
+
+
 
 
     @Override
