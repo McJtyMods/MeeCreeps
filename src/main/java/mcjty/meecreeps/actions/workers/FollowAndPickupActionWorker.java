@@ -29,6 +29,12 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
     }
 
     @Override
+    public boolean needsToFollowPlayer() {
+        return true;
+    }
+
+
+    @Override
     public void tick(boolean timeToWrapUp) {
         EntityMeeCreeps meeCreep = (EntityMeeCreeps) this.entity;
         EntityPlayer player = options.getPlayer();
@@ -39,7 +45,7 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
             helper.taskIsDone();
         } else if (player.getEntityWorld().provider.getDimension() != meeCreep.getEntityWorld().provider.getDimension()) {
             // Wrong dimension. Teleport to the player
-            BlockPos p = helper.findSuitablePositionNearPlayer(3.0);
+            BlockPos p = helper.findSuitablePositionNearPlayer(4.0);
             TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX(), p.getY(), p.getZ(), EnumFacing.NORTH);
         } else {
             BlockPos position = player.getPosition();
@@ -66,7 +72,7 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
                 helper.navigateTo(helper.findSuitablePositionNearPlayer(1.0), blockPos -> helper.giveToPlayerOrDrop());
             } else {
                 // Find a spot close to the player where we can navigate too
-                BlockPos p = helper.findSuitablePositionNearPlayer(3.0);
+                BlockPos p = helper.findSuitablePositionNearPlayer(4.0);
                 helper.navigateTo(p, blockPos -> {});
             }
         }

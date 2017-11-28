@@ -2,8 +2,12 @@ package mcjty.meecreeps.actions;
 
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
+import mcjty.meecreeps.actions.workers.WorkerHelper;
+import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.config.Config;
+import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.items.CreepCubeItem;
+import mcjty.meecreeps.teleport.TeleportationTools;
 import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,6 +19,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.storage.WorldSavedData;
@@ -35,6 +40,8 @@ public class ServerActionManager extends WorldSavedData {
     private Map<Integer, ActionOptions> optionMap = new HashMap<>();
     private int lastId = 0;
 
+    private Map<Integer, EntityMeeCreeps> entityCache = new HashMap<>();
+
     public ServerActionManager(String name) {
         super(name);
     }
@@ -45,10 +52,27 @@ public class ServerActionManager extends WorldSavedData {
         markDirty();
     }
 
+    public void clearOptions() {
+        options.clear();
+        save();
+    }
+
     public static void clearInstance() {
         if (instance != null) {
             instance = null;
         }
+    }
+
+    public void updateEntityCache(int actionId, @Nullable EntityMeeCreeps entity) {
+        if (entity == null) {
+            entityCache.remove(actionId);
+        } else {
+            entityCache.put(actionId, entity);
+        }
+    }
+
+    public EntityMeeCreeps getCachedEntity(int actionId) {
+        return entityCache.get(actionId);
     }
 
     public int newId() {
@@ -142,6 +166,37 @@ public class ServerActionManager extends WorldSavedData {
         }
     }
 
+    private EntityMeeCreeps findMeeCreep(World world, int actionId) {
+        EntityMeeCreeps cachedEntity = getCachedEntity(actionId);
+        if (cachedEntity != null) {
+            return cachedEntity;
+        }
+        List<EntityMeeCreeps> entities = world.getEntities(EntityMeeCreeps.class, input -> input.getActionId() == actionId);
+        if (!entities.isEmpty()) {
+            updateEntityCache(actionId, entities.get(0));
+            return entities.get(0);
+        }
+        // Lets try to find the entity in other dimensions that are still loaded
+        for (WorldServer w : DimensionManager.getWorlds()) {
+            entities = world.getEntities(EntityMeeCreeps.class, input -> input.getActionId() == actionId);
+            if (!entities.isEmpty()) {
+                updateEntityCache(actionId, entities.get(0));
+                return entities.get(0);
+            }
+        }
+        // Last attempt. Also check unloaded dimensions
+        Integer[] iDs = DimensionManager.getStaticDimensionIDs();
+        for (Integer id : iDs) {
+            World w = TeleportationTools.getWorldForDimension(id);
+            entities = world.getEntities(EntityMeeCreeps.class, input -> input.getActionId() == actionId);
+            if (!entities.isEmpty()) {
+                updateEntityCache(actionId, entities.get(0));
+                return entities.get(0);
+            }
+        }
+
+        return null;
+    }
 
     public void tick() {
         save();
@@ -155,6 +210,25 @@ public class ServerActionManager extends WorldSavedData {
                     keep = false;
                 }
             }
+            // Block is not loaded. We check here if the MeeCreep wants to follow the player
+            // and if so we do the teleport here
+            EntityPlayer player = option.getPlayer();
+            if (player != null) {
+                EntityMeeCreeps meeCreep = findMeeCreep(world, option.getActionId());
+                if (meeCreep != null && meeCreep.getHelper() != null) {
+                    IActionWorker worker = meeCreep.getHelper().getWorker();
+                    if (worker.needsToFollowPlayer()) {
+                        if (isDifferentDimension(player, meeCreep) || isTooFar(player, meeCreep)) {
+                            // Wrong dimension. Teleport to the player
+                            System.out.println("Try to find player again!");
+                            meeCreep.cancelJob();
+                            BlockPos p = WorkerHelper.findSuitablePositionNearPlayer(meeCreep, player, 4.0);
+                            TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX(), p.getY(), p.getZ(), EnumFacing.NORTH);
+                        }
+                    }
+                }
+            }
+
             if (keep) {
                 newlist.add(option);
                 newmap.put(option.getActionId(), option);
@@ -175,12 +249,20 @@ public class ServerActionManager extends WorldSavedData {
         optionMap = newmap;
     }
 
+    private boolean isDifferentDimension(EntityPlayer player, EntityMeeCreeps meeCreep) {
+        return player.getEntityWorld().provider.getDimension() != meeCreep.getEntityWorld().provider.getDimension();
+    }
+
+    private boolean isTooFar(EntityPlayer player, EntityMeeCreeps meeCreep) {
+        return player.getPositionVector().squareDistanceTo(meeCreep.getPositionVector()) > 60*60;
+    }
+
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
         NBTTagList list = nbt.getTagList("actions", Constants.NBT.TAG_COMPOUND);
         options = new ArrayList<>();
         optionMap = new HashMap<>();
-        for (int i = 0 ; i < list.tagCount() ; i++) {
+        for (int i = 0; i < list.tagCount(); i++) {
             ActionOptions opt = new ActionOptions(list.getCompoundTagAt(i));
             options.add(opt);
             optionMap.put(opt.getActionId(), opt);

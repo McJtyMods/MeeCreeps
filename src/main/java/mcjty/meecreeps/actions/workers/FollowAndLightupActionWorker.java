@@ -32,6 +32,11 @@ public class FollowAndLightupActionWorker extends AbstractActionWorker {
         return true;
     }
 
+    @Override
+    public boolean needsToFollowPlayer() {
+        return true;
+    }
+
     private BlockPos findDarkSpot() {
         World world = entity.getWorld();
         BlockPos position = options.getPlayer().getPosition();
@@ -82,11 +87,11 @@ public class FollowAndLightupActionWorker extends AbstractActionWorker {
                 helper.navigateTo(darkSpot, this::placeTorch);
             } else if (player.getEntityWorld().provider.getDimension() != meeCreep.getEntityWorld().provider.getDimension()) {
                 // Wrong dimension. Teleport to the player
-                BlockPos p = helper.findSuitablePositionNearPlayer(3.0);
+                BlockPos p = helper.findSuitablePositionNearPlayer(4.0);
                 TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX(), p.getY(), p.getZ(), EnumFacing.NORTH);
             } else {
                 // Find a spot close to the player where we can navigate too
-                BlockPos p = helper.findSuitablePositionNearPlayer(3.0);
+                BlockPos p = helper.findSuitablePositionNearPlayer(4.0);
                 helper.navigateTo(p, blockPos -> {});
             }
         }

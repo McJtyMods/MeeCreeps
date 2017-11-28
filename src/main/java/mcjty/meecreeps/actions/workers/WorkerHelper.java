@@ -87,6 +87,10 @@ public class WorkerHelper implements IWorkerHelper {
         return worker;
     }
 
+    public void cancelJob() {
+        job = null;
+    }
+
     @Override
     public void setSpeed(int speed) {
         this.speed = speed;
@@ -224,7 +228,7 @@ public class WorkerHelper implements IWorkerHelper {
         for (int x = minPos.getX(); x <= maxPos.getX(); x++) {
             for (int z = minPos.getZ(); z <= maxPos.getZ(); z++) {
                 BlockPos relativePos = new BlockPos(x, progress.getHeight(), z);
-                if (toSkip == null || !toSkip.contains(relativePos)) {
+                if (!toSkip.contains(relativePos)) {
                     BlockPos p = tpos.add(relativePos);
                     IBlockState state = entity.getWorld().getBlockState(p);
                     IDesiredBlock desired = schematic.getDesiredBlock(relativePos);
@@ -673,20 +677,29 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public BlockPos findSuitablePositionNearPlayer(double distance) {
-        EntityMeeCreeps meeCreep = this.entity;
-        BlockPos entityPos = meeCreep.getPosition();
-        BlockPos playerPos = options.getPlayer().getPosition();
-        double dx = playerPos.getX() - entityPos.getX();
-        double dy = playerPos.getY() - entityPos.getY();
-        double dz = playerPos.getZ() - entityPos.getZ();
+        return findSuitablePositionNearPlayer(this.entity, options.getPlayer(), distance);
+    }
+
+    public static BlockPos findSuitablePositionNearPlayer(@Nonnull EntityMeeCreeps meeCreep, @Nonnull EntityPlayer player, double distance) {
+        Vec3d entityPos = meeCreep.getPositionVector();
+        Vec3d playerPos = player.getPositionVector();
+
+        if (entityPos.distanceTo(playerPos) < distance) {
+            // No need to move
+            return meeCreep.getPosition();
+        }
+
+        double dx = playerPos.x - entityPos.x;
+        double dy = playerPos.x - entityPos.x;
+        double dz = playerPos.x - entityPos.x;
         Vec3d v = new Vec3d(-dx, -dy, -dz);
         v = v.normalize();
-        BlockPos pos = playerPos.add(v.x * distance, v.y * distance, v.z * distance);
+        Vec3d pos = new Vec3d(playerPos.x + v.x * distance, playerPos.y + v.y * distance, playerPos.z + v.z * distance);
         // First find a good spot at the specific location
         World world = meeCreep.getWorld();
 
         // First try on the prefered spot
-        BlockPos p = scanSuitablePos(pos, world);
+        BlockPos p = scanSuitablePos(new BlockPos(pos.x, pos.y+.5, pos.z), world);
         if (p != null) return p;
         // No good spot to stand on found. Try other spots around the prefered spot
         p = scanAround(pos, world);
@@ -696,10 +709,11 @@ public class WorkerHelper implements IWorkerHelper {
         if (p != null) return p;
 
         // If all else fails we go stand where the player is
-        return playerPos;
+        return player.getPosition();
     }
 
-    private BlockPos scanAround(BlockPos pos, World world) {
+    private static BlockPos scanAround(Vec3d vec, World world) {
+        BlockPos pos = new BlockPos(vec.x, vec.y + 0.5, vec.z);
         for (int dx = -1 ; dx <= 1 ; dx++) {
             for (int dz = -1 ; dz <= 1 ; dz++) {
                 BlockPos p = pos.add(dx, 0, dz);
@@ -712,7 +726,7 @@ public class WorkerHelper implements IWorkerHelper {
         return null;
     }
 
-    private BlockPos scanSuitablePos(BlockPos pos, World world) {
+    private static BlockPos scanSuitablePos(BlockPos pos, World world) {
         for (int d = 0 ; d < 6 ; d++) {
             BlockPos p = pos.down(d);
             if (isSuitableStandingPos(world, p)) {
@@ -726,7 +740,7 @@ public class WorkerHelper implements IWorkerHelper {
         return null;
     }
 
-    private boolean isSuitableStandingPos(World world, BlockPos p) {
+    private static boolean isSuitableStandingPos(World world, BlockPos p) {
         boolean b = !world.isAirBlock(p.down()) && world.isAirBlock(p) && world.isAirBlock(p.up());
         if (b) {
             IBlockState state = world.getBlockState(p.down());

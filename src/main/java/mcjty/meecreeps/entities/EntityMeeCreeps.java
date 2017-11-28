@@ -5,6 +5,7 @@ import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.actions.PacketActionOptionToClient;
 import mcjty.meecreeps.actions.ServerActionManager;
+import mcjty.meecreeps.actions.workers.WorkerHelper;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.network.PacketHandler;
@@ -55,6 +56,7 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
         super(worldIn);
         setSize(0.6F, 1.95F);
         variationHair = worldIn.rand.nextInt(9);
+        enablePersistence();
     }
 
     @Override
@@ -67,9 +69,20 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
         return this;
     }
 
+    public WorkerHelper getHelper() {
+        return workerTask.getHelper();
+    }
+
     @Override
     public World getWorld() {
         return getEntityWorld();
+    }
+
+    /// Cancel the current job
+    public void cancelJob() {
+        if (workerTask != null) {
+            workerTask.cancelJob();
+        }
     }
 
     @Override
@@ -147,7 +160,10 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
             if (actionId != 0) {
                 ActionOptions options = manager.getOptions(actionId);
                 if (options == null) {
-                    this.setDead();
+                    manager.updateEntityCache(actionId, null);
+                    this.killMe();
+                } else {
+                    manager.updateEntityCache(actionId, this);
                 }
             }
         }
@@ -412,16 +428,18 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     @Override
     public void setDead() {
         super.setDead();
+        spawnDeathParticles();
+    }
+
+    private void killMe() {
+        setDead();
         dropInventory();
         placeDownBlock(getPosition());
-        spawnDeathParticles();
     }
 
     @Override
     public void onDeath(@SuppressWarnings("NullableProblems") DamageSource cause) {
         super.onDeath(cause);
-        dropInventory();
-        placeDownBlock(getPosition());
-        spawnDeathParticles();
+        killMe();
     }
 }

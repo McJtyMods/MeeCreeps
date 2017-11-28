@@ -238,6 +238,7 @@ public class TeleportationTools {
         } else {
             if (world.provider.getDimension() != destWorld.provider.getDimension()) {
                 NBTTagCompound tagCompound = new NBTTagCompound();
+                tagCompound.removeTag("Dimension");
                 entity.writeToNBT(tagCompound);
                 Class<? extends Entity> entityClass = entity.getClass();
                 world.removeEntity(entity);

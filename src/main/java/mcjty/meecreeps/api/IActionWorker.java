@@ -43,6 +43,14 @@ public interface IActionWorker {
     default boolean onlyStopWhenDone() { return false; }
 
     /**
+     * If this returns true the MeeCreep wants to follow the player. Returning true here ensures
+     * that the MeeCreep will follow the player even when the player suddenly teleports very far
+     * or to another dimension. If this flag is not set the MeeCreep may become unloaded and
+     * fail to teleport by itself. Note that this long-distance teleport will cancel any current job
+     */
+    default boolean needsToFollowPlayer() { return false; }
+
+    /**
      * Return a sorted array of prefered chest locations for putting back items. The
      * first chest in this array will be tried first
      */

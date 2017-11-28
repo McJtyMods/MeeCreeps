@@ -34,6 +34,13 @@ public class MeeCreepWorkerTask extends EntityAIBase {
         return false;
     }
 
+    /// Cancel the current job
+    public void cancelJob() {
+        if (helper != null) {
+            helper.cancelJob();
+        }
+    }
+
     private WorkerHelper getHelper(ActionOptions options) {
         if (helper == null) {
             helper = new WorkerHelper(meeCreeps, options);
@@ -85,6 +92,11 @@ public class MeeCreepWorkerTask extends EntityAIBase {
                 }
             }
         }
+    }
+
+
+    public WorkerHelper getHelper() {
+        return helper;
     }
 
     public void writeToNBT(NBTTagCompound tag) {
