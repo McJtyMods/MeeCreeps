@@ -113,6 +113,12 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
                 return p.up(2);
             case 11:
                 return p.up(2).offset(facing.rotateYCCW());
+            case 12:
+                return p.up(3).offset(facing.rotateY());
+            case 13:
+                return p.up(3);
+            case 14:
+                return p.up(3).offset(facing.rotateYCCW());
         }
         return p;
     }
@@ -213,8 +219,8 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     private void handleNextPosition(EnumFacing facing, BlockPos p) {
         IMeeCreep entity = helper.getMeeCreep();
         blockidx++;
-        if (blockidx >= 12) {
-            blockidx = 11;      // Make sure we come here again next turn
+        if (blockidx >= 15) {
+            blockidx = 14;      // Make sure we come here again next turn
             // Before we continue lets first see if things are ok
             if (checkClear(p, facing)) {
                 if (checkForStairs(p, facing)) {
@@ -379,6 +385,9 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         if (checkForLiquid(p.up(2).offset(facing.rotateY(), 2))) {
             return true;
         }
+        if (checkForLiquid(p.up(3).offset(facing.rotateY(), 2))) {
+            return true;
+        }
         if (checkForLiquid(p.down(1).offset(facing.rotateYCCW(), 2))) {
             return true;
         }
@@ -391,13 +400,16 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         if (checkForLiquid(p.up(2).offset(facing.rotateYCCW(), 2))) {
             return true;
         }
-        if (checkForLiquid(p.up(3))) {
+        if (checkForLiquid(p.up(3).offset(facing.rotateYCCW(), 2))) {
             return true;
         }
-        if (checkForLiquid(p.up(3).offset(facing.rotateY()))) {
+        if (checkForLiquid(p.up(4))) {
             return true;
         }
-        if (checkForLiquid(p.up(3).offset(facing.rotateYCCW()))) {
+        if (checkForLiquid(p.up(4).offset(facing.rotateY()))) {
+            return true;
+        }
+        if (checkForLiquid(p.up(4).offset(facing.rotateYCCW()))) {
             return true;
         }
         return false;
