@@ -3,15 +3,10 @@ package mcjty.meecreeps.actions.workers;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
-import mcjty.meecreeps.teleport.TeleportationTools;
 import mcjty.meecreeps.varia.GeneralTools;
-import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -58,16 +53,11 @@ public class FollowAndLightupActionWorker extends AbstractActionWorker {
         World world = entity.getWorld();
         int light = world.getLightFromNeighbors(pos);
         if (light < 7) {
-            ItemStack torch = entity.consumeItem(this::isTorch, 1);
+            ItemStack torch = entity.consumeItem(WorkerHelper::isTorch, 1);
             if (!torch.isEmpty()) {
-                entity.getWorld().setBlockState(pos, Blocks.TORCH.getDefaultState(), 3);
-                SoundTools.playSound(world, Blocks.TORCH.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+                helper.placeStackAt(torch, world, pos);
             }
         }
-    }
-
-    private boolean isTorch(ItemStack stack) {
-        return stack.getItem() == Item.getItemFromBlock(Blocks.TORCH);
     }
 
     @Override
@@ -80,8 +70,8 @@ public class FollowAndLightupActionWorker extends AbstractActionWorker {
             helper.done();
         } else if (player == null) {
             helper.taskIsDone();
-        } else if (!entity.hasItem(this::isTorch)) {
-            if (!helper.findItemOnGroundOrInChest(this::isTorch, "I cannot find any torches", Integer.MAX_VALUE)) {
+        } else if (!entity.hasItem(WorkerHelper::isTorch)) {
+            if (!helper.findItemOnGroundOrInChest(WorkerHelper::isTorch, "I cannot find any torches", Integer.MAX_VALUE)) {
                 helper.taskIsDone();
             }
         } else {

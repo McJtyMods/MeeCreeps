@@ -1,11 +1,11 @@
 package mcjty.meecreeps.actions.schematics;
 
+import mcjty.meecreeps.actions.workers.WorkerHelper;
 import mcjty.meecreeps.api.IBuildSchematic;
 import mcjty.meecreeps.api.IDesiredBlock;
 import mcjty.meecreeps.api.IWorkerHelper;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockGlass;
-import net.minecraft.block.BlockTorch;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
@@ -185,12 +185,12 @@ public class SchematicHouse implements IBuildSchematic {
 
         @Override
         public Predicate<ItemStack> getMatcher() {
-            return stack -> stack.getItem() == Item.getItemFromBlock(Blocks.TORCH);
+            return stack -> WorkerHelper.isTorch(stack);
         }
 
         @Override
         public Predicate<IBlockState> getStateMatcher() {
-            return blockState -> blockState.getBlock() instanceof BlockTorch;
+            return blockState -> WorkerHelper.isTorch(blockState.getBlock());
         }
     };
 

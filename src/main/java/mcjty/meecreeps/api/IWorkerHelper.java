@@ -87,6 +87,12 @@ public interface IWorkerHelper {
     boolean handleBuilding(@Nonnull IBuildSchematic schematic, @Nonnull BuildProgress progress, @Nonnull Set<BlockPos> toSkip);
 
     /**
+     * Place an itemstack at the specific location. This does not test that the stack is valid for
+     * placement or that the location can be modified.
+     */
+    void placeStackAt(ItemStack blockStack, World world, BlockPos pos);
+
+    /**
      * Harvest the given block and give the drops to the MeeCreep. If there is no room the
      * MeeCreep will drop the remaining items and try to fetch them later
      * Return false if the block could not be harvested for some reason

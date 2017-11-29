@@ -98,10 +98,6 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
         }
     }
 
-    private boolean isTorch(ItemStack stack) {
-        return stack.getItem() == Item.getItemFromBlock(Blocks.TORCH);
-    }
-
     private BlockPos getBlockToDig(BlockPos p, EnumFacing facing, int blockidx) {
         switch (blockidx) {
             case 0: return p.up(1).offset(facing.rotateY());
@@ -143,10 +139,9 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     private void placeTorch(BlockPos pos) {
         IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
-        ItemStack torch = entity.consumeItem(this::isTorch, 1);
+        ItemStack torch = entity.consumeItem(WorkerHelper::isTorch, 1);
         if (!torch.isEmpty()) {
-            entity.getWorld().setBlockState(pos, Blocks.TORCH.getDefaultState(), 3);
-            SoundTools.playSound(world, Blocks.TORCH.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+            helper.placeStackAt(torch, world, pos);
         }
     }
 
@@ -162,8 +157,8 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
         torchChecker--;
         if (torchChecker <= 0) {
             torchChecker = 40;
-            if (!entity.hasItem(this::isTorch)) {
-                if (helper.findItemOnGroundOrInChest(this::isTorch, 64)) {
+            if (!entity.hasItem(WorkerHelper::isTorch)) {
+                if (helper.findItemOnGroundOrInChest(WorkerHelper::isTorch, 64)) {
                     // Lets first handle the fetching of the torches
                     return;
                 }
@@ -179,9 +174,9 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
         }
 
         BlockPos torchPos = p.down().offset(facing.getOpposite());
-        if (this.offset % 7 == 0 && entity.getWorld().getBlockState(torchPos).getBlock() != Blocks.TORCH) {
+        if (this.offset % 7 == 0 && !WorkerHelper.isTorch(entity.getWorld().getBlockState(torchPos).getBlock())) {
             // Time to place a torch if we have any
-            if (entity.hasItem(this::isTorch)) {
+            if (entity.hasItem(WorkerHelper::isTorch)) {
                 placeTorch(torchPos);
             }
         }

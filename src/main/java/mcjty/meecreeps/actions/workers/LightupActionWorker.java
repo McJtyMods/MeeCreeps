@@ -3,10 +3,7 @@ package mcjty.meecreeps.actions.workers;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
-import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.entity.EntityLiving;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -51,16 +48,11 @@ public class LightupActionWorker extends AbstractActionWorker {
         World world = entity.getWorld();
         int light = world.getLightFromNeighbors(pos);
         if (light < 7) {
-            ItemStack torch = entity.consumeItem(this::isTorch, 1);
+            ItemStack torch = entity.consumeItem(WorkerHelper::isTorch, 1);
             if (!torch.isEmpty()) {
-                entity.getWorld().setBlockState(pos, Blocks.TORCH.getDefaultState(), 3);
-                SoundTools.playSound(world, Blocks.TORCH.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+                helper.placeStackAt(torch, world, pos);
             }
         }
-    }
-
-    private boolean isTorch(ItemStack stack) {
-        return stack.getItem() == Item.getItemFromBlock(Blocks.TORCH);
     }
 
     @Override
@@ -68,8 +60,8 @@ public class LightupActionWorker extends AbstractActionWorker {
         IMeeCreep entity = helper.getMeeCreep();
         if (timeToWrapUp) {
             helper.done();
-        } else if (!entity.hasItem(this::isTorch)) {
-            helper.findItemOnGroundOrInChest(this::isTorch, "I cannot find any torches", 128);
+        } else if (!entity.hasItem(WorkerHelper::isTorch)) {
+            helper.findItemOnGroundOrInChest(WorkerHelper::isTorch, "I cannot find any torches", 128);
         } else {
             BlockPos darkSpot = findDarkSpot();
             if (darkSpot != null) {

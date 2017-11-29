@@ -79,6 +79,20 @@ public class WorkerHelper implements IWorkerHelper {
         this.options = (ActionOptions) options;
     }
 
+    private static final Set<String> TORCHES = new HashSet<>();
+    static {
+        TORCHES.add("minecraft:torch");
+        TORCHES.add("tconstruct:stone_torch");
+    }
+
+    public static boolean isTorch(ItemStack stack) {
+        return TORCHES.contains(stack.getItem().getRegistryName().toString());
+    }
+
+    public static boolean isTorch(Block block) {
+        return TORCHES.contains(block.getRegistryName().toString());
+    }
+
     public void setWorker(IActionWorker worker) {
         this.worker = worker;
     }
@@ -560,21 +574,26 @@ public class WorkerHelper implements IWorkerHelper {
         }
         ItemStack blockStack = entity.consumeItem(desiredBlock.getMatcher(), 1);
         if (!blockStack.isEmpty()) {
-            if (blockStack.getItem() instanceof ItemBlock) {
-                Block block = ((ItemBlock) blockStack.getItem()).getBlock();
-                IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, blockStack.getItem().getMetadata(blockStack), GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
-                entity.getWorld().setBlockState(pos, stateForPlacement, 3);
-                SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
-            } else {
-                GeneralTools.getHarvester().setPosition(entity.getEntity().posX, entity.getEntity().posY, entity.getEntity().posZ);
-                blockStack.getItem().onItemUse(GeneralTools.getHarvester(), world, pos, EnumHand.MAIN_HAND, EnumFacing.UP, 0, 0, 0);
-            }
+            placeStackAt(blockStack, world, pos);
             boolean jump = !entity.isNotColliding();
             if (jump) {
                 entity.getEntity().getJumpHelper().setJumping();
             }
         }
         return true;
+    }
+
+    @Override
+    public void placeStackAt(ItemStack blockStack, World world, BlockPos pos) {
+        if (blockStack.getItem() instanceof ItemBlock) {
+            Block block = ((ItemBlock) blockStack.getItem()).getBlock();
+            IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, blockStack.getItem().getMetadata(blockStack), GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
+            entity.getWorld().setBlockState(pos, stateForPlacement, 3);
+            SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        } else {
+            GeneralTools.getHarvester().setPosition(entity.getEntity().posX, entity.getEntity().posY, entity.getEntity().posZ);
+            blockStack.getItem().onItemUse(GeneralTools.getHarvester(), world, pos, EnumHand.MAIN_HAND, EnumFacing.UP, 0, 0, 0);
+        }
     }
 
 
