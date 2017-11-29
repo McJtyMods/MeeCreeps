@@ -20,8 +20,9 @@ public interface IActionWorker {
 
     /**
      * Called at initialization time. In contrast with the constructor the helper will be correctly setup here
+     * @param meeCreep
      */
-    default void init() { }
+    default void init(IMeeCreep meeCreep) { }
 
     /**
      * Optionally return a box on which this action should operate. This is optional in case the action does

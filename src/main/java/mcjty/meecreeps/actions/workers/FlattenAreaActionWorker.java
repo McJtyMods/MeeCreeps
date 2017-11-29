@@ -1,7 +1,7 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 
@@ -28,7 +28,7 @@ public class FlattenAreaActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    public void init() {
+    public void init(IMeeCreep meeCreep) {
         helper.setSpeed(3);
     }
 
@@ -56,6 +56,7 @@ public class FlattenAreaActionWorker extends AbstractActionWorker {
      * Returns absolute position
      */
     private BlockPos findSpotToFlatten() {
+        IMeeCreep entity = helper.getMeeCreep();
         BlockPos tpos = options.getTargetPos();
         int hs = (getSize() - 1) / 2;
 

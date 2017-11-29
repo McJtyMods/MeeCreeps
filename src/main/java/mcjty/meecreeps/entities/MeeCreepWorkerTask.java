@@ -12,17 +12,17 @@ import net.minecraft.nbt.NBTTagCompound;
 
 public class MeeCreepWorkerTask extends EntityAIBase {
 
-    private final EntityMeeCreeps meeCreeps;
+    private final EntityMeeCreeps meeCreep;
     private WorkerHelper helper = null;
 
-    public MeeCreepWorkerTask(EntityMeeCreeps meeCreeps) {
-        this.meeCreeps = meeCreeps;
+    public MeeCreepWorkerTask(EntityMeeCreeps meeCreep) {
+        this.meeCreep = meeCreep;
     }
 
     @Override
     public boolean shouldExecute() {
         ServerActionManager manager = ServerActionManager.getManager();
-        int actionId = meeCreeps.getActionId();
+        int actionId = meeCreep.getActionId();
         if (actionId != 0) {
             ActionOptions options = manager.getOptions(actionId);
             if (options != null) {
@@ -43,11 +43,11 @@ public class MeeCreepWorkerTask extends EntityAIBase {
 
     private WorkerHelper getHelper(ActionOptions options) {
         if (helper == null) {
-            helper = new WorkerHelper(meeCreeps, options);
+            helper = new WorkerHelper(options);
             MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(options.getTask());
             IActionWorker worker = factory.getFactory().createWorker(helper);
             helper.setWorker(worker);
-            worker.init();
+            worker.init(meeCreep);
         }
         return helper;
     }
@@ -55,26 +55,26 @@ public class MeeCreepWorkerTask extends EntityAIBase {
     @Override
     public void updateTask() {
         ServerActionManager manager = ServerActionManager.getManager();
-        int actionId = meeCreeps.getActionId();
+        int actionId = meeCreep.getActionId();
         if (actionId != 0) {
             ActionOptions options = manager.getOptions(actionId);
             if (options != null) {
                 if (options.isPaused()) {
-                    if (!meeCreeps.getNavigator().noPath()) {
-                        meeCreeps.getNavigator().clearPath();
+                    if (!meeCreep.getNavigator().noPath()) {
+                        meeCreep.getNavigator().clearPath();
                     }
                 } else {
                     WorkerHelper helper = getHelper(options);
                     if (options.getStage() == Stage.WORKING) {
-                        helper.tick(false);
+                        helper.tick(meeCreep, false);
                     } else if (options.getStage() == Stage.TIME_IS_UP) {
                         if (helper.getWorker().onlyStopWhenDone()) {
-                            helper.tick(false);
+                            helper.tick(meeCreep, false);
                         } else {
-                            helper.tick(true);
+                            helper.tick(meeCreep, true);
                         }
                     } else if (options.getStage() == Stage.TASK_IS_DONE) {
-                        helper.tick(true);
+                        helper.tick(meeCreep, true);
                     }
                 }
             }
@@ -82,9 +82,9 @@ public class MeeCreepWorkerTask extends EntityAIBase {
     }
 
     public void readFromNBT(NBTTagCompound tag) {
-        if (!meeCreeps.getWorld().isRemote) {
+        if (!meeCreep.getWorld().isRemote) {
             ServerActionManager manager = ServerActionManager.getManager();
-            int actionId = meeCreeps.getActionId();
+            int actionId = meeCreep.getActionId();
             if (actionId != 0) {
                 ActionOptions options = manager.getOptions(actionId);
                 if (options != null && options.getTask() != null) {

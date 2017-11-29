@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
@@ -23,6 +24,7 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
     }
 
     private void replant(BlockPos pos) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         Block block = needToReplant.get(pos);
         needToReplant.remove(pos);
@@ -41,6 +43,7 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
 
     @Override
     protected void harvest(BlockPos pos) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
@@ -87,6 +90,7 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
     }
 
     private BlockPos hasSuitableSeed() {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         for (Map.Entry<BlockPos, Block> entry : needToReplant.entrySet()) {
             BlockPos pos = entry.getKey();

@@ -1,9 +1,8 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
-import mcjty.meecreeps.items.CreepCubeItem;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -18,8 +17,8 @@ public class AngryActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    public void init() {
-        ((EntityMeeCreeps) entity).setVariationFace(1);
+    public void init(IMeeCreep meeCreep) {
+        ((EntityMeeCreeps) meeCreep).setVariationFace(1);
     }
 
     public AngryActionWorker(IWorkerHelper helper) {
@@ -35,10 +34,12 @@ public class AngryActionWorker extends AbstractActionWorker {
     }
 
     private void attack(EntityMeeCreeps enemy) {
+        IMeeCreep entity = helper.getMeeCreep();
         enemy.attackEntityFrom(DamageSource.causeMobDamage(entity.getEntity()), 4.0F);
     }
 
     private boolean findMeeCreeps() {
+        IMeeCreep entity = helper.getMeeCreep();
         BlockPos position = entity.getEntity().getPosition();
         List<EntityMeeCreeps> meeCreeps = entity.getWorld().getEntitiesWithinAABB(EntityMeeCreeps.class, getSearchBox(),
                 input -> input != entity.getEntity());

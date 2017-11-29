@@ -9,6 +9,8 @@ import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.items.CreepCubeItem;
 import mcjty.meecreeps.teleport.TeleportationTools;
 import mcjty.meecreeps.varia.SoundTools;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -19,7 +21,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.DimensionType;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.storage.WorldSavedData;
@@ -55,6 +57,29 @@ public class ServerActionManager extends WorldSavedData {
     public void clearOptions() {
         options.clear();
         save();
+
+        Integer[] iDs = DimensionManager.getStaticDimensionIDs();
+        int cnt = 0;
+        for (Integer id : iDs) {
+            World w = TeleportationTools.getWorldForDimension(id);
+            List<EntityMeeCreeps> entities = w.getEntities(EntityMeeCreeps.class, input -> true);
+            for (EntityMeeCreeps entity : entities) {
+                entity.setDead();
+                cnt++;
+            }
+        }
+        System.out.println("Killed " + cnt + " meecreeps!");
+    }
+
+    public void listOptions(ICommandSender sender) {
+        for (Map.Entry<Integer, ActionOptions> entry : optionMap.entrySet()) {
+            ActionOptions options = entry.getValue();
+            Stage stage = options.getStage();
+            MeeCreepActionType task = options.getTask();
+            EntityMeeCreeps entity = findMeeCreep(sender.getEntityWorld(), entry.getKey());
+            String name = entity == null ? "<none>" : entity.getUniqueID().toString();
+            sender.sendMessage(new TextComponentString("Action " + entry.getKey() + ", Task " + task.getId() + ", Stage " + stage + ", Entity " + name));
+        }
     }
 
     public static void clearInstance() {
@@ -168,17 +193,17 @@ public class ServerActionManager extends WorldSavedData {
 
     private EntityMeeCreeps findMeeCreep(World world, int actionId) {
         EntityMeeCreeps cachedEntity = getCachedEntity(actionId);
-        if (cachedEntity != null) {
+        if (cachedEntity != null && !cachedEntity.isDead) {
             return cachedEntity;
         }
-        List<EntityMeeCreeps> entities = world.getEntities(EntityMeeCreeps.class, input -> input.getActionId() == actionId);
+        List<EntityMeeCreeps> entities = world.getEntities(EntityMeeCreeps.class, input -> input != null && input.getActionId() == actionId && !input.isDead);
         if (!entities.isEmpty()) {
             updateEntityCache(actionId, entities.get(0));
             return entities.get(0);
         }
         // Lets try to find the entity in other dimensions that are still loaded
         for (WorldServer w : DimensionManager.getWorlds()) {
-            entities = world.getEntities(EntityMeeCreeps.class, input -> input.getActionId() == actionId);
+            entities = w.getEntities(EntityMeeCreeps.class, input -> input != null && input.getActionId() == actionId && !input.isDead);
             if (!entities.isEmpty()) {
                 updateEntityCache(actionId, entities.get(0));
                 return entities.get(0);
@@ -188,7 +213,7 @@ public class ServerActionManager extends WorldSavedData {
         Integer[] iDs = DimensionManager.getStaticDimensionIDs();
         for (Integer id : iDs) {
             World w = TeleportationTools.getWorldForDimension(id);
-            entities = world.getEntities(EntityMeeCreeps.class, input -> input.getActionId() == actionId);
+            entities = w.getEntities(EntityMeeCreeps.class, input -> input != null && input.getActionId() == actionId && !input.isDead);
             if (!entities.isEmpty()) {
                 updateEntityCache(actionId, entities.get(0));
                 return entities.get(0);
@@ -203,50 +228,75 @@ public class ServerActionManager extends WorldSavedData {
         List<ActionOptions> newlist = new ArrayList<>();
         Map<Integer, ActionOptions> newmap = new HashMap<>();
         for (ActionOptions option : options) {
-            World world = DimensionManager.getWorld(option.getDimension());
+            EntityMeeCreeps meeCreep = findMeeCreep(DimensionManager.getWorld(0), option.getActionId());
             boolean keep = true;
-            if (world != null && world.isBlockLoaded(option.getTargetPos())) {
+
+            World world = meeCreep == null ? DimensionManager.getWorld(option.getDimension()) : meeCreep.getEntityWorld();
+            BlockPos meeCreepPos = meeCreep == null ? option.getTargetPos() : meeCreep.getPosition();
+            if (world != null && world.isBlockLoaded(meeCreepPos)) {
                 if (!option.tick(world)) {
                     keep = false;
                 }
-            }
-            // Block is not loaded. We check here if the MeeCreep wants to follow the player
-            // and if so we do the teleport here
-            EntityPlayer player = option.getPlayer();
-            if (player != null) {
-                EntityMeeCreeps meeCreep = findMeeCreep(world, option.getActionId());
-                if (meeCreep != null && meeCreep.getHelper() != null) {
-                    IActionWorker worker = meeCreep.getHelper().getWorker();
-                    if (worker.needsToFollowPlayer()) {
-                        if (isDifferentDimension(player, meeCreep) || isTooFar(player, meeCreep)) {
-                            // Wrong dimension. Teleport to the player
-                            System.out.println("Try to find player again!");
-                            meeCreep.cancelJob();
-                            BlockPos p = WorkerHelper.findSuitablePositionNearPlayer(meeCreep, player, 4.0);
-                            TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX(), p.getY(), p.getZ(), EnumFacing.NORTH);
-                        }
-                    }
+            } else {
+                if (option.getStage() != Stage.OPENING_GUI && option.getStage() != Stage.WAITING_FOR_PLAYER_INPUT && option.getStage() != Stage.WAITING_FOR_SPAWN) {
+                    keep = false;
                 }
+            }
+            if (meeCreep != null) {
+                stayWithPlayer(option, meeCreep);
             }
 
             if (keep) {
                 newlist.add(option);
                 newmap.put(option.getActionId(), option);
             } else {
-                List<Pair<BlockPos, ItemStack>> drops = option.getDrops();
-                if (!drops.isEmpty()) {
-                    for (Pair<BlockPos, ItemStack> pair : drops) {
-                        EntityItem entityItem = new EntityItem(world);
-                        entityItem.setItem(pair.getValue());
-                        BlockPos pos = pair.getKey();
-                        entityItem.setLocationAndAngles(pos.getX(), pos.getY(), pos.getZ(), 0, 0);
-                        world.spawnEntity(entityItem);
+                if (world != null) {
+                    List<Pair<BlockPos, ItemStack>> drops = option.getDrops();
+                    if (!drops.isEmpty()) {
+                        for (Pair<BlockPos, ItemStack> pair : drops) {
+                            EntityItem entityItem = new EntityItem(world);
+                            entityItem.setItem(pair.getValue());
+                            BlockPos pos = pair.getKey();
+                            entityItem.setLocationAndAngles(pos.getX(), pos.getY(), pos.getZ(), 0, 0);
+                            world.spawnEntity(entityItem);
+                        }
                     }
                 }
             }
         }
         options = newlist;
         optionMap = newmap;
+    }
+
+    private void stayWithPlayer(ActionOptions option, EntityMeeCreeps meeCreep) {
+        // We check here if the MeeCreep wants to follow the player
+        // and if so we do the teleport here
+        EntityPlayer player = option.getPlayer();
+        if (player != null) {
+            if (meeCreep.getHelper() != null) {
+                IActionWorker worker = meeCreep.getHelper().getWorker();
+                if (worker.needsToFollowPlayer()) {
+                    if (isDifferentDimension(player, meeCreep) || isTooFar(player, meeCreep)) {
+                        // Wrong dimension. Teleport to the player
+                        System.out.println("Try to find player again!");
+
+                        // First park a few things so we don't have to worry about them
+                        IBlockState heldBlockState = meeCreep.getHeldBlockState();
+                        NBTTagCompound carriedNBT = meeCreep.getCarriedNBT();
+                        meeCreep.setHeldBlockState(null);
+                        meeCreep.setCarriedNBT(null);
+
+                        meeCreep.cancelJob();
+                        BlockPos p = WorkerHelper.findSuitablePositionNearPlayer(null, player, 4.0);
+                        meeCreep = (EntityMeeCreeps) TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX(), p.getY(), p.getZ(), EnumFacing.NORTH);
+                        updateEntityCache(option.getActionId(), meeCreep);
+
+                        meeCreep.setHeldBlockState(heldBlockState);
+                        meeCreep.setCarriedNBT(carriedNBT);
+                    }
+                }
+            }
+        }
     }
 
     private boolean isDifferentDimension(EntityPlayer player, EntityMeeCreeps meeCreep) {

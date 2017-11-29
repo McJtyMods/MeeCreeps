@@ -1,28 +1,27 @@
 package mcjty.meecreeps.commands;
 
-import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.actions.ServerActionManager;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.Collections;
 import java.util.List;
 
-public class CommandTestApi implements ICommand {
+public class CommandListActions implements ICommand {
 
 
     @Override
     public String getName() {
-        return "creep_test";
+        return "creep_list";
     }
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "creep_test";
+        return "creep_list";
     }
 
     @Override
@@ -32,20 +31,12 @@ public class CommandTestApi implements ICommand {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        if (sender instanceof EntityPlayerMP) {
-            EntityPlayerMP player = (EntityPlayerMP) sender;
-            MeeCreeps.api.spawnMeeCreep("meecreeps.dig_down", null, player.getEntityWorld(), player.getPosition().down(),
-                    EnumFacing.UP, null, true);
-        }
+        ServerActionManager.getManager().listOptions(sender);
     }
 
     @Override
     public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
-        if (sender instanceof EntityPlayerMP) {
-            return ((EntityPlayerMP) sender).capabilities.isCreativeMode && sender.canUseCommand(2, "");
-        } else {
-            return sender.canUseCommand(2, "creep_test");
-        }
+        return true;
     }
 
 
@@ -63,4 +54,6 @@ public class CommandTestApi implements ICommand {
     public int compareTo(ICommand o) {
         return getName().compareTo(o.getName());
     }
+
+
 }

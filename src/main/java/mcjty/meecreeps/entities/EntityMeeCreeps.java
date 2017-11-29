@@ -60,6 +60,29 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
     }
 
     @Override
+    public boolean isEntityInvulnerable(DamageSource source) {
+        if (source.equals(DamageSource.CACTUS)) {
+            return true;
+        }
+        if (source.equals(DamageSource.DROWN)) {
+            return true;
+        }
+        if (source.equals(DamageSource.FALL)) {
+            return true;
+        }
+        if (source.equals(DamageSource.IN_WALL)) {
+            return true;
+        }
+        if (source.equals(DamageSource.CRAMMING)) {
+            return true;
+        }
+        if (source.equals(DamageSource.GENERIC)) {
+            return true;
+        }
+        return super.isEntityInvulnerable(source);
+    }
+
+    @Override
     public Random getRandom() {
         return getRNG();
     }

@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.teleport.TeleportationTools;
@@ -38,7 +39,7 @@ public class FollowAndLightupActionWorker extends AbstractActionWorker {
     }
 
     private BlockPos findDarkSpot() {
-        World world = entity.getWorld();
+        World world = helper.getMeeCreep().getWorld();
         BlockPos position = options.getPlayer().getPosition();
         AxisAlignedBB box = new AxisAlignedBB(position.add(-6, -4, -6), position.add(6, 4, 6));
         return GeneralTools.traverseBoxFirst(box, p -> {
@@ -53,6 +54,7 @@ public class FollowAndLightupActionWorker extends AbstractActionWorker {
     }
 
     private void placeTorch(BlockPos pos) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         int light = world.getLightFromNeighbors(pos);
         if (light < 7) {
@@ -70,7 +72,8 @@ public class FollowAndLightupActionWorker extends AbstractActionWorker {
 
     @Override
     public void tick(boolean timeToWrapUp) {
-        EntityMeeCreeps meeCreep = (EntityMeeCreeps) this.entity;
+        IMeeCreep entity = helper.getMeeCreep();
+        EntityMeeCreeps meeCreep = (EntityMeeCreeps) entity;
         EntityPlayer player = options.getPlayer();
 
         if (timeToWrapUp) {
@@ -86,9 +89,7 @@ public class FollowAndLightupActionWorker extends AbstractActionWorker {
             if (darkSpot != null) {
                 helper.navigateTo(darkSpot, this::placeTorch);
             } else if (player.getEntityWorld().provider.getDimension() != meeCreep.getEntityWorld().provider.getDimension()) {
-                // Wrong dimension. Teleport to the player
-                BlockPos p = helper.findSuitablePositionNearPlayer(4.0);
-                TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX(), p.getY(), p.getZ(), EnumFacing.NORTH);
+                // Wrong dimension, do nothing as this is handled by ServerActionManager
             } else {
                 // Find a spot close to the player where we can navigate too
                 BlockPos p = helper.findSuitablePositionNearPlayer(4.0);

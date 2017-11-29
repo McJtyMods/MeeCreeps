@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
@@ -42,6 +43,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
     }
 
     private void placeLadder(BlockPos pos) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         ItemStack ladder = entity.consumeItem(this::isLadder, 1);
         if (!ladder.isEmpty()) {
@@ -51,6 +53,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
     }
 
     private BlockPos findTopSpotNotDiggedYet() {
+        IMeeCreep entity = helper.getMeeCreep();
         BlockPos p = options.getTargetPos();
         World world = entity.getWorld();
         IBlockState state = world.getBlockState(p);
@@ -62,6 +65,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
     }
 
     private void digDown() {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         BlockPos p = findTopSpotNotDiggedYet();
         IBlockState state = world.getBlockState(p);
@@ -78,6 +82,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
     }
 
     private boolean needsSupportPillar(BlockPos p) {
+        IMeeCreep entity = helper.getMeeCreep();
         supportPosTodo = null;
         if (p.getY() < options.getTargetPos().getY()) {
             World world = entity.getWorld();
@@ -100,6 +105,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
         if (blockStack.isEmpty()) {
             entityItem.setDead();
         }
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
 
         Block block = ((ItemBlock) actual.getItem()).getBlock();
@@ -143,6 +149,8 @@ public class DigdownActionWorker extends AbstractActionWorker {
 
     @Override
     public void tick(boolean timeToWrapUp) {
+        IMeeCreep entity = helper.getMeeCreep();
+
         if (supportPosTodo != null) {
             if (!helper.findItemOnGround(new AxisAlignedBB(entity.getEntity().getPosition().add(-3, -3, -3), entity.getEntity().getPosition().add(3, 3, 3)),
                     this::isBuildingBlock, this::buildSupportBlock)) {

@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
@@ -31,6 +32,7 @@ public class LightupActionWorker extends AbstractActionWorker {
     }
 
     private BlockPos findDarkSpot() {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         AxisAlignedBB box = getActionBox();
         return GeneralTools.traverseBoxFirst(box, p -> {
@@ -45,6 +47,7 @@ public class LightupActionWorker extends AbstractActionWorker {
     }
 
     private void placeTorch(BlockPos pos) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         int light = world.getLightFromNeighbors(pos);
         if (light < 7) {
@@ -62,6 +65,7 @@ public class LightupActionWorker extends AbstractActionWorker {
 
     @Override
     public void tick(boolean timeToWrapUp) {
+        IMeeCreep entity = helper.getMeeCreep();
         if (timeToWrapUp) {
             helper.done();
         } else if (!entity.hasItem(this::isTorch)) {

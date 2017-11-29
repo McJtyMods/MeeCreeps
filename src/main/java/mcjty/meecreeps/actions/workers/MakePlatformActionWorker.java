@@ -3,6 +3,7 @@ package mcjty.meecreeps.actions.workers;
 import mcjty.meecreeps.actions.schematics.SchematicPlatform;
 import mcjty.meecreeps.api.BuildProgress;
 import mcjty.meecreeps.api.IBuildSchematic;
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -46,7 +47,7 @@ public class MakePlatformActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    public void init() {
+    public void init(IMeeCreep meeCreep) {
         helper.setSpeed(5);
     }
 

@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.varia.Counter;
@@ -32,13 +33,13 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
     }
 
     private void harvest(BlockPos pos) {
-        World world = entity.getWorld();
+        World world = helper.getMeeCreep().getWorld();
         helper.harvestAndDrop(pos);
         findLeaves(pos, world);
     }
 
     @Override
-    public void init() {
+    public void init(IMeeCreep meeCreep) {
         helper.setSpeed(5);
     }
 
@@ -70,6 +71,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
         if (blocks.size() > Config.maxTreeBlocks) {
             return;
         }
+        IMeeCreep entity = helper.getMeeCreep();
         for (int y = -1 ; y <= 1 ; y++) {
             for (int x = -1 ; x <= 1 ; x++) {
                 for (int z = -1 ; z <= 1 ; z++) {
@@ -90,6 +92,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
     }
 
     protected void findTree() {
+        IMeeCreep entity = helper.getMeeCreep();
         BlockPos startPos = options.getTargetPos();
         if (entity.getWorld().isAirBlock(startPos)) {
             return;
@@ -125,6 +128,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
     }
 
     private void decayLeaves() {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         Counter<BlockPos> newmap = new Counter<>();
         for (Map.Entry<BlockPos, Integer> entry : leavesToTick.entrySet()) {

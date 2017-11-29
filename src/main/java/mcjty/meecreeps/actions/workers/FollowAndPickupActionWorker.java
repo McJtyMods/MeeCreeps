@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.teleport.TeleportationTools;
@@ -36,7 +37,8 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
 
     @Override
     public void tick(boolean timeToWrapUp) {
-        EntityMeeCreeps meeCreep = (EntityMeeCreeps) this.entity;
+        IMeeCreep entity = helper.getMeeCreep();
+        EntityMeeCreeps meeCreep = (EntityMeeCreeps) entity;
         EntityPlayer player = options.getPlayer();
 
         if (timeToWrapUp) {
@@ -44,9 +46,7 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
         } else if (player == null) {
             helper.taskIsDone();
         } else if (player.getEntityWorld().provider.getDimension() != meeCreep.getEntityWorld().provider.getDimension()) {
-            // Wrong dimension. Teleport to the player
-            BlockPos p = helper.findSuitablePositionNearPlayer(4.0);
-            TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX(), p.getY(), p.getZ(), EnumFacing.NORTH);
+            // Wrong dimension, do nothing as this is handled by ServerActionManager
         } else {
             BlockPos position = player.getPosition();
             AxisAlignedBB box = new AxisAlignedBB(position.add(-6, -4, -6), position.add(6, 4, 6));

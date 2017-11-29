@@ -3,6 +3,7 @@ package mcjty.meecreeps;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.api.IMeeCreepsApi;
 import mcjty.meecreeps.commands.CommandClearActions;
+import mcjty.meecreeps.commands.CommandListActions;
 import mcjty.meecreeps.commands.CommandTestApi;
 import mcjty.meecreeps.items.ModItems;
 import mcjty.meecreeps.proxy.CommonProxy;
@@ -88,6 +89,7 @@ public class MeeCreeps {
     public void serverLoad(FMLServerStartingEvent event) {
         event.registerServerCommand(new CommandTestApi());
         event.registerServerCommand(new CommandClearActions());
+        event.registerServerCommand(new CommandListActions());
     }
 
     @Mod.EventHandler

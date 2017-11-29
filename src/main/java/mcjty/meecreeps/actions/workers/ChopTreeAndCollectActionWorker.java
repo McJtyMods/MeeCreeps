@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.api.PreferedChest;
 import mcjty.meecreeps.varia.Counter;
@@ -33,6 +34,7 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
     }
 
     private void harvest(BlockPos pos) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         helper.harvestAndPickup(pos);
         findLeaves(pos, world);
@@ -40,6 +42,7 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
 
     @Override
     public void tick(boolean timeToWrapUp) {
+        IMeeCreep entity = helper.getMeeCreep();
         if (blocks.isEmpty()) {
             findTree();
         }
@@ -73,6 +76,7 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
     }
 
     private void decayLeaves() {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         Counter<BlockPos> newmap = new Counter<>();
         for (Map.Entry<BlockPos, Integer> entry : leavesToTick.entrySet()) {

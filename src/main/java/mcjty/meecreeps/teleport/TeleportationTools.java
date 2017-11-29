@@ -6,6 +6,7 @@ import mcjty.meecreeps.blocks.PortalTileEntity;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.network.PacketHandler;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -226,7 +227,7 @@ public class TeleportationTools {
     }
 
 
-    public static void teleportEntity(Entity entity, World destWorld, double newX, double newY, double newZ, EnumFacing facing) {
+    public static Entity teleportEntity(Entity entity, World destWorld, double newX, double newY, double newZ, EnumFacing facing) {
         World world = entity.getEntityWorld();
         if (entity instanceof EntityPlayer) {
             if (world.provider.getDimension() != destWorld.provider.getDimension()) {
@@ -235,26 +236,37 @@ public class TeleportationTools {
 
             fixOrientation(entity, newX, newY, newZ, facing);
             entity.setPositionAndUpdate(newX, newY, newZ);
+            return entity;
         } else {
             if (world.provider.getDimension() != destWorld.provider.getDimension()) {
                 NBTTagCompound tagCompound = new NBTTagCompound();
-                tagCompound.removeTag("Dimension");
                 entity.writeToNBT(tagCompound);
+                tagCompound.removeTag("Dimension");
                 Class<? extends Entity> entityClass = entity.getClass();
                 world.removeEntity(entity);
+                entity.isDead = false;
+                world.updateEntityWithOptionalForce(entity, false);
 
-                try {
-                    Entity newEntity = entityClass.getConstructor(World.class).newInstance(destWorld);
-                    newEntity.readFromNBT(tagCompound);
-                    fixOrientation(entity, newX, newY, newZ, facing);
-                    newEntity.setLocationAndAngles(newX, newY, newZ, entity.rotationYaw, entity.rotationPitch);
-                    destWorld.spawnEntity(newEntity);
-                } catch (Exception e) {
-                }
+                Entity newEntity = EntityList.newEntity(entityClass, destWorld);
+                newEntity.readFromNBT(tagCompound);
+                fixOrientation(newEntity, newX, newY, newZ, facing);
+                newEntity.setLocationAndAngles(newX, newY, newZ, newEntity.rotationYaw, newEntity.rotationPitch);
+                boolean flag = newEntity.forceSpawn;
+                newEntity.forceSpawn = true;
+                destWorld.spawnEntity(newEntity);
+                newEntity.forceSpawn = flag;
+                destWorld.updateEntityWithOptionalForce(newEntity, false);
+
+                entity.isDead = true;
+
+                ((WorldServer)world).resetUpdateEntityTick();
+                ((WorldServer)destWorld).resetUpdateEntityTick();
+                return newEntity;
             } else {
                 fixOrientation(entity, newX, newY, newZ, facing);
                 entity.setLocationAndAngles(newX, newY, newZ, entity.rotationYaw, entity.rotationPitch);
                 destWorld.updateEntityWithOptionalForce(entity, false);
+                return entity;
             }
         }
     }

@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
@@ -39,7 +40,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    public void init() {
+    public void init(IMeeCreep meeCreep) {
         helper.setSpeed(5);
     }
 
@@ -71,6 +72,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     }
 
     private void dig(BlockPos p) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         IBlockState state = world.getBlockState(p);
         boolean result;
@@ -116,6 +118,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     }
 
     private void buildSupport(BlockPos pos, EntityItem entityItem) {
+        IMeeCreep entity = helper.getMeeCreep();
         ItemStack blockStack = entityItem.getItem();
         ItemStack actual = blockStack.splitStack(1);
         if (blockStack.isEmpty()) {
@@ -138,6 +141,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     }
 
     private void buildStairs(BlockPos pos) {
+        IMeeCreep entity = helper.getMeeCreep();
         numStairs--;
         World world = entity.getWorld();
         Block block = Blocks.STONE_STAIRS;
@@ -174,6 +178,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
 
     @Override
     public void tick(boolean timeToWrapUp) {
+        IMeeCreep entity = helper.getMeeCreep();
         if (timeToWrapUp) {
             if (numStairs > 0) {
                 entity.getEntity().entityDropItem(new ItemStack(Blocks.STONE_STAIRS, numStairs), 0.0f);
@@ -206,6 +211,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     }
 
     private void handleNextPosition(EnumFacing facing, BlockPos p) {
+        IMeeCreep entity = helper.getMeeCreep();
         blockidx++;
         if (blockidx >= 12) {
             blockidx = 11;      // Make sure we come here again next turn
@@ -266,6 +272,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     }
 
     private void placeStair(EnumFacing facing, BlockPos p) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         if (!isStair(p.down(), world)) {
             buildStairs(p.down());
@@ -281,6 +288,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     }
 
     private boolean checkClear(BlockPos p, EnumFacing facing) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         if (canDig(p, world)) {
             return false;
@@ -322,6 +330,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     }
 
     private boolean checkForStairs(BlockPos p, EnumFacing facing) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         if (!isStair(p.down(), world)) {
             return false;
@@ -395,6 +404,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     }
 
     private boolean checkForSupport(BlockPos p) {
+        IMeeCreep entity = helper.getMeeCreep();
         if (entity.getWorld().isAirBlock(p) || isLiquid(p)) {
             if (!helper.findItemOnGround(getSearchBox(), this::isSupportBlock, entityItem -> buildSupport(p, entityItem))) {
                 // We cannot continu like this
@@ -419,6 +429,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     }
 
     private boolean isLiquid(BlockPos p) {
+        IMeeCreep entity = helper.getMeeCreep();
         Block block = entity.getWorld().getBlockState(p).getBlock();
         return block instanceof BlockLiquid || block instanceof BlockDynamicLiquid || block instanceof BlockStaticLiquid;
     }

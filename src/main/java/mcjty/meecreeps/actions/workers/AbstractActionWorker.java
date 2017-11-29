@@ -1,6 +1,9 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.meecreeps.api.*;
+import mcjty.meecreeps.api.IActionContext;
+import mcjty.meecreeps.api.IActionWorker;
+import mcjty.meecreeps.api.IWorkerHelper;
+import mcjty.meecreeps.api.PreferedChest;
 import net.minecraft.util.math.AxisAlignedBB;
 
 import javax.annotation.Nonnull;
@@ -15,12 +18,10 @@ public abstract class AbstractActionWorker implements IActionWorker {
     private AxisAlignedBB searchBox = null;
 
     protected final IWorkerHelper helper;
-    protected final IMeeCreep entity;
     protected final IActionContext options;
 
     public AbstractActionWorker(IWorkerHelper helper) {
         this.helper = helper;
-        this.entity = helper.getMeeCreep();
         this.options = helper.getContext();
     }
 

@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
@@ -40,7 +41,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    public void init() {
+    public void init(IMeeCreep meeCreep) {
         helper.setSpeed(5);
     }
 
@@ -82,6 +83,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     }
 
     private void dig(BlockPos p) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         IBlockState state = world.getBlockState(p);
         boolean result;
@@ -130,6 +132,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
             return;
         }
 
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         Block block = ((ItemBlock) item).getBlock();
         IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, item.getMetadata(actual), GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
@@ -138,6 +141,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     }
 
     private void placeTorch(BlockPos pos) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         ItemStack torch = entity.consumeItem(this::isTorch, 1);
         if (!torch.isEmpty()) {
@@ -148,6 +152,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
 
     @Override
     public void tick(boolean timeToWrapUp) {
+        IMeeCreep entity = helper.getMeeCreep();
         if (timeToWrapUp) {
             helper.done();
             return;
@@ -202,6 +207,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     }
 
     private boolean checkClear(BlockPos p, EnumFacing facing) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         if (canDig(p, world)) {
             return false;
@@ -279,6 +285,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     }
 
     private boolean checkForSupport(BlockPos p) {
+        IMeeCreep entity = helper.getMeeCreep();
         if (entity.getWorld().isAirBlock(p) || isLiquid(p)) {
             if (!helper.findItemOnGround(getSearchBox(), this::isSupportBlock, entityItem -> buildSupport(p, entityItem))) {
                 // We cannot continu like this
@@ -303,6 +310,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     }
 
     private boolean isLiquid(BlockPos p) {
+        IMeeCreep entity = helper.getMeeCreep();
         Block block = entity.getWorld().getBlockState(p).getBlock();
         return block instanceof BlockLiquid || block instanceof BlockDynamicLiquid || block instanceof BlockStaticLiquid;
     }

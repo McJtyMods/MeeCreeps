@@ -2,6 +2,7 @@ package mcjty.meecreeps.actions.workers;
 
 import mcjty.meecreeps.api.BuildProgress;
 import mcjty.meecreeps.api.IBuildSchematic;
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -30,7 +31,7 @@ public abstract class AbstractBuildActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    public void init() {
+    public void init(IMeeCreep meeCreep) {
         helper.setSpeed(3);
     }
 

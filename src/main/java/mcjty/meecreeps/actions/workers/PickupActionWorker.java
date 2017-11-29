@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -35,6 +36,7 @@ public class PickupActionWorker extends AbstractActionWorker {
     }
 
     private void tryFindingItemsToPickup() {
+        IMeeCreep entity = helper.getMeeCreep();
         BlockPos position = entity.getEntity().getPosition();
         List<EntityItem> items = entity.getWorld().getEntitiesWithinAABB(EntityItem.class, getActionBox());
         if (!items.isEmpty()) {

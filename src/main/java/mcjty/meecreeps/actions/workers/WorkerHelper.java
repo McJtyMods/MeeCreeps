@@ -49,10 +49,10 @@ public class WorkerHelper implements IWorkerHelper {
     private final double DISTANCE_TOLERANCE = 1.4;
 
     private IActionWorker worker;
-    protected final ActionOptions options;
-    protected final EntityMeeCreeps entity;
-    protected boolean needsToPutAway = false;
-    protected int waitABit = 10;
+    private final ActionOptions options;
+    private EntityMeeCreeps entity;
+    private boolean needsToPutAway = false;
+    private int waitABit = 10;
     private int speed = 10;
 
     private BlockPos movingToPos;
@@ -65,8 +65,8 @@ public class WorkerHelper implements IWorkerHelper {
     private int stuckCounter;
 
     private int pathTries = 0;
-    protected Consumer<BlockPos> job;
-    protected List<EntityItem> itemsToPickup = new ArrayList<>();
+    private Consumer<BlockPos> job;
+    private List<EntityItem> itemsToPickup = new ArrayList<>();
     private BlockPos materialChest;
 
     // While building or flattening this will contain positions that we want to skip because they are too hard or unbreakable
@@ -74,9 +74,8 @@ public class WorkerHelper implements IWorkerHelper {
 
     private String lastMessage = "";
 
-    public WorkerHelper(EntityMeeCreeps entity, IActionContext options) {
+    public WorkerHelper(IActionContext options) {
         this.options = (ActionOptions) options;
-        this.entity = entity;
     }
 
     public void setWorker(IActionWorker worker) {
@@ -421,7 +420,7 @@ public class WorkerHelper implements IWorkerHelper {
         return stack.getItem() instanceof CreepCubeItem;
     }
 
-    public void tick(boolean timeToWrapUp) {
+    public void tick(EntityMeeCreeps entity, boolean timeToWrapUp) {
         waitABit--;
         if (waitABit > 0) {
             return;
@@ -429,6 +428,7 @@ public class WorkerHelper implements IWorkerHelper {
         // @todo config
         waitABit = speed;
 
+        this.entity = entity;
         if (job != null) {
             handleJob();
         } else if (entity.hasItem(this::isCube)) {
@@ -445,6 +445,7 @@ public class WorkerHelper implements IWorkerHelper {
         } else {
             worker.tick(timeToWrapUp);
         }
+        this.entity = null;
     }
 
     private void spawnAngryCreep() {
@@ -680,11 +681,11 @@ public class WorkerHelper implements IWorkerHelper {
         return findSuitablePositionNearPlayer(this.entity, options.getPlayer(), distance);
     }
 
-    public static BlockPos findSuitablePositionNearPlayer(@Nonnull EntityMeeCreeps meeCreep, @Nonnull EntityPlayer player, double distance) {
-        Vec3d entityPos = meeCreep.getPositionVector();
+    public static BlockPos findSuitablePositionNearPlayer(@Nullable EntityMeeCreeps meeCreep, @Nonnull EntityPlayer player, double distance) {
         Vec3d playerPos = player.getPositionVector();
+        Vec3d entityPos = meeCreep == null ? playerPos.addVector(distance, 0, 0) : meeCreep.getPositionVector();
 
-        if (entityPos.distanceTo(playerPos) < distance) {
+        if (entityPos.distanceTo(playerPos) < (distance * 1.2) && meeCreep != null) {
             // No need to move
             return meeCreep.getPosition();
         }
@@ -696,7 +697,7 @@ public class WorkerHelper implements IWorkerHelper {
         v = v.normalize();
         Vec3d pos = new Vec3d(playerPos.x + v.x * distance, playerPos.y + v.y * distance, playerPos.z + v.z * distance);
         // First find a good spot at the specific location
-        World world = meeCreep.getWorld();
+        World world = player.getEntityWorld();
 
         // First try on the prefered spot
         BlockPos p = scanSuitablePos(new BlockPos(pos.x, pos.y+.5, pos.z), world);

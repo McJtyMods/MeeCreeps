@@ -16,12 +16,12 @@ public class CommandClearActions implements ICommand {
 
     @Override
     public String getName() {
-        return "clear_actions";
+        return "creep_clear";
     }
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "clear_actions";
+        return "creep_clear";
     }
 
     @Override
@@ -39,7 +39,7 @@ public class CommandClearActions implements ICommand {
         if (sender instanceof EntityPlayerMP) {
             return ((EntityPlayerMP) sender).capabilities.isCreativeMode && sender.canUseCommand(2, "");
         } else {
-            return sender.canUseCommand(2, "clear_actions");
+            return sender.canUseCommand(2, "creep_clear");
         }
     }
 

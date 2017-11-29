@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.SoundTools;
@@ -36,6 +37,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
     }
 
     protected void harvest(BlockPos pos) {
+        IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
@@ -57,6 +59,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
     }
 
     protected void tryFindingCropsToHarvest() {
+        IMeeCreep entity = helper.getMeeCreep();
         AxisAlignedBB box = getActionBox();
         World world = entity.getWorld();
         List<BlockPos> positions = new ArrayList<>();
