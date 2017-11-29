@@ -53,21 +53,44 @@ public class ServerActionManager extends WorldSavedData {
         markDirty();
     }
 
-    public void clearOptions() {
-        options.clear();
+    /**
+     * If player == null then we're doing this as an OP and in that case we clear all options
+     * and additionally kill all remaining MeeCreeps
+     * @param sender
+     * @param player
+     */
+    public void clearOptions(ICommandSender sender, @Nullable EntityPlayer player) {
+        if (player == null) {
+            sender.sendMessage(new TextComponentString("Cleared " + options.size() + " active operations"));
+            options.clear();
+        } else {
+            int cnt = 0;
+            List<ActionOptions> toKeep = new ArrayList<>();
+            for (ActionOptions option : options) {
+                if (!player.getGameProfile().getId().equals(option.getPlayerId())) {
+                    toKeep.add(option);
+                } else {
+                    cnt++;
+                }
+            }
+            options = toKeep;
+            sender.sendMessage(new TextComponentString("Cleared " + cnt + " active operations"));
+        }
         save();
 
-        Integer[] iDs = DimensionManager.getStaticDimensionIDs();
-        int cnt = 0;
-        for (Integer id : iDs) {
-            World w = TeleportationTools.getWorldForDimension(id);
-            List<EntityMeeCreeps> entities = w.getEntities(EntityMeeCreeps.class, input -> true);
-            for (EntityMeeCreeps entity : entities) {
-                entity.setDead();
-                cnt++;
+        if (player == null) {
+            Integer[] iDs = DimensionManager.getStaticDimensionIDs();
+            int cnt = 0;
+            for (Integer id : iDs) {
+                World w = TeleportationTools.getWorldForDimension(id);
+                List<EntityMeeCreeps> entities = w.getEntities(EntityMeeCreeps.class, input -> true);
+                for (EntityMeeCreeps entity : entities) {
+                    entity.setDead();
+                    cnt++;
+                }
             }
+            sender.sendMessage(new TextComponentString("Additionally killed " + cnt + " MeeCreeps"));
         }
-        System.out.println("Killed " + cnt + " meecreeps!");
     }
 
     public void listOptions(ICommandSender sender) {
@@ -253,6 +276,8 @@ public class ServerActionManager extends WorldSavedData {
             }
             if (meeCreep != null) {
                 stayWithPlayer(option, meeCreep);
+            } else if (option.getStage() != Stage.OPENING_GUI && option.getStage() != Stage.WAITING_FOR_PLAYER_INPUT && option.getStage() != Stage.WAITING_FOR_SPAWN) {
+                keep = false;
             }
 
             if (keep) {

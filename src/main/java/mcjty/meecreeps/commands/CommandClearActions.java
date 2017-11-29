@@ -7,6 +7,8 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,16 +33,24 @@ public class CommandClearActions implements ICommand {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        ServerActionManager.getManager().clearOptions();
+        if (sender instanceof EntityPlayerMP) {
+            if (((EntityPlayerMP) sender).capabilities.isCreativeMode && sender.canUseCommand(2, "")) {
+                ServerActionManager.getManager().clearOptions(sender, null);
+            } else {
+                ServerActionManager.getManager().clearOptions(sender, (EntityPlayerMP) sender);
+            }
+        } else {
+            if (sender.canUseCommand(2, "creep_clear")) {
+                ServerActionManager.getManager().clearOptions(sender, null);
+            } else {
+                sender.sendMessage(new TextComponentString(TextFormatting.RED + "You have no permission for this command!"));
+            }
+        }
     }
 
     @Override
     public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
-        if (sender instanceof EntityPlayerMP) {
-            return ((EntityPlayerMP) sender).capabilities.isCreativeMode && sender.canUseCommand(2, "");
-        } else {
-            return sender.canUseCommand(2, "creep_clear");
-        }
+        return true;
     }
 
 
