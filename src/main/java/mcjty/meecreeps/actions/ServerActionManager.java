@@ -9,7 +9,6 @@ import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.items.CreepCubeItem;
 import mcjty.meecreeps.teleport.TeleportationTools;
 import mcjty.meecreeps.varia.SoundTools;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -249,23 +248,25 @@ public class ServerActionManager extends WorldSavedData {
             if (keep) {
                 newlist.add(option);
                 newmap.put(option.getActionId(), option);
-            } else {
-                if (world != null) {
-                    List<Pair<BlockPos, ItemStack>> drops = option.getDrops();
-                    if (!drops.isEmpty()) {
-                        for (Pair<BlockPos, ItemStack> pair : drops) {
-                            EntityItem entityItem = new EntityItem(world);
-                            entityItem.setItem(pair.getValue());
-                            BlockPos pos = pair.getKey();
-                            entityItem.setLocationAndAngles(pos.getX(), pos.getY(), pos.getZ(), 0, 0);
-                            world.spawnEntity(entityItem);
-                        }
-                    }
-                }
+            } else if (world != null) {
+                dropRemainingDrops(option, world);
             }
         }
         options = newlist;
         optionMap = newmap;
+    }
+
+    private void dropRemainingDrops(ActionOptions option, World world) {
+        List<Pair<BlockPos, ItemStack>> drops = option.getDrops();
+        if (!drops.isEmpty()) {
+            for (Pair<BlockPos, ItemStack> pair : drops) {
+                EntityItem entityItem = new EntityItem(world);
+                entityItem.setItem(pair.getValue());
+                BlockPos pos = pair.getKey();
+                entityItem.setLocationAndAngles(pos.getX(), pos.getY(), pos.getZ(), 0, 0);
+                world.spawnEntity(entityItem);
+            }
+        }
     }
 
     private void stayWithPlayer(ActionOptions option, EntityMeeCreeps meeCreep) {
@@ -278,21 +279,10 @@ public class ServerActionManager extends WorldSavedData {
                 if (worker.needsToFollowPlayer()) {
                     if (isDifferentDimension(player, meeCreep) || isTooFar(player, meeCreep)) {
                         // Wrong dimension. Teleport to the player
-                        System.out.println("Try to find player again!");
-
-                        // First park a few things so we don't have to worry about them
-                        IBlockState heldBlockState = meeCreep.getHeldBlockState();
-                        NBTTagCompound carriedNBT = meeCreep.getCarriedNBT();
-                        meeCreep.setHeldBlockState(null);
-                        meeCreep.setCarriedNBT(null);
-
                         meeCreep.cancelJob();
-                        BlockPos p = WorkerHelper.findSuitablePositionNearPlayer(null, player, 4.0);
-                        meeCreep = (EntityMeeCreeps) TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX(), p.getY(), p.getZ(), EnumFacing.NORTH);
+                        BlockPos p = WorkerHelper.findSuitablePositionNearPlayer(meeCreep, player, 4.0);
+                        meeCreep = (EntityMeeCreeps) TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX() + .5, p.getY(), p.getZ() + .5, EnumFacing.NORTH);
                         updateEntityCache(option.getActionId(), meeCreep);
-
-                        meeCreep.setHeldBlockState(heldBlockState);
-                        meeCreep.setCarriedNBT(carriedNBT);
                     }
                 }
             }

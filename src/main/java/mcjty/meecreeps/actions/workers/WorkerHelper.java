@@ -28,6 +28,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
@@ -334,10 +335,10 @@ public class WorkerHelper implements IWorkerHelper {
             return;
         }
         lastMessage = message;
-            EntityPlayerMP player = getPlayer();
-            if (player != null) {
-                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient(message), player);
-            }
+        EntityPlayerMP player = getPlayer();
+        if (player != null) {
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient(message), player);
+        }
     }
 
     @Override
@@ -373,7 +374,7 @@ public class WorkerHelper implements IWorkerHelper {
             return false;
         }
         double d = getSquareDist(entity, dest);
-        if (d > maxDist*maxDist) {
+        if (d > maxDist * maxDist) {
             return false;
         } else if (d < DISTANCE_TOLERANCE) {
             job.accept(dest.getPosition());
@@ -398,9 +399,9 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     private static double getSquareDist(Entity source, Entity dest) {
-        Vec3d lowPosition = new Vec3d(source.posX, source.posY-1, source.posZ);
+        Vec3d lowPosition = new Vec3d(source.posX, source.posY - 1, source.posZ);
         Vec3d position = new Vec3d(source.posX, source.posY, source.posZ);
-        Vec3d eyePosition = new Vec3d(source.posX, source.posY+source.getEyeHeight(), source.posZ);
+        Vec3d eyePosition = new Vec3d(source.posX, source.posY + source.getEyeHeight(), source.posZ);
         double d0 = lowPosition.squareDistanceTo(dest.posX, dest.posY, dest.posZ);
         double d1 = position.squareDistanceTo(dest.posX, dest.posY, dest.posZ);
         double d2 = eyePosition.squareDistanceTo(dest.posX, dest.posY, dest.posZ);
@@ -413,7 +414,7 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     private boolean isStuck() {
-        return Math.abs(entity.posX-prevPosX) < 0.01 && Math.abs(entity.posY-prevPosY) < 0.01 && Math.abs(entity.posZ-prevPosZ) < 0.01;
+        return Math.abs(entity.posX - prevPosX) < 0.01 && Math.abs(entity.posY - prevPosY) < 0.01 && Math.abs(entity.posZ - prevPosZ) < 0.01;
     }
 
     private boolean isCube(ItemStack stack) {
@@ -460,7 +461,7 @@ public class WorkerHelper implements IWorkerHelper {
         }
 
         Random r = entity.getRandom();
-        BlockPos targetPos = new BlockPos(entity.posX + r.nextFloat()*8 - 4, entity.posY, entity.posZ + r.nextFloat()*8 - 4);
+        BlockPos targetPos = new BlockPos(entity.posX + r.nextFloat() * 8 - 4, entity.posY, entity.posZ + r.nextFloat() * 8 - 4);
         int actionId = manager.createActionOptions(world, targetPos, EnumFacing.UP, getPlayer());
         ActionOptions.spawn(world, targetPos, EnumFacing.UP, actionId, false);
         manager.performAction(null, actionId, new MeeCreepActionType("meecreeps.angry"), null);
@@ -681,11 +682,11 @@ public class WorkerHelper implements IWorkerHelper {
         return findSuitablePositionNearPlayer(this.entity, options.getPlayer(), distance);
     }
 
-    public static BlockPos findSuitablePositionNearPlayer(@Nullable EntityMeeCreeps meeCreep, @Nonnull EntityPlayer player, double distance) {
+    public static BlockPos findSuitablePositionNearPlayer(@Nonnull EntityMeeCreeps meeCreep, @Nonnull EntityPlayer player, double distance) {
         Vec3d playerPos = player.getPositionVector();
-        Vec3d entityPos = meeCreep == null ? playerPos.addVector(distance, 0, 0) : meeCreep.getPositionVector();
+        Vec3d entityPos = meeCreep.getPositionVector();
 
-        if (entityPos.distanceTo(playerPos) < (distance * 1.2) && meeCreep != null) {
+        if (entityPos.distanceTo(playerPos) < (distance * 1.2)) {
             // No need to move
             return meeCreep.getPosition();
         }
@@ -699,26 +700,29 @@ public class WorkerHelper implements IWorkerHelper {
         // First find a good spot at the specific location
         World world = player.getEntityWorld();
 
+        float width = meeCreep.width;
+        float eyeHeight = meeCreep.getEyeHeight();
+
         // First try on the prefered spot
-        BlockPos p = scanSuitablePos(new BlockPos(pos.x, pos.y+.5, pos.z), world);
+        BlockPos p = scanSuitablePos(new BlockPos(pos.x, pos.y + .5, pos.z), world, width, eyeHeight);
         if (p != null) return p;
         // No good spot to stand on found. Try other spots around the prefered spot
-        p = scanAround(pos, world);
+        p = scanAround(pos, world, width, eyeHeight);
         if (p != null) return p;
         // No good spot to stand on found. Try other spots around the player
-        p = scanAround(playerPos, world);
+        p = scanAround(playerPos, world, width, eyeHeight);
         if (p != null) return p;
 
         // If all else fails we go stand where the player is
         return player.getPosition();
     }
 
-    private static BlockPos scanAround(Vec3d vec, World world) {
+    private static BlockPos scanAround(Vec3d vec, World world, float width, float eyeHeight) {
         BlockPos pos = new BlockPos(vec.x, vec.y + 0.5, vec.z);
-        for (int dx = -1 ; dx <= 1 ; dx++) {
-            for (int dz = -1 ; dz <= 1 ; dz++) {
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
                 BlockPos p = pos.add(dx, 0, dz);
-                p = scanSuitablePos(p, world);
+                p = scanSuitablePos(p, world, width, eyeHeight);
                 if (p != null) {
                     return p;
                 }
@@ -727,36 +731,51 @@ public class WorkerHelper implements IWorkerHelper {
         return null;
     }
 
-    private static BlockPos scanSuitablePos(BlockPos pos, World world) {
-        for (int d = 0 ; d < 6 ; d++) {
+    private static BlockPos scanSuitablePos(BlockPos pos, World world, float width, float eyeHeight) {
+        for (int d = 0; d < 6; d++) {
             BlockPos p = pos.down(d);
-            if (isSuitableStandingPos(world, p)) {
+            if (isSuitableStandingPos(world, p, width, eyeHeight)) {
                 return p;
             }
             p = pos.up(d);
-            if (isSuitableStandingPos(world, p)) {
+            if (isSuitableStandingPos(world, p, width, eyeHeight)) {
                 return p;
             }
         }
         return null;
     }
 
-    private static boolean isSuitableStandingPos(World world, BlockPos p) {
-        boolean b = !world.isAirBlock(p.down()) && world.isAirBlock(p) && world.isAirBlock(p.up());
-        if (b) {
-            IBlockState state = world.getBlockState(p.down());
-            if (state.getBlock() == Blocks.LAVA || state.getBlock() == Blocks.FLOWING_LAVA) {
-                return false;
-            }
-            if (state.getBlock() == Blocks.FIRE) {
-                return false;
-            }
-        }
-        return b;
+    private static boolean isSuitableStandingPos(World world, BlockPos p, float width, float eyeHeight) {
+        return canStandOn(world.getBlockState(p.down()))
+                && !canStandOn(world.getBlockState(p))
+                && !willSuffocateHere(world, p.getX()+.5, p.getY(), p.getZ()+.5, width, eyeHeight);
     }
 
+    private static boolean canStandOn(IBlockState state) {
+        return state.getMaterial().blocksMovement() && state.isFullCube();
+    }
 
+    private static boolean willSuffocateHere(World world, double posX, double posY, double posZ, float width, float eyeHeight) {
+        BlockPos.PooledMutableBlockPos mutableBlockPos = BlockPos.PooledMutableBlockPos.retain();
 
+        for (int i = 0; i < 8; ++i) {
+            int x = MathHelper.floor(posX + ((((i >> 1) % 2) - 0.5F) * width * 0.8F));
+            int y = MathHelper.floor(posY + ((((i >> 0) % 2) - 0.5F) * 0.1F) + eyeHeight);
+            int z = MathHelper.floor(posZ + ((((i >> 2) % 2) - 0.5F) * width * 0.8F));
+
+            if (mutableBlockPos.getX() != x || mutableBlockPos.getY() != y || mutableBlockPos.getZ() != z) {
+                mutableBlockPos.setPos(x, y, z);
+
+                if (world.getBlockState(mutableBlockPos).causesSuffocation()) {
+                    mutableBlockPos.release();
+                    return true;
+                }
+            }
+        }
+
+        mutableBlockPos.release();
+        return false;
+    }
 
     @Override
     public void giveToPlayerOrDrop() {
@@ -903,7 +922,7 @@ public class WorkerHelper implements IWorkerHelper {
         }
         TileEntity te = world.getTileEntity(pos);
         IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
-        for (int i = 0 ; i < handler.getSlots() ; i++) {
+        for (int i = 0; i < handler.getSlots(); i++) {
             if (maxAmount <= 0) {
                 return;
             }
@@ -971,8 +990,8 @@ public class WorkerHelper implements IWorkerHelper {
                 (pos, state) -> {
                     TileEntity te = world.getTileEntity(pos);
                     IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
-                    int cnt  = 0;
-                    for (int i = 0 ; i < handler.getSlots() ; i++) {
+                    int cnt = 0;
+                    for (int i = 0; i < handler.getSlots(); i++) {
                         ItemStack stack = handler.getStackInSlot(i);
                         if (stack == null) {
                             // There are still bad mods!
@@ -1054,7 +1073,7 @@ public class WorkerHelper implements IWorkerHelper {
                     if (handler.getSlots() > 8) {
                         int cnt = 0;
                         int free = 0;
-                        for (int i = 0 ; i < handler.getSlots() ; i++) {
+                        for (int i = 0; i < handler.getSlots(); i++) {
                             ItemStack stack = handler.getStackInSlot(i);
                             if (stack == null) {
                                 // There are still bad mods!

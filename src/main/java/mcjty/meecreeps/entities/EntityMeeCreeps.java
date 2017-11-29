@@ -10,6 +10,8 @@ import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -412,6 +414,20 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
         if (compound.hasKey("worker") && workerTask != null) {
             workerTask.readFromNBT(compound.getCompoundTag("worker"));
         }
+
+        IBlockState iblockstate;
+
+        if (compound.hasKey("carried", 8)) {
+            iblockstate = Block.getBlockFromName(compound.getString("carried")).getStateFromMeta(compound.getShort("carriedData") & 65535);
+        } else {
+            iblockstate = Block.getBlockById(compound.getShort("carried")).getStateFromMeta(compound.getShort("carriedData") & 65535);
+        }
+
+        if (iblockstate == null || iblockstate.getBlock() == null || iblockstate.getMaterial() == Material.AIR) {
+            iblockstate = null;
+        }
+        this.setHeldBlockState(iblockstate);
+
         if (compound.hasKey("carriedNBT")) {
             carriedNBT = compound.getCompoundTag("carriedNBT");
         }
@@ -431,6 +447,13 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
             workerTask.writeToNBT(workerTag);
             compound.setTag("worker", workerTag);
         }
+
+        IBlockState iblockstate = this.getHeldBlockState();
+        if (iblockstate != null) {
+            compound.setShort("carried", (short) Block.getIdFromBlock(iblockstate.getBlock()));
+            compound.setShort("carriedData", (short) iblockstate.getBlock().getMetaFromState(iblockstate));
+        }
+
         if (carriedNBT != null) {
             compound.setTag("carriedNBT", carriedNBT);
         }
