@@ -109,6 +109,16 @@ public class ServerActionManager extends WorldSavedData {
         return optionMap.get(id);
     }
 
+    public int countMeeCreeps(EntityPlayer player) {
+        int cnt = 0;
+        for (ActionOptions option : options) {
+            if (Objects.equals(option.getPlayerId(), player.getGameProfile().getId())) {
+                cnt++;
+            }
+        }
+        return cnt;
+    }
+
     @Nonnull
     public static ServerActionManager getManager() {
         if (instance != null) {

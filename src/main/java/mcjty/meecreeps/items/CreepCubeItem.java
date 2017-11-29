@@ -146,6 +146,15 @@ public class CreepCubeItem extends Item {
             }
             setUsages(heldItem, getUsages(heldItem)+1);
         }
+
+        if (Config.maxMeecreepsPerPlayer >= 0) {
+            int cnt = ServerActionManager.getManager().countMeeCreeps(player);
+            if (cnt >= Config.maxMeecreepsPerPlayer) {
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("You can only spawn " + Config.maxMeecreepsPerPlayer + " MeeCreep(s) per player!"), (EntityPlayerMP) player);
+                return EnumActionResult.SUCCESS;
+            }
+        }
+
         if (player.isSneaking()) {
             ItemStack heldItem = player.getHeldItem(hand);
             MeeCreepActionType lastAction = getLastAction(heldItem);

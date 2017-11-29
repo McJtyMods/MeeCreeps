@@ -353,6 +353,11 @@ public class ActionOptions implements IActionContext {
         return server.getPlayerList().getPlayerByUUID(playerId);
     }
 
+    @Nullable
+    public UUID getPlayerId() {
+        return playerId;
+    }
+
     private boolean openGui() {
         if (playerId == null) {
             return false;

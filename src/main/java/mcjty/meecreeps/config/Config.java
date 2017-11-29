@@ -35,6 +35,7 @@ public class Config {
     public static int chargesPerEnderpearl = 4;
 
     public static int meeCreepBoxMaxUsage = -1;
+    public static int maxMeecreepsPerPlayer = 4;
 
     public static float meeCreepVolume = 1.0f;
     public static float teleportVolume = 1.0f;
@@ -58,6 +59,7 @@ public class Config {
         maxCharge = cfg.getInt("maxCharge", CATEGORY_GENERAL, maxCharge, 1, 1000000, "Maximum charge in a portalgun/cartridge");
         chargesPerEnderpearl = cfg.getInt("chargesPerEnderpearl", CATEGORY_GENERAL, chargesPerEnderpearl, 1, 1000000, "Number of charges per enderpearl");
         meeCreepBoxMaxUsage = cfg.getInt("meeCreepBoxMaxUsage", CATEGORY_GENERAL, meeCreepBoxMaxUsage, -1, 1000000, "Maximum number of uses for a single MeeCreep box (-1 means unlimited)");
+        maxMeecreepsPerPlayer = cfg.getInt("maxMeecreepsPerPlayer", CATEGORY_GENERAL, maxMeecreepsPerPlayer, -1, 1000000, "Maximum number of active MeeCreeps per player (-1 means unlimited)");
 
         meeCreepVolume = cfg.getFloat("meeCreepVolume", CATEGORY_GENERAL, meeCreepVolume, 0, 1, "Volume of the MeeCreep");
         teleportVolume = cfg.getFloat("teleportVolume", CATEGORY_GENERAL, teleportVolume, 0, 1, "Volume of the Portal Gun");
