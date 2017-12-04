@@ -71,7 +71,7 @@ public class FollowAndLightupActionWorker extends AbstractActionWorker {
         } else if (player == null) {
             helper.taskIsDone();
         } else if (!entity.hasItem(WorkerHelper::isTorch)) {
-            if (!helper.findItemOnGroundOrInChest(WorkerHelper::isTorch, "I cannot find any torches", Integer.MAX_VALUE)) {
+            if (!helper.findItemOnGroundOrInChest(WorkerHelper::isTorch, "message.meecreeps.cant_find_torches", Integer.MAX_VALUE)) {
                 helper.taskIsDone();
             }
         } else {

@@ -107,7 +107,7 @@ public class PortalGunItem extends Item {
 
         int charge = getCharge(heldItem);
         if (charge <= 0) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("Not enough charge!"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_no_charge"), (EntityPlayerMP) player);
             return;
         }
         setCharge(heldItem, charge-1);
@@ -115,9 +115,9 @@ public class PortalGunItem extends Item {
         List<TeleportDestination> destinations = getDestinations(heldItem);
         int current = getCurrentDestination(heldItem);
         if (current == -1) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("This gun does not have a current destination!"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_no_destination"), (EntityPlayerMP) player);
         } else if (destinations.get(current) == null) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("Something is wrong with this destination!"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_bad_destination"), (EntityPlayerMP) player);
         } else {
             EntityProjectile projectile = new EntityProjectile(world, player);
             projectile.setDestination(destinations.get(current));

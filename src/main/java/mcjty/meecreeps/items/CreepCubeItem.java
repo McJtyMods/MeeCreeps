@@ -141,7 +141,7 @@ public class CreepCubeItem extends Item {
         if (isLimited()) {
             ItemStack heldItem = player.getHeldItem(hand);
             if (getUsages(heldItem) >= Config.meeCreepBoxMaxUsage) {
-                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("This MeeCreep box has become unusable"), (EntityPlayerMP) player);
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.box_unusable"), (EntityPlayerMP) player);
                 return EnumActionResult.SUCCESS;
             }
             setUsages(heldItem, getUsages(heldItem)+1);
@@ -150,6 +150,7 @@ public class CreepCubeItem extends Item {
         if (Config.maxMeecreepsPerPlayer >= 0) {
             int cnt = ServerActionManager.getManager().countMeeCreeps(player);
             if (cnt >= Config.maxMeecreepsPerPlayer) {
+                // @todo parameter loc
                 PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("You can only spawn " + Config.maxMeecreepsPerPlayer + " MeeCreep(s) per player!"), (EntityPlayerMP) player);
                 return EnumActionResult.SUCCESS;
             }
@@ -159,13 +160,13 @@ public class CreepCubeItem extends Item {
             ItemStack heldItem = player.getHeldItem(hand);
             MeeCreepActionType lastAction = getLastAction(heldItem);
             if (lastAction == null) {
-                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("There is no last action!"), (EntityPlayerMP) player);
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.no_last_action"), (EntityPlayerMP) player);
             } else {
                 MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(lastAction);
                 if (factory.getFactory().isPossible(world, pos, side) || factory.getFactory().isPossibleSecondary(world, pos, side)) {
                     MeeCreeps.api.spawnMeeCreep(lastAction.getId(), getLastQuestionId(heldItem), world, pos, side, (EntityPlayerMP) player, false);
                 } else {
-                    PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("The last action is not possible here!"), (EntityPlayerMP) player);
+                    PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.last_action_not_possible"), (EntityPlayerMP) player);
                 }
             }
         } else {

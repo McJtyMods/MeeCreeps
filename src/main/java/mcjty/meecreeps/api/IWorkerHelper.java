@@ -133,7 +133,7 @@ public interface IWorkerHelper {
 
     /**
      * Show a message to the player. Calling this two times after each other with the same
-     * message will not show the message again
+     * message will not show the message again. This message can be a localized message tag
      */
     void showMessage(String message);
 

@@ -100,7 +100,7 @@ public class GuiWheel extends GuiScreen {
                     if (bestPosition == null) {
 //                        GuiBalloon.message = "Can't find a good spot to make a portal!";
                         closeThis();
-                        ClientActionManager.showProblem("Can't find a good spot to make a portal!");
+                        ClientActionManager.showProblem("message.meecreeps.cant_find_portal_spot");
 //                        mc.player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, mc.world, selectedBlock.getX(), selectedBlock.getY(), selectedBlock.getZ());
                         return;
                     } else {

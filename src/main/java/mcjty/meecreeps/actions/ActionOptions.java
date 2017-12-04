@@ -307,7 +307,7 @@ public class ActionOptions implements IActionContext {
                     } else {
                         EntityPlayer player = getPlayer();
                         if (player != null) {
-                            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("Can't find a good spot to spawn a MeeCreep!"), (EntityPlayerMP) player);
+                            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_spawn_meecreep"), (EntityPlayerMP) player);
                         }
                         return false;
                     }

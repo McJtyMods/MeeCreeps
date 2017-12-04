@@ -46,7 +46,7 @@ public class EmptyPortalGunItem extends Item {
         if (world.isRemote) {
 //            GuiBalloon.message = "This gun does not have a cartridge!";
 //            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
-            ClientActionManager.showProblem("This gun does not have a cartridge!");
+            ClientActionManager.showProblem("message.meecreeps.missing_cartridge");
             return EnumActionResult.SUCCESS;
         }
 
@@ -64,7 +64,7 @@ public class EmptyPortalGunItem extends Item {
 //            GuiBalloon.message = "This gun does not have a cartridge!";
 //            BlockPos pos = player.getPosition();
 //            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_BALLOON, world, pos.getX(), pos.getY(), pos.getZ());
-            ClientActionManager.showProblem("This gun does not have a cartridge!");
+            ClientActionManager.showProblem("message.meecreeps.missing_cartridge");
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, player.getHeldItem(hand));
     }

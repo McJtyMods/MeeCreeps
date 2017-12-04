@@ -166,7 +166,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
         if (timeToWrapUp && supportPosTodo == null) {
             helper.done();
         } else if (!entity.hasItem(this::isLadder)) {
-            helper.findItemOnGroundOrInChest(this::isLadder, "I cannot find any ladders", 128); // At most 2 stacks
+            helper.findItemOnGroundOrInChest(this::isLadder, "message.meecreeps.cant_find_ladders", 128); // At most 2 stacks
         } else {
             BlockPos p = findTopSpotNotDiggedYet();
             if (!needsSupportPillar(p)) {

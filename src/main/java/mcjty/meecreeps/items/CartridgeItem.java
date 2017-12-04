@@ -96,7 +96,7 @@ public class CartridgeItem extends Item {
         ItemStack heldItem = player.getHeldItem(hand);
         int charge = getCharge(heldItem);
         if (charge >= (Config.maxCharge-Config.chargesPerEnderpearl+1)) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("This cartridge is full!"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cartridge_full"), (EntityPlayerMP) player);
         } else {
             for (int i = 0 ; i < player.inventory.getSizeInventory() ; i++) {
                 ItemStack stack = player.inventory.getStackInSlot(i);
@@ -107,7 +107,7 @@ public class CartridgeItem extends Item {
                     return;
                 }
             }
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("No ender pearls!"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.missing_enderpearls"), (EntityPlayerMP) player);
         }
     }
 

@@ -56,23 +56,23 @@ public class TeleportationTools {
         World sourceWorld = player.getEntityWorld();
         BlockPos sourcePortalPos = findBestPosition(sourceWorld, selectedBlock, selectedSide);
         if (sourcePortalPos == null) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("Can't find good spot for portal!"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_find_portal_spot"), (EntityPlayerMP) player);
             return;
         }
 
         World destWorld = getWorldForDimension(dest.getDimension());
         if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.portalBlock) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("There is already a portal at the destination!"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.portal_already_there"), (EntityPlayerMP) player);
             return;
         }
         if (dest.getSide() == EnumFacing.DOWN) {
             if (!canPlacePortal(destWorld, dest.getPos()) || canCollideWith(destWorld, dest.getPos().down())) {
-                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("The destination seems obstructed!"), (EntityPlayerMP) player);
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), (EntityPlayerMP) player);
                 return;
             }
         } else {
             if (!canPlacePortal(destWorld, dest.getPos()) || canCollideWith(destWorld, dest.getPos().up())) {
-                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("The destination seems obstructed!"), (EntityPlayerMP) player);
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), (EntityPlayerMP) player);
                 return;
             }
         }

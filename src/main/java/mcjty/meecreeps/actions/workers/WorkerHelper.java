@@ -304,6 +304,7 @@ public class WorkerHelper implements IWorkerHelper {
                             toSkip.add(relativePos);
                         }
                     } else {
+                        // @todo translation loc
                         findItemOnGroundOrInChest(desired.getMatcher(), "I cannot find any " + desired.getName(), desired.getAmount());
                     }
                 } else {

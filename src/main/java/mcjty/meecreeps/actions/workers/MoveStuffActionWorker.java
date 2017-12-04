@@ -68,7 +68,7 @@ public class MoveStuffActionWorker extends AbstractActionWorker {
         BlockPos pos = options.getTargetPos();
         IBlockState state = world.getBlockState(pos);
         if (!helper.allowedToHarvest(state, world, pos, options.getPlayer())) {
-            helper.showMessage("I cannot pick up this block!");
+            helper.showMessage("message.meecreeps.cant_pickup_block");
             helper.taskIsDone();
             return;
         }
