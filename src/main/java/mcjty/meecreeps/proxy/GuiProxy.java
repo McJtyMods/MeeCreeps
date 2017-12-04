@@ -1,7 +1,6 @@
 package mcjty.meecreeps.proxy;
 
 import mcjty.meecreeps.gui.GuiAskName;
-import mcjty.meecreeps.gui.GuiBalloon;
 import mcjty.meecreeps.gui.GuiMeeCreeps;
 import mcjty.meecreeps.gui.GuiWheel;
 import net.minecraft.entity.player.EntityPlayer;
@@ -12,9 +11,8 @@ public class GuiProxy implements IGuiHandler {
 
     public static final int GUI_MEECREEP_QUESTION = 1;
     public static final int GUI_MEECREEP_DISMISS = 2;
-    public static final int GUI_MEECREEP_BALLOON = 3;
-    public static final int GUI_WHEEL = 4;
-    public static final int GUI_ASKNAME = 5;
+    public static final int GUI_WHEEL = 3;
+    public static final int GUI_ASKNAME = 4;
 
     @Override
     public Object getServerGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
@@ -27,8 +25,6 @@ public class GuiProxy implements IGuiHandler {
             return new GuiMeeCreeps(id);
         } else if (id == GUI_MEECREEP_DISMISS) {
             return new GuiMeeCreeps(id);
-        } else if (id == GUI_MEECREEP_BALLOON) {
-            return new GuiBalloon();
         } else if (id == GUI_WHEEL) {
             return new GuiWheel();
         } else if (id == GUI_ASKNAME) {

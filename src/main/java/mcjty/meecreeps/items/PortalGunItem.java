@@ -5,7 +5,6 @@ import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.entities.EntityProjectile;
-import mcjty.meecreeps.gui.GuiBalloon;
 import mcjty.meecreeps.gui.GuiWheel;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
