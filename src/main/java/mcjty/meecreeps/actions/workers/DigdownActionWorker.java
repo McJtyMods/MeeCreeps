@@ -72,12 +72,14 @@ public class DigdownActionWorker extends AbstractActionWorker {
         if (p.getY() < 1 || world.isAirBlock(p) || state.getBlock() == Blocks.LADDER) {
             helper.taskIsDone();
         } else if (helper.allowedToHarvest(state, world, p, GeneralTools.getHarvester())) {
-            if (helper.harvestAndDrop(p)) {
-                placeLadder(p);
-            } else {
-                // Too hard or not allowed. We stop here
-                helper.taskIsDone();
-            }
+            helper.delayForHardBlocks(p, pp -> {
+                if (helper.harvestAndDrop(p)) {
+                    placeLadder(p);
+                } else {
+                    // Too hard or not allowed. We stop here
+                    helper.taskIsDone();
+                }
+            });
         }
     }
 

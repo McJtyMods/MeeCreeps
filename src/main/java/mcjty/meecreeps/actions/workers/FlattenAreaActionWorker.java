@@ -102,15 +102,19 @@ public class FlattenAreaActionWorker extends AbstractActionWorker {
             BlockPos navigate = helper.findBestNavigationSpot(flatSpot);
             if (navigate != null) {
                 helper.navigateTo(navigate, p -> {
+                    helper.delayForHardBlocks(flatSpot, pp -> {
+                        if (!helper.harvestAndDrop(flatSpot)) {
+                            positionsToSkip.add(flatSpot);
+                        }
+                    });
+                });
+            } else {
+                // We couldn't reach it. Just drop the block
+                helper.delayForHardBlocks(flatSpot, pp -> {
                     if (!helper.harvestAndDrop(flatSpot)) {
                         positionsToSkip.add(flatSpot);
                     }
                 });
-            } else {
-                // We couldn't reach it. Just drop the block
-                if (!helper.harvestAndDrop(flatSpot)) {
-                    positionsToSkip.add(flatSpot);
-                }
             }
         }
     }

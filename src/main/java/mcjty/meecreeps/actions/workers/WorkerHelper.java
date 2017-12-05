@@ -67,6 +67,8 @@ public class WorkerHelper implements IWorkerHelper {
 
     private int pathTries = 0;
     private Consumer<BlockPos> job;
+    private Runnable delayedJob;
+    private int delayedTicks;
     private List<EntityItem> itemsToPickup = new ArrayList<>();
     private BlockPos materialChest;
 
@@ -80,6 +82,7 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     private static final Set<String> TORCHES = new HashSet<>();
+
     static {
         TORCHES.add("minecraft:torch");
         TORCHES.add("tconstruct:stone_torch");
@@ -103,6 +106,7 @@ public class WorkerHelper implements IWorkerHelper {
 
     public void cancelJob() {
         job = null;
+        delayedJob = null;
     }
 
     @Override
@@ -267,6 +271,25 @@ public class WorkerHelper implements IWorkerHelper {
         return todo.get(0);
     }
 
+
+    @Override
+    public void delayForHardBlocks(BlockPos pos, Consumer<BlockPos> nextJob) {
+        World world = entity.getEntityWorld();
+        if (world.isAirBlock(pos)) {
+            return;
+        }
+        IBlockState state = world.getBlockState(pos);
+        if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester())) {
+            return;
+        }
+        float hardness = state.getBlockHardness(world, pos);
+        if (hardness < Config.delayAtHardness) {
+            nextJob.accept(pos);
+        } else {
+            delay((int) (hardness * Config.delayFactor), () -> nextJob.accept(pos));
+        }
+    }
+
     @Override
     public boolean handleFlatten(@Nonnull IBuildSchematic schematic) {
         BlockPos flatSpot = findSpotToFlatten(schematic);
@@ -276,15 +299,19 @@ public class WorkerHelper implements IWorkerHelper {
             BlockPos navigate = findBestNavigationSpot(flatSpot);
             if (navigate != null) {
                 navigateTo(navigate, p -> {
-                    if (!harvestAndDrop(flatSpot)) {
-                        positionsToSkip.add(p);
-                    }
+                    delayForHardBlocks(flatSpot, pp -> {
+                        if (!harvestAndDrop(flatSpot)) {
+                            positionsToSkip.add(flatSpot);
+                        }
+                    });
                 });
             } else {
                 // We couldn't reach it. Just drop the block
-                if (!harvestAndDrop(flatSpot)) {
-                    positionsToSkip.add(flatSpot);
-                }
+                delayForHardBlocks(flatSpot, pp -> {
+                    if (!harvestAndDrop(flatSpot)) {
+                        positionsToSkip.add(flatSpot);
+                    }
+                });
             }
             return true;
         }
@@ -435,6 +462,13 @@ public class WorkerHelper implements IWorkerHelper {
         return stack.getItem() instanceof CreepCubeItem;
     }
 
+    @Override
+    public void delay(int ticks, Runnable task) {
+        System.out.println("ticks = " + ticks);
+        delayedTicks = ticks;
+        delayedJob = task;
+    }
+
     public void tick(EntityMeeCreeps entity, boolean timeToWrapUp) {
         waitABit--;
         if (waitABit > 0) {
@@ -444,7 +478,14 @@ public class WorkerHelper implements IWorkerHelper {
         waitABit = speed;
 
         this.entity = entity;
-        if (job != null) {
+        if (delayedJob != null) {
+            delayedTicks -= speed;
+            if (delayedTicks < 0) {
+                Runnable d = this.delayedJob;
+                delayedJob = null;
+                d.run();
+            }
+        } else if (job != null) {
             handleJob();
         } else if (entity.hasItem(this::isCube)) {
             spawnAngryCreep();
@@ -568,10 +609,20 @@ public class WorkerHelper implements IWorkerHelper {
     public boolean placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock) {
         World world = entity.getWorld();
         if (!world.isAirBlock(pos) && !world.getBlockState(pos).getBlock().isReplaceable(world, pos)) {
-            if (!harvestAndDrop(pos)) {
-                return false;   // We cannot get rid of the block that is there
+            if (!allowedToHarvest(world.getBlockState(pos), world, pos, GeneralTools.getHarvester())) {
+                return false;
             }
+            delayForHardBlocks(pos, pp -> {
+                harvestAndDrop(pos);
+                reallyPlace(pos, desiredBlock, world);
+            });
+        } else {
+            reallyPlace(pos, desiredBlock, world);
         }
+        return true;
+    }
+
+    private void reallyPlace(BlockPos pos, IDesiredBlock desiredBlock, World world) {
         ItemStack blockStack = entity.consumeItem(desiredBlock.getMatcher(), 1);
         if (!blockStack.isEmpty()) {
             placeStackAt(blockStack, world, pos);
@@ -580,7 +631,6 @@ public class WorkerHelper implements IWorkerHelper {
                 entity.getEntity().getJumpHelper().setJumping();
             }
         }
-        return true;
     }
 
     @Override
@@ -611,6 +661,7 @@ public class WorkerHelper implements IWorkerHelper {
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
         net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
         SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        block.onBlockHarvested(world, pos, state, GeneralTools.getHarvester());
         entity.getEntityWorld().setBlockToAir(pos);
         giveDropsToMeeCreeps(drops);
         return true;
@@ -627,10 +678,13 @@ public class WorkerHelper implements IWorkerHelper {
         if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester())) {
             return false;
         }
+
         Block block = state.getBlock();
+
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
         net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
         SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        block.onBlockHarvested(world, pos, state, GeneralTools.getHarvester());
         entity.getEntityWorld().setBlockToAir(pos);
         for (ItemStack stack : drops) {
             entity.entityDropItem(stack, 0.0f);
@@ -767,7 +821,7 @@ public class WorkerHelper implements IWorkerHelper {
     private static boolean isSuitableStandingPos(World world, BlockPos p, float width, float eyeHeight) {
         return canStandOn(world.getBlockState(p.down()))
                 && !canStandOn(world.getBlockState(p))
-                && !willSuffocateHere(world, p.getX()+.5, p.getY(), p.getZ()+.5, width, eyeHeight);
+                && !willSuffocateHere(world, p.getX() + .5, p.getY(), p.getZ() + .5, width, eyeHeight);
     }
 
     private static boolean canStandOn(IBlockState state) {

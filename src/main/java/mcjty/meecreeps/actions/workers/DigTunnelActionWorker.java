@@ -183,7 +183,9 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
 
         BlockPos digpos = getBlockToDig(p, facing, blockidx);
         // Navigate to the block just adjacent to where we want to dig
-        helper.navigateTo(p.offset(facing.getOpposite()), blockPos -> dig(digpos));
+        helper.navigateTo(p.offset(facing.getOpposite()), blockPos -> {
+            helper.delayForHardBlocks(digpos, pp -> dig(digpos));
+        });
 
         blockidx++;
         if (blockidx >= 9) {

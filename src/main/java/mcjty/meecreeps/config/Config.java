@@ -47,6 +47,9 @@ public class Config {
     public static int maxSpawnCount = 60;
     public static int maxTreeBlocks = 2000;
 
+    public static float delayAtHardness = 10;
+    public static float delayFactor = 0.75f;
+
     public static Set<String> allowedActions = new HashSet<>();
 
     // @todo
@@ -70,6 +73,9 @@ public class Config {
 
         maxSpawnCount = cfg.getInt("maxSpawnCount", CATEGORY_GENERAL, maxSpawnCount, 1, 200, "Spawn cap for an angry MeeCreep (a MeeCreep with a box)");
         maxTreeBlocks = cfg.getInt("maxTreeBlocks", CATEGORY_GENERAL, maxTreeBlocks, 1, 100000, "Maximum number of tree blocks a single MeeCreep can chop down");
+
+        delayAtHardness = cfg.getFloat("delayAtHardness", CATEGORY_GENERAL, delayAtHardness, 0, 10000000, "Delay harvest of blocks if hardness is bigger then this value");
+        delayFactor = cfg.getFloat("delayFactor", CATEGORY_GENERAL, delayFactor, 0, 1000, "Speed modifier for harvesting (i.e. how much faster a MeeCreep is compared to a player)");
     }
 
     private static void initPermissionConfig(Configuration cfg) {

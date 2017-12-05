@@ -43,6 +43,11 @@ public interface IWorkerHelper {
     IDesiredBlock getIgnoreBlock();
 
     /**
+     * Wait a bit and then perform the given task
+     */
+    void delay(int ticks, Runnable task);
+
+    /**
      * Return true if it is legal to harvest this block
      */
     boolean allowedToHarvest(IBlockState state, World world, BlockPos pos, EntityPlayer entityPlayer);
@@ -68,6 +73,14 @@ public interface IWorkerHelper {
      * will be modified if another such block is found
      */
     BlockPos findSpotToBuild(@Nonnull IBuildSchematic schematic, @Nonnull BuildProgress progress, @Nonnull Set<BlockPos> toSkip);
+
+    /**
+     * Add an artifical delay before harvesting a block (if needed).
+     * The next given job is typically one of harvestAndPickup
+     * or harvestAndDrop. If the hardness of the block is low enough
+     * this performs the job immediatelly
+     */
+    void delayForHardBlocks(BlockPos pos, Consumer<BlockPos> nextJob);
 
     /**
      * Conveniance method to handle flattening of an area based on a schematic. This will call findSpotToFlatten()
