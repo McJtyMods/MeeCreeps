@@ -801,8 +801,12 @@ public class WorkerHelper implements IWorkerHelper {
         EntityPlayerMP player = getPlayer();
         BlockPos position = entity.getPosition();
         if (player == null || position.distanceSq(player.getPosition()) > 2 * 2) {
+            if (player != null) {
+                showMessage("message.meecreeps.where_are_you");
+            }
             entity.dropInventory();
         } else {
+            showMessage("message.meecreeps.i_gave_some_things");
             List<ItemStack> remaining = new ArrayList<>();
             for (ItemStack stack : entity.getInventory()) {
                 if (!player.inventory.addItemStackToInventory(stack)) {
@@ -914,10 +918,20 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void putInventoryInChest(BlockPos pos) {
+        putInventoryInChestWithMessage(pos, null);
+    }
+
+    private void putInventoryInChestWithMessage(BlockPos pos, String message, String... parameters) {
         if (!InventoryTools.isInventory(entity.getEntityWorld(), pos)) {
             // No longer an inventory here. Just drop the items on the ground here
+            if (message != null) {
+                showMessage("message.meecreeps.inventory_missing");
+            }
             entity.dropInventory();
         } else {
+            if (message != null) {
+                showMessage(message, parameters);
+            }
             TileEntity te = entity.getEntityWorld().getTileEntity(pos);
             IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
             for (ItemStack stack : entity.getInventory()) {
@@ -1038,32 +1052,33 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     // Default implementation checks materialChest first and otherwise assumes the action was centered on the chest. Override if that's not applicable
-    protected boolean findChestToPutItemsIn() {
+    private boolean findChestToPutItemsIn() {
         for (PreferedChest chest : worker.getPreferedChests()) {
             switch (chest) {
                 case MARKED:
                     List<BlockPos> meeCreepChests = findMeeCreepChests(worker.getSearchBox());
                     if (!meeCreepChests.isEmpty()) {
-                        navigateTo(meeCreepChests.get(0), this::putInventoryInChest);
+                        navigateTo(meeCreepChests.get(0), p -> putInventoryInChestWithMessage(p, "message.meecreeps.put_stuff_away_marked"));
                         return true;
                     }
                     break;
                 case TARGET:
                     BlockPos pos = options.getTargetPos();
                     if (InventoryTools.isInventory(entity.getEntityWorld(), pos)) {
-                        navigateTo(pos, this::putInventoryInChest);
+                        navigateTo(pos, p -> putInventoryInChestWithMessage(p, "message.meecreeps.put_stuff_away_target"));
                         return true;
                     }
                     break;
                 case FIND_MATCHING_INVENTORY:
-                    if (findSuitableInventory(worker.getSearchBox(), entity.getInventoryMatcher(), this::putInventoryInChest)) {
+                    if (findSuitableInventory(worker.getSearchBox(), entity.getInventoryMatcher(),
+                            this::putAwayAndTellPlayerTheDistance)) {
                         return true;
                     }
                     break;
                 case LAST_CHEST:
                     if (materialChest != null) {
                         if (InventoryTools.isInventory(entity.getEntityWorld(), materialChest)) {
-                            navigateTo(materialChest, this::putInventoryInChest);
+                            navigateTo(materialChest, this::putAwayAndTellPlayerTheDistance);
                             return true;
                         }
                     }
@@ -1072,6 +1087,16 @@ public class WorkerHelper implements IWorkerHelper {
         }
 
         return false;
+    }
+
+    private void putAwayAndTellPlayerTheDistance(BlockPos p) {
+        EntityPlayerMP player = getPlayer();
+        double dist = 0;
+        if (player != null) {
+            dist = player.getPosition().getDistance(p.getX(), p.getY(), p.getZ());
+        }
+        putInventoryInChestWithMessage(p, "message.meecreeps.put_stuff_away_specific",
+                Integer.toString((int) dist));
     }
 
     protected boolean needToFindChest(boolean timeToWrapUp) {
