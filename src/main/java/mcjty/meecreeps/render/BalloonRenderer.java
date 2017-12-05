@@ -16,7 +16,15 @@ public class BalloonRenderer {
 
     private static final ResourceLocation gui_top = new ResourceLocation(MeeCreeps.MODID, "textures/gui/gui_meecreeps_top.png");
 
-    public static List<Pair<Integer, String>> messages = new ArrayList<>();
+    private static List<Pair<Integer, String>> messages = new ArrayList<>();
+
+    public static void addMessage(String message) {
+        Minecraft mc = Minecraft.getMinecraft();
+        List<String> strings = mc.fontRenderer.listFormattedStringToWidth(message, 246);
+        for (String s : strings) {
+            BalloonRenderer.messages.add(Pair.of(Config.balloonTimeout*2, s));
+        }
+    }
 
     public static void renderBalloon() {
         if (messages.isEmpty()) {
