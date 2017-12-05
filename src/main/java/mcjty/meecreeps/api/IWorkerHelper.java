@@ -135,7 +135,7 @@ public interface IWorkerHelper {
      * Show a message to the player. Calling this two times after each other with the same
      * message will not show the message again. This message can be a localized message tag
      */
-    void showMessage(String message);
+    void showMessage(String message, String... parameters);
 
     /**
      * Give the list of items to the meecreeps. If the meecreeps cannot hold them they are
@@ -205,7 +205,7 @@ public interface IWorkerHelper {
      * It will try to fetch at most 'amount' items. Use MAXINT if you want to fill the inventory
      * Returns false if it failed to find any torch
      */
-    boolean findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message, int maxAmount);
+    boolean findItemOnGroundOrInChest(Predicate<ItemStack> matcher, int maxAmount, String message, String... parameters);
 
     /**
      * Find items matching the predicate on the ground or else in a nearby chest (uses getActionBox()). Returns

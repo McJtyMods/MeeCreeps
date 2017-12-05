@@ -5,7 +5,6 @@ import mcjty.meecreeps.config.Config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
@@ -76,7 +75,7 @@ public class BalloonRenderer {
 
         y = guiTop+7;
         for (Pair<Integer, String> pair : messages) {
-            String msg = I18n.format(pair.getRight());
+            String msg = pair.getRight();
             RenderHelper.renderText(mc, guiLeft+15, y, msg, 0);
             y += 14;
             if (pair.getLeft() > 0) {

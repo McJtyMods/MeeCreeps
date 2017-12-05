@@ -150,8 +150,7 @@ public class CreepCubeItem extends Item {
         if (Config.maxMeecreepsPerPlayer >= 0) {
             int cnt = ServerActionManager.getManager().countMeeCreeps(player);
             if (cnt >= Config.maxMeecreepsPerPlayer) {
-                // @todo parameter loc
-                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("You can only spawn " + Config.maxMeecreepsPerPlayer + " MeeCreep(s) per player!"), (EntityPlayerMP) player);
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.max_spawn_reached", Integer.toString(Config.maxMeecreepsPerPlayer)), (EntityPlayerMP) player);
                 return EnumActionResult.SUCCESS;
             }
         }

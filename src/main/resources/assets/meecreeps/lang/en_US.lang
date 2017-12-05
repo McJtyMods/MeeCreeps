@@ -20,6 +20,8 @@ message.meecreeps.gun_no_destination=This gun does not have a current destinatio
 message.meecreeps.gun_bad_destination=Something is wrong with this destination!
 message.meecreeps.portal_already_there=There is already a portal at the destination!
 message.meecreeps.destination_obstructed=The destination seems obstructed!
+message.meecreeps.max_spawn_reached=You can only spawn %s MeeCreep(s) per player!
+message.meecreeps.cannot_find=I cannot find any %s!
 
 message.meecreeps.cant_continue=I cannot continue this way
 message.meecreeps.cant_pickup_block=I cannot pick up this block!

@@ -304,8 +304,7 @@ public class WorkerHelper implements IWorkerHelper {
                             toSkip.add(relativePos);
                         }
                     } else {
-                        // @todo translation loc
-                        findItemOnGroundOrInChest(desired.getMatcher(), "I cannot find any " + desired.getName(), desired.getAmount());
+                        findItemOnGroundOrInChest(desired.getMatcher(), desired.getAmount(), "message.meecreeps.cannot_find", desired.getName());
                     }
                 } else {
                     // First put away stuff
@@ -345,14 +344,14 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
-    public void showMessage(String message) {
+    public void showMessage(String message, String... parameters) {
         if (lastMessage.equals(message)) {
             return;
         }
         lastMessage = message;
         EntityPlayerMP player = getPlayer();
         if (player != null) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient(message), player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient(message, parameters), player);
         }
     }
 
@@ -825,18 +824,18 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
-    public boolean findItemOnGroundOrInChest(Predicate<ItemStack> matcher, String message, int maxAmount) {
+    public boolean findItemOnGroundOrInChest(Predicate<ItemStack> matcher, int maxAmount, String message, String... parameters) {
         List<BlockPos> meeCreepChests = findMeeCreepChests(worker.getSearchBox());
         if (meeCreepChests.isEmpty()) {
             if (!findItemOnGround(worker.getSearchBox(), matcher, this::pickup)) {
                 if (!findInventoryContainingMost(worker.getSearchBox(), matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
-                    showMessage(message);
+                    showMessage(message, parameters);
                     return false;
                 }
             }
         } else {
             if (!findInventoryContainingMost(meeCreepChests, matcher, p -> fetchFromInventory(p, matcher, maxAmount))) {
-                showMessage(message);
+                showMessage(message, parameters);
                 return false;
             }
         }

@@ -3,6 +3,7 @@ package mcjty.meecreeps.actions;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.render.BalloonRenderer;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -20,11 +21,12 @@ public class ClientActionManager {
         player.openGui(MeeCreeps.instance, guiid, worldIn, pos.getX(), pos.getY(), pos.getZ());
     }
 
-    public static void showProblem(String message) {
+    public static void showProblem(String message, String... parameters) {
         EntityPlayer player = MeeCreeps.proxy.getClientPlayer();
         World worldIn = MeeCreeps.proxy.getClientWorld();
         BlockPos pos = player.getPosition();
-        BalloonRenderer.messages.add(Pair.of(Config.balloonTimeout*2, message));
+        String translated = I18n.format(message, parameters);
+        BalloonRenderer.messages.add(Pair.of(Config.balloonTimeout*2, translated));
 
     }
 }

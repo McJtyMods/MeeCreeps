@@ -61,7 +61,7 @@ public class LightupActionWorker extends AbstractActionWorker {
         if (timeToWrapUp) {
             helper.done();
         } else if (!entity.hasItem(WorkerHelper::isTorch)) {
-            helper.findItemOnGroundOrInChest(WorkerHelper::isTorch, "message.meecreeps.cant_find_torches", 128);
+            helper.findItemOnGroundOrInChest(WorkerHelper::isTorch, 128, "message.meecreeps.cant_find_torches");
         } else {
             BlockPos darkSpot = findDarkSpot();
             if (darkSpot != null) {
