@@ -3,6 +3,8 @@ package mcjty.meecreeps.proxy;
 import com.google.common.util.concurrent.ListenableFuture;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.entities.ModEntities;
+import mcjty.meecreeps.input.KeyBindings;
+import mcjty.meecreeps.input.KeyInputHandler;
 import mcjty.meecreeps.items.ModItems;
 import mcjty.meecreeps.render.BalloonRenderer;
 import net.minecraft.client.Minecraft;
@@ -38,6 +40,8 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent e) {
         super.init(e);
+        MinecraftForge.EVENT_BUS.register(new KeyInputHandler());
+        KeyBindings.init();
     }
 
     @Override

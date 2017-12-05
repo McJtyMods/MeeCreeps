@@ -18,11 +18,20 @@ public class BalloonRenderer {
 
     private static List<Pair<Integer, String>> messages = new ArrayList<>();
 
+    private static String lastMessage = "";
+
     public static void addMessage(String message) {
         Minecraft mc = Minecraft.getMinecraft();
-        List<String> strings = mc.fontRenderer.listFormattedStringToWidth(message, 246);
+        List<String> strings = mc.fontRenderer.listFormattedStringToWidth(message, 230);
         for (String s : strings) {
             BalloonRenderer.messages.add(Pair.of(Config.balloonTimeout*2, s));
+        }
+        lastMessage = message;
+    }
+
+    public static void repeatLast() {
+        if (!lastMessage.isEmpty()) {
+            addMessage(lastMessage);
         }
     }
 
