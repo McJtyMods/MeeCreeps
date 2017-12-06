@@ -24,7 +24,7 @@ public class BalloonRenderer {
         Minecraft mc = Minecraft.getMinecraft();
         List<String> strings = mc.fontRenderer.listFormattedStringToWidth(message, 230);
         for (String s : strings) {
-            BalloonRenderer.messages.add(Pair.of(Config.balloonTimeout*2, s));
+            BalloonRenderer.messages.add(Pair.of(Config.messageTimeout *2, s));
         }
         lastMessage = message;
     }
@@ -59,18 +59,18 @@ public class BalloonRenderer {
         int guiLeft;
         int guiTop;
 
-        if (Config.balloonX > 0) {
-            guiLeft = width * Config.balloonX / 100;
-        } else if (Config.balloonX < 0) {
-            guiLeft = (width + width * Config.balloonX / 100) - WIDTH;
+        if (Config.messageX > 0) {
+            guiLeft = width * Config.messageX / 100;
+        } else if (Config.messageX < 0) {
+            guiLeft = (width + width * Config.messageX / 100) - WIDTH;
         } else {
             guiLeft = (width - WIDTH) / 2;
         }
 
-        if (Config.balloonY > 0) {
-            guiTop = height * Config.balloonY / 100;
-        } else if (Config.balloonY < 0) {
-            guiTop = (height + height * Config.balloonY / 100) - HEIGHT;
+        if (Config.messageY > 0) {
+            guiTop = height * Config.messageY / 100;
+        } else if (Config.messageY < 0) {
+            guiTop = (height + height * Config.messageY / 100) - HEIGHT;
         } else {
             guiTop = (height - HEIGHT) / 2;
         }

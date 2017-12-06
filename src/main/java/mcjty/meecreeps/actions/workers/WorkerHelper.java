@@ -13,6 +13,8 @@ import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.InventoryTools;
 import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockDynamicLiquid;
+import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
@@ -282,11 +284,16 @@ public class WorkerHelper implements IWorkerHelper {
         if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester())) {
             return;
         }
-        float hardness = state.getBlockHardness(world, pos);
-        if (hardness < Config.delayAtHardness) {
+        Block block = state.getBlock();
+        if (block instanceof BlockLiquid) {
             nextJob.accept(pos);
         } else {
-            delay((int) (hardness * Config.delayFactor), () -> nextJob.accept(pos));
+            float hardness = state.getBlockHardness(world, pos);
+            if (hardness < Config.delayAtHardness) {
+                nextJob.accept(pos);
+            } else {
+                delay((int) (hardness * Config.delayFactor), () -> nextJob.accept(pos));
+            }
         }
     }
 

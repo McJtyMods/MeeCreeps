@@ -42,7 +42,12 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
 
     @Override
     public void tick(boolean timeToWrapUp) {
-        IMeeCreep entity = helper.getMeeCreep();
+
+        if (timeToWrapUp) {
+            helper.done();
+            return;
+        }
+
         if (blocks.isEmpty()) {
             findTree();
         }
@@ -56,18 +61,7 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
             decayLeaves();
         }
 
-        if (timeToWrapUp) {
-            if (entity.hasStuffInInventory()) {
-                // We need to find a suitable chest
-                if (!helper.findSuitableInventory(getSearchBox(), entity.getInventoryMatcher(), helper::putInventoryInChest)) {
-                    if (!helper.navigateTo(options.getPlayer(), (p) -> helper.giveToPlayerOrDrop(), 12)) {
-                        entity.dropInventory();
-                    }
-                }
-            } else {
-                helper.done();
-            }
-        } else if (!blocks.isEmpty()) {
+        if (!blocks.isEmpty()) {
             BlockPos toRemove = blocks.remove(0);
             helper.navigateTo(options.getTargetPos(), blockPos -> harvest(toRemove));
         } else {

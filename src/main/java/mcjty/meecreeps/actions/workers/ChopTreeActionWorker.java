@@ -104,6 +104,11 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
 
     @Override
     public void tick(boolean timeToWrapUp) {
+
+        if (timeToWrapUp) {
+            helper.done();
+        }
+
         if (blocks.isEmpty()) {
             findTree();
         }
@@ -117,9 +122,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
             decayLeaves();
         }
 
-        if (timeToWrapUp) {
-            helper.done();
-        } else if (!blocks.isEmpty()) {
+        if (!blocks.isEmpty()) {
             BlockPos toRemove = blocks.remove(0);
             helper.navigateTo(options.getTargetPos(), blockPos -> harvest(toRemove));
         } else {
