@@ -471,7 +471,6 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void delay(int ticks, Runnable task) {
-        System.out.println("ticks = " + ticks);
         delayedTicks = ticks;
         delayedJob = task;
     }

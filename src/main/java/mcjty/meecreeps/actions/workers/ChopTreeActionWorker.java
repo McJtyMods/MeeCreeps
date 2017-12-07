@@ -107,6 +107,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
 
         if (timeToWrapUp) {
             helper.done();
+            return;
         }
 
         if (blocks.isEmpty()) {
