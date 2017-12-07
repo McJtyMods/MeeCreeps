@@ -37,9 +37,9 @@ public class MakePlatformActionFactory implements IActionFactory {
     @Override
     public List<Pair<String, String>> getFurtherQuestions(World world, BlockPos pos, EnumFacing side) {
         List<Pair<String, String>> result = new ArrayList<>();
-        result.add(Pair.of("9x9", "9x9 is the perfect size!"));
-        result.add(Pair.of("11x11", "11x11 because I'm greedy"));
-        result.add(Pair.of("13x13", "I'm special so make it a 13x13"));
+        result.add(Pair.of("9x9", "message.meecreeps.action.platform_9x9"));
+        result.add(Pair.of("11x11", "message.meecreeps.action.platform_11x11"));
+        result.add(Pair.of("13x13", "message.meecreeps.action.platform_13x13"));
         return result;
     }
 

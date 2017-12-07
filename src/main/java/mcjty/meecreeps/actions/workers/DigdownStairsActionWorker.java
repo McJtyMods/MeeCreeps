@@ -248,7 +248,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
                         if (!helper.findItemOnGround(box, this::isStair, entityItem -> placeStair(facing, p, entityItem))) {
                             // Collect cobble until we can make stairs
                             if (!helper.findItemOnGround(box, this::isCobble, this::collectCobble)) {
-                                helper.showMessage("I cannot find stairs or cobblestone!");
+                                helper.showMessage("message.meecreeps.cant_find_stairs_or_cobble");
                             }
                         }
                     }

@@ -30,7 +30,7 @@ public class FlattenAreaActionFactory implements IActionFactory {
     @Nullable
     @Override
     public String getFurtherQuestionHeading(World world, BlockPos pos, EnumFacing side) {
-        return "message.meecreeps.action.flatten_area";
+        return "message.meecreeps.action.flatten_area_size";
     }
 
     @Nonnull
