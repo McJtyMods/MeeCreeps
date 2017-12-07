@@ -13,6 +13,7 @@ import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
@@ -205,7 +206,7 @@ public class GuiWheel extends GuiScreen {
         List<TeleportDestination> destinations = PortalGunItem.getDestinations(PortalGunItem.getGun(Minecraft.getMinecraft().player));
         TeleportDestination destination = destinations.get(q);
         if (destination == null) {
-            renderTooltipText("Destination not set");
+            renderTooltipText(I18n.format("message.meecreeps.gui.destination_not_set"));
         } else {
             BlockPos p = destination.getPos();
             if (destination.getDimension() == Minecraft.getMinecraft().world.provider.getDimension()) {

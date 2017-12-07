@@ -29,17 +29,17 @@ public class DigdownStairsActionFactory implements IActionFactory {
     @Nullable
     @Override
     public String getFurtherQuestionHeading(World world, BlockPos pos, EnumFacing side) {
-        return "What direction should I dig?";
+        return "message.meecreeps.action.what_direction";
     }
 
     @Nonnull
     @Override
     public List<Pair<String, String>> getFurtherQuestions(World world, BlockPos pos, EnumFacing side) {
         List<Pair<String, String>> result = new ArrayList<>();
-        result.add(Pair.of(EnumFacing.NORTH.getName(), "To the north"));
-        result.add(Pair.of(EnumFacing.SOUTH.getName(), "To the south"));
-        result.add(Pair.of(EnumFacing.WEST.getName(), "To the west"));
-        result.add(Pair.of(EnumFacing.EAST.getName(), "To the east"));
+        result.add(Pair.of(EnumFacing.NORTH.getName(), "message.meecreeps.action.to_north"));
+        result.add(Pair.of(EnumFacing.SOUTH.getName(), "message.meecreeps.action.to_south"));
+        result.add(Pair.of(EnumFacing.WEST.getName(), "message.meecreeps.action.to_west"));
+        result.add(Pair.of(EnumFacing.EAST.getName(), "message.meecreeps.action.to_east"));
         return result;
     }
 

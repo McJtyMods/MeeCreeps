@@ -6,6 +6,7 @@ import mcjty.meecreeps.teleport.PacketSetDestination;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Keyboard;
 
@@ -99,10 +100,11 @@ public class GuiAskName extends GuiScreen {
         int y = guiTop+10;
 
         drawTexturedModalRect(guiLeft, y, 0, 25, WIDTH, 15);
-        mc.fontRenderer.drawString("Name: " + text, guiLeft+15, guiTop+7, 0);
+        String label = I18n.format("message.meecreeps.gui.name_label") + " ";
+        mc.fontRenderer.drawString(label + text, guiLeft+15, guiTop+7, 0);
 
         int w = mc.fontRenderer.getStringWidth(text.substring(0, cursor));
-        int xx = guiLeft+10+mc.fontRenderer.getStringWidth("Name: ");
+        int xx = guiLeft+10+mc.fontRenderer.getStringWidth(label);
         int yy = guiTop+3;
         Gui.drawRect(xx + 5 + w, yy + 2, xx + 5 + w + 1, yy + 14, 0xff000000);
     }

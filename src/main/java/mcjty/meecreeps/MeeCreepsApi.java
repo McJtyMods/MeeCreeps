@@ -72,24 +72,24 @@ public class MeeCreepsApi implements IMeeCreepsApi {
     }
 
     public void registerFactories() {
-        registerActionFactory("meecreeps.make_house", "Build a house", new MakeHouseActionFactory());
-        registerActionFactory("meecreeps.make_platform", "Build a platform", new MakePlatformActionFactory());
-        registerActionFactory("meecreeps.flatten_area", "Flatten an area", new FlattenAreaActionFactory());
-        registerActionFactory("meecreeps.chop_tree", "Chop this tree", new ChopTreeActionFactory());
-        registerActionFactory("meecreeps.chop_tree_collect", "Chop this tree and get the drops", new ChopTreeAndCollectActionFactory());
-        registerActionFactory("meecreeps.dig_down", "Dig straight down to bedrock", new DigdownActionFactory());
-        registerActionFactory("meecreeps.dig_down_stairs", "Dig down to bedrock using stairs", new DigdownStairsActionFactory());
-        registerActionFactory("meecreeps.mine_ores", "Find and mine all nearby ores", new MineOresActionFactory());
-        registerActionFactory("meecreeps.dig_tunnel", "Dig a 3x3 tunnel, 32 blocks long", new DigTunnelActionFactory());
-        registerActionFactory("meecreeps.harvest_replant", "Harvest and replant those crops", new HarvestReplantActionFactory());
-        registerActionFactory("meecreeps.harvest", "Harvest those crops", new HarvestActionFactory());
-        registerActionFactory("meecreeps.torches", "Light up the area", new LightupActionFactory());
-        registerActionFactory("meecreeps.follow_and_lightup", "Follow me and lightup the area", new FollowAndLightupActionFactory());
-        registerActionFactory("meecreeps.pickup", "Pickup items", new PickupActionFactory());
-        registerActionFactory("meecreeps.follow_and_pickup", "Follow me and pickup items", new FollowAndPickupActionFactory());
-        registerActionFactory("meecreeps.move_stuff", "Pick up and follow me", new MoveStuffActionFactory());
-        registerActionFactory("meecreeps.idle", "Just idle a bit", new IdleActionFactory());
-        registerActionFactory("meecreeps.angry", "I'm sooo angry!", new AngryActionFactory());
+        registerActionFactory("meecreeps.make_house", "message.meecreeps.action.make_house", new MakeHouseActionFactory());
+        registerActionFactory("meecreeps.make_platform", "message.meecreeps.action.make_platform", new MakePlatformActionFactory());
+        registerActionFactory("meecreeps.flatten_area", "message.meecreeps.action.flatten_area", new FlattenAreaActionFactory());
+        registerActionFactory("meecreeps.chop_tree", "message.meecreeps.action.chop_tree", new ChopTreeActionFactory());
+        registerActionFactory("meecreeps.chop_tree_collect", "message.meecreeps.action.chop_tree_collect", new ChopTreeAndCollectActionFactory());
+        registerActionFactory("meecreeps.dig_down", "message.meecreeps.action.dig_down", new DigdownActionFactory());
+        registerActionFactory("meecreeps.dig_down_stairs", "message.meecreeps.action.dig_down_stairs", new DigdownStairsActionFactory());
+        registerActionFactory("meecreeps.mine_ores", "message.meecreeps.action.mine_ores", new MineOresActionFactory());
+        registerActionFactory("meecreeps.dig_tunnel", "message.meecreeps.action.dig_tunnel", new DigTunnelActionFactory());
+        registerActionFactory("meecreeps.harvest_replant", "message.meecreeps.action.harvest_replant", new HarvestReplantActionFactory());
+        registerActionFactory("meecreeps.harvest", "message.meecreeps.action.harvest", new HarvestActionFactory());
+        registerActionFactory("meecreeps.torches", "message.meecreeps.action.torches", new LightupActionFactory());
+        registerActionFactory("meecreeps.follow_and_lightup", "message.meecreeps.action.follow_and_lightup", new FollowAndLightupActionFactory());
+        registerActionFactory("meecreeps.pickup", "message.meecreeps.action.pickup", new PickupActionFactory());
+        registerActionFactory("meecreeps.follow_and_pickup", "message.meecreeps.action.follow_and_pickup", new FollowAndPickupActionFactory());
+        registerActionFactory("meecreeps.move_stuff", "message.meecreeps.action.move_stuff", new MoveStuffActionFactory());
+        registerActionFactory("meecreeps.idle", "message.meecreeps.action.idle", new IdleActionFactory());
+        registerActionFactory("meecreeps.angry", "message.meecreeps.action.angry", new AngryActionFactory());
     }
 
     public MeeCreepsApi() {

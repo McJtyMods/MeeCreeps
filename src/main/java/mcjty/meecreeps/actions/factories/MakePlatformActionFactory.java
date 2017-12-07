@@ -30,7 +30,7 @@ public class MakePlatformActionFactory implements IActionFactory {
     @Nullable
     @Override
     public String getFurtherQuestionHeading(World world, BlockPos pos, EnumFacing side) {
-        return "How big do you want the platform?";
+        return "message.meecreeps.action.platform_size";
     }
 
     @Nonnull

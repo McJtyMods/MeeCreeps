@@ -30,16 +30,16 @@ public class MakeHouseActionFactory implements IActionFactory {
     @Nullable
     @Override
     public String getFurtherQuestionHeading(World world, BlockPos pos, EnumFacing side) {
-        return "How big do you want the house?";
+        return "message.meecreeps.action.house_size";
     }
 
     @Nonnull
     @Override
     public List<Pair<String, String>> getFurtherQuestions(World world, BlockPos pos, EnumFacing side) {
         List<Pair<String, String>> result = new ArrayList<>();
-        result.add(Pair.of("9x9", "9x9 of course!"));
-        result.add(Pair.of("11x11", "11x11 is cleary inferior but..."));
-        result.add(Pair.of("13x13", "I need the room so take 13x13"));
+        result.add(Pair.of("9x9", "message.meecreeps.action.house_9x9"));
+        result.add(Pair.of("11x11", "message.meecreeps.action.house_11x11"));
+        result.add(Pair.of("13x13", "message.meecreeps.action.house_13x13"));
         return result;
     }
 

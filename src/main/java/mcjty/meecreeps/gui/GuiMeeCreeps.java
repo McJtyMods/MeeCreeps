@@ -8,6 +8,7 @@ import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.proxy.GuiProxy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -144,15 +145,15 @@ public class GuiMeeCreeps extends GuiScreen {
     private List<Question> getQuestions() {
         questions = new ArrayList<>();
         if (id == GuiProxy.GUI_MEECREEP_DISMISS) {
-            questions.add(new Question("Please stop now!", this::dismissAndClose));
-            questions.add(new Question("Carry on...", this::resumeAndClose));
+            questions.add(new Question("message.meecreeps.gui.please_stop_now", this::dismissAndClose));
+            questions.add(new Question("message.meecreeps.gui.carry_on", this::resumeAndClose));
             outsideWindowAction = this::resume;
         } else if (furtherQuestionsHeading != null) {
             MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(furtherQuestionType);
             for (Pair<String, String> pair : furtherQuestions) {
                 questions.add(new Question(pair.getRight(), () -> doAction(furtherQuestionType, factory, pair.getLeft())));
             }
-            questions.add(new Question("Never mind...", this::close));
+            questions.add(new Question("message.meecreeps.gui.never_mind", this::close));
             outsideWindowAction = this::dismiss;
         } else if (showingAlternatives) {
             List<MeeCreepActionType> opts = options.getMaybeActionOptions();
@@ -160,7 +161,7 @@ public class GuiMeeCreeps extends GuiScreen {
                 MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(type);
                 questions.add(new Question(factory.getMessage(), () -> doAction(type, factory, null)));
             }
-            questions.add(new Question("Never mind...", this::close));
+            questions.add(new Question("message.meecreeps.gui.never_mind", this::close));
             outsideWindowAction = this::dismiss;
         } else {
             List<MeeCreepActionType> opts = options.getActionOptions();
@@ -169,9 +170,9 @@ public class GuiMeeCreeps extends GuiScreen {
                 questions.add(new Question(factory.getMessage(), () -> doAction(type, factory, null)));
             }
             if (hasAlternatives()) {
-                questions.add(new Question("Can you do other things?", () -> { showingAlternatives = true;}));
+                questions.add(new Question("message.meecreeps.gui.other_things", () -> { showingAlternatives = true;}));
             }
-            questions.add(new Question("Never mind...", this::dismissAndClose));
+            questions.add(new Question("message.meecreeps.gui.never_mind", this::dismissAndClose));
             outsideWindowAction = this::dismiss;
         }
         return questions;
@@ -195,24 +196,24 @@ public class GuiMeeCreeps extends GuiScreen {
         String msg;
 
         if (id == GuiProxy.GUI_MEECREEP_DISMISS) {
-            msg = "Is there a problem?";
+            msg = "message.meecreeps.gui.problem";
         } else if (furtherQuestionsHeading != null) {
             msg = furtherQuestionsHeading;
         } else if (showingAlternatives) {
-            msg = "Any of this suits you then?";
+            msg = "message.meecreeps.gui.alternatives";
         } else if (options.getActionOptions().isEmpty()) {
-            msg = "There is not much I can do here";
+            msg = "message.meecreeps.gui.cant_do_much";
         } else {
-            msg = "What can I do for you?";
+            msg = "message.meecreeps.gui.what_can_i_do";
         }
-        mc.fontRenderer.drawString(msg, guiLeft+15, guiTop+7, 0);
+        mc.fontRenderer.drawString(I18n.format(msg), guiLeft+15, guiTop+7, 0);
         y = guiTop+21;
         for (Question question : questions) {
             int color = 0xff666600;
             if (mouseY > y && mouseY < y+OPTION_DISTANCE) {
                 color = 0xff22dd00;
             }
-            mc.fontRenderer.drawString(question.getMsg(), guiLeft+40, y, color);
+            mc.fontRenderer.drawString(I18n.format(question.getMsg()), guiLeft+40, y, color);
             y += OPTION_DISTANCE;
         }
     }
