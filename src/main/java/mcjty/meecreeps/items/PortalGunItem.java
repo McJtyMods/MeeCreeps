@@ -11,6 +11,7 @@ import mcjty.meecreeps.proxy.GuiProxy;
 import mcjty.meecreeps.teleport.PacketCancelPortal;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -23,15 +24,16 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class PortalGunItem extends Item {
@@ -57,10 +59,7 @@ public class PortalGunItem extends Item {
 
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-        tooltip.add(TextFormatting.GREEN + "Sneak right click: " + TextFormatting.WHITE + "manage destinations");
-        tooltip.add(TextFormatting.GREEN + "Right click: " + TextFormatting.WHITE + "create portal to current destination");
-        tooltip.add(TextFormatting.GREEN + "Right click on portal: " + TextFormatting.WHITE + "remove portal");
-        tooltip.add(TextFormatting.GREEN + "Charges left: " + TextFormatting.YELLOW + getCharge(stack));
+        Collections.addAll(tooltip, StringUtils.split(I18n.format("message.meecreeps.tooltip.portalgun", Integer.toString(getCharge(stack))), "\n"));
     }
 
     @SideOnly(Side.CLIENT)

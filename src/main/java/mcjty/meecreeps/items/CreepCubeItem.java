@@ -8,6 +8,7 @@ import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.network.PacketHandler;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -23,8 +24,10 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
 
 public class CreepCubeItem extends Item {
@@ -43,15 +46,15 @@ public class CreepCubeItem extends Item {
 
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-        tooltip.add(TextFormatting.GREEN + "Right click: " + TextFormatting.WHITE + "spawn MeeCreep");
-        tooltip.add(TextFormatting.GREEN + "Sneak right click: " + TextFormatting.WHITE + "repeat last action");
+        Collections.addAll(tooltip, StringUtils.split(I18n.format("message.meecreeps.tooltip.cube_intro"), "\n"));
+
         MeeCreepActionType lastAction = getLastAction(stack);
         if (lastAction != null) {
             MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(lastAction);
-            tooltip.add(TextFormatting.YELLOW + "    (" + factory.getMessage() + ")");
+            tooltip.add(TextFormatting.YELLOW + "    (" + I18n.format(factory.getMessage()) + ")");
         }
         if (isLimited()) {
-            tooltip.add(TextFormatting.GREEN + "Uses left: " + TextFormatting.YELLOW + (Config.meeCreepBoxMaxUsage - getUsages(stack)));
+            Collections.addAll(tooltip, StringUtils.split(I18n.format("message.meecreeps.tooltip.cube_uses", Integer.toString(Config.meeCreepBoxMaxUsage - getUsages(stack))), "\n"));
         }
     }
 

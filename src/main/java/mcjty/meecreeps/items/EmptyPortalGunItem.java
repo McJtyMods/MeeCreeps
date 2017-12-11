@@ -3,6 +3,7 @@ package mcjty.meecreeps.items;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ClientActionManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -17,8 +18,10 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
 
 public class EmptyPortalGunItem extends Item {
@@ -32,8 +35,7 @@ public class EmptyPortalGunItem extends Item {
 
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-        tooltip.add(TextFormatting.GREEN + "Combine with charged cartridge");
-        tooltip.add(TextFormatting.GREEN + "in crafting table");
+        Collections.addAll(tooltip, StringUtils.split(I18n.format("message.meecreeps.tooltip.emptyportalgun"), "\n"));
     }
 
     @SideOnly(Side.CLIENT)
