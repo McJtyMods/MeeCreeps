@@ -1,0 +1,110 @@
+#PARSE_ESCAPES
+item.meecreeps.creepcube.name=Creepowa Kostka
+item.meecreeps.portalgun.name=Portal Gun
+item.meecreeps.emptyportalgun.name=Portal Gun (pusty)
+item.meecreeps.cartridge.name=Nabój Portal Guna
+entity.MeeCreeps.name=MeeCreeps
+entity.meecreeps_projectile.name=Pocisk do Portal Guna
+
+itemGroup.meecreeps=MeeCreeps
+
+message.meecreeps.cant_find_portal_spot=Nie można znalesć dobrego miejsca na portal!
+message.meecreeps.missing_cartridge=Ten gun niema żadnych nabojów!
+message.meecreeps.cant_spawn_meecreep=Nie można znaleść dobrego miejsca na pojawienie się MeeCreepa!
+message.meecreeps.cartridge_full=Ten nabuj jest pełny!
+message.meecreeps.missing_enderpearls=Brak pereł kresu w twoim ekwipunku!
+message.meecreeps.box_unusable=Ta kostka MeeCreepa stała się bezużyteczna!
+message.meecreeps.no_last_action=Nie ma ostatniej akcji!
+message.meecreeps.last_action_not_possible=Ostatnie działanie nie jest tutaj możliwe!
+message.meecreeps.gun_no_charge=Niewystarczający ładunek!
+message.meecreeps.gun_no_destination=Ten Gun nie ma aktualnie miejsca docelowego!
+message.meecreeps.gun_bad_destination=Coś jest nie tak z obecnym miejscem docelowym!
+message.meecreeps.portal_already_there=W tym miejscu jest już portal!
+message.meecreeps.destination_obstructed=Miejsce docelowe wydaje się być zablokowane!
+message.meecreeps.max_spawn_reached=Możesz stworzyć tylko %s MeeCreep(sów) na gracza!
+message.meecreeps.cannot_find=Niemogę znalesć żadnych %s!
+message.meecreeps.cant_continue=Nie mogę kontynuować w taki sposób
+message.meecreeps.cant_pickup_block=Nie mogę wziąć bloków!
+message.meecreeps.cant_find_ladders=Nie mogę znaleść żadnych drabinek
+message.meecreeps.cant_find_torches=Nie mogę znaleść żadnych pochodni
+message.meecreeps.cant_find_stairs_or_cobble=Nie mogę znalesć schodów ani bruku!
+message.meecreeps.where_are_you=Nie byłeś blisko mnie więc musiałem wszystko wyrzucić
+message.meecreeps.inventory_missing=Nie mogłem znaleść tego ekwipunku więc musiałem wszystko wyrzucić
+message.meecreeps.i_gave_some_things=Tutaj jest pare rzeczy dla ciebie
+message.meecreeps.put_stuff_away_marked=Odłożę rzeczy w wyznaczonym inwentarzu
+message.meecreeps.put_stuff_away_target=Odłożę rzeczy w orginalnie oznaczonym inwentarzu
+message.meecreeps.put_stuff_away_specific=Położę rzeczy w skrzni %s od twojejgo miejsca
+
+message.meecreeps.gui.name_label=Name:
+message.meecreeps.gui.please_stop_now=Dosć! Przestań!
+message.meecreeps.gui.carry_on=Nieś ze sobą...
+message.meecreeps.gui.never_mind=Nie ważne...
+message.meecreeps.gui.other_things=Możesz zrobić co innego?
+message.meecreeps.gui.problem=Jest jakiś problem?
+message.meecreeps.gui.alternatives=Czy ci to wszystko pasuje?
+message.meecreeps.gui.cant_do_much=Nie mam tu zbyt wiele do roboty.
+message.meecreeps.gui.what_can_i_do=Co mogę dla ciebie zrobi?
+message.meecreeps.gui.destination_not_set=Miejsce docelowe nie jest ustawione
+
+message.meecreeps.action.make_house=Zbuduj dom
+message.meecreeps.action.make_platform=Zbuduj platformę
+message.meecreeps.action.flatten_area=Wyrównaj teren
+message.meecreeps.action.chop_tree=Zetnij to drzewo
+message.meecreeps.action.chop_tree_collect=Zetnij to drzewo i je zbierz
+message.meecreeps.action.dig_down=Kop się aż do skały macieżystej
+message.meecreeps.action.dig_down_stairs=Kop się aż do skały macieżystej z pomocą schodów
+message.meecreeps.action.mine_ores=Znajdź i wykop wszystkie surowce w pobliżu
+message.meecreeps.action.dig_tunnel=Wykop tunel 3x3, przez 32 bloki
+message.meecreeps.action.harvest_replant=Zbierz i posadź te plony jeszcze raz
+message.meecreeps.action.harvest=Zbierz te plony
+message.meecreeps.action.torches=Rozjaśnij teren
+message.meecreeps.action.follow_and_lightup=Podążaj za mną i rozjaśnij teren
+message.meecreeps.action.pickup=Podnieś przedmioty
+message.meecreeps.action.follow_and_pickup=Podążaj za mną i podnieś przedmioty
+message.meecreeps.action.move_stuff=Podnieś to i podążaj za mną
+message.meecreeps.action.idle=Odpocznij tutaj trochę
+
+message.meecreeps.action.what_direction=W jaką stronę mam kopać?
+message.meecreeps.action.flatten_area_size=W jaki sposób chcesz wyrównać ten obszar?
+message.meecreeps.action.house_size=Jak duży chcesz mieć ten dom?
+message.meecreeps.action.platform_size=Jak duża ma być ta platforma?
+message.meecreeps.action.to_north=Na północ
+message.meecreeps.action.to_south=Na południe
+message.meecreeps.action.to_west=Na zachód
+message.meecreeps.action.to_east=Na wschód
+message.meecreeps.action.flatten_9x9=9x9 to wystarczająco dobrze
+message.meecreeps.action.flatten_11x11=Poproszę o 11x11
+message.meecreeps.action.flatten_13x13=Będe potrzebował 13x13
+message.meecreeps.action.house_9x9=Oczywiście że 9x9!
+message.meecreeps.action.house_11x11=11x11 jest wyraźnie gorszy, ale...
+message.meecreeps.action.house_13x13=Ten pokój zdecydowanie potrzebuje 13x13
+message.meecreeps.action.platform_9x9=9x9 to perfekcyjny rozmiar!
+message.meecreeps.action.platform_11x11=11x11 ponieważ jestem chciwy... hehe
+message.meecreeps.action.platform_13x13=Jestem wyjątkowy, więc zbuduj 13x13
+
+message.meecreeps.tooltip.cartridge_item=\
+    §aNabój dla Portal Guna\n\
+    §fPrawy przycisk do naładowanie przez pochłonięcie\n\
+    §fperły kresu w twoim ekwipunku\n\
+    §aPozostałe ładunki: §e%s
+
+message.meecreeps.tooltip.cube_intro=\
+    §aPrawy przycisk: §fStwórz MeeCreepa\n\
+    §aKucnij i prawy przycisk: §fpowtarzaj ostatnią akcje
+
+message.meecreeps.tooltip.cube_uses=\
+    §aPozostałe użycia: §e%s
+
+message.meecreeps.tooltip.emptyportalgun=\
+    §aPołącz z naładowanym nabojem\n\
+    §aW stole rzemieślniczym
+
+message.meecreeps.tooltip.portalgun=\
+    §Kucnij i prawy przycisk: §fzarządzaj miejscami docelowymi\n\
+    §Prawy przycisk: §fstwórz portal do obecnego miejsca docelowego\n\
+    §Prawy przycisk na portal: §fusuń portal\n\
+    §aPozostałe ładunki: §e%s
+
+
+key.last_message=Powtóż ostatnią wiadomość
+key.categories.meecreeps=MeeCreeps
