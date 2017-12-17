@@ -1,0 +1,110 @@
+#PARSE_ESCAPES
+item.meecreeps.creepcube.name=MeeCreep doboz
+item.meecreeps.portalgun.name=Portálvető
+item.meecreeps.emptyportalgun.name=Portálvető (üres)
+item.meecreeps.cartridge.name=Portál Patron
+entity.MeeCreeps.name=MeeCreep
+entity.meecreeps_projectile.name=Portálvető lövedég
+
+itemGroup.meecreeps=MeeCreeps
+
+message.meecreeps.cant_find_portal_spot=Ide nem lehet portált lerakni!
+message.meecreeps.missing_cartridge=Ebből a portálvetőből kifogyott a Patron!
+message.meecreeps.cant_spawn_meecreep=Ide nem lehet MeeCreeps-et leidézni!
+essage.meecreeps.cartridge_full=A patron tele van!
+message.meecreeps.missing_enderpearls=Nincs nálad Ender pearl!
+message.meecreeps.box_unusable=Ez a MeeCreep doboz használhatatlanná vált
+message.meecreeps.no_last_action=Ez nem a legutóbbi művelet!
+message.meecreeps.last_action_not_possible=A legutóbbi műveletet itt nem lehet megcsinálni!
+message.meecreeps.gun_no_charge=Nincs elég töltés!
+message.meecreeps.gun_no_destination=Nem választottál érkezési helyet!
+message.meecreeps.gun_bad_destination=Valami baj van a választott érkezési hellyel!
+message.meecreeps.portal_already_there=Már van egy portál kilőve erre az érkezési helyre!
+message.meecreeps.destination_obstructed=Valami akdályozza a portál kilövését!
+message.meecreeps.max_spawn_reached=Csak %s MeeCreep lehet játékosonként!
+message.meecreeps.cannot_find=Nem találok %s !
+message.meecreeps.cant_continue=Nem tudom folytatni ezt az utat!
+message.meecreeps.cant_pickup_block=Nem vehetem fel ezt a blokkot!
+message.meecreeps.cant_find_ladders=Nem találok létrákat!
+message.meecreeps.cant_find_torches=Nem találok fáklyákat!
+message.meecreeps.cant_find_stairs_or_cobble=Nem találok lépcsőket vagy zúzottkövet!
+message.meecreeps.where_are_you=Nem vagy hozzám elég közel, ezért el kell dobjam ami nálam van!
+message.meecreeps.inventory_missing=Nem találok tárolóhelyet, ezért el kell hogy dobjam!
+message.meecreeps.i_gave_some_things=Itt van pár tárgy, neked!
+message.meecreeps.put_stuff_away_marked=Beteszem a dolgokat a kijelölt tárolóba.
+message.meecreeps.put_stuff_away_target=Beteszem a dolgokat az eredeti cél tárolójába.
+message.meecreeps.put_stuff_away_specific=Beleteszem a dolgokat a ládába %s onnan ahol vagy.
+
+message.meecreeps.gui.name_label=Név:
+message.meecreeps.gui.please_stop_now=Kérlek fejezd be, most!
+message.meecreeps.gui.carry_on=Folytasd amit csinálsz...
+message.meecreeps.gui.never_mind=Nem fontos...
+message.meecreeps.gui.other_things=Tudsz mást csinálni?
+message.meecreeps.gui.problem=Van valami baj?
+message.meecreeps.gui.alternatives=Any of this suits you then?
+message.meecreeps.gui.cant_do_much=Sokat nem csinálhatok itt
+message.meecreeps.gui.what_can_i_do=Mit tehetek érted?
+message.meecreeps.gui.destination_not_set=Az érkezési hely nem lett beállítva!
+
+message.meecreeps.action.make_house=Építs egy házat!
+message.meecreeps.action.make_platform=Építs egy platformot
+message.meecreeps.action.flatten_area=Simíts ki egy területet!
+message.meecreeps.action.chop_tree=Vágd ki ezt a fát!
+message.meecreeps.action.chop_tree_collect=Vágd ki ezt a fát és gyüjtsd össze amit szedtél!
+message.meecreeps.action.dig_down=Áss le egyenesen az alapkőig!
+message.meecreeps.action.dig_down_stairs=Áss le az alapkőig lépcsőzetesen!
+message.meecreeps.action.mine_ores=Keress érceket, és szedd ki az összes közelben lévőt!
+message.meecreeps.action.dig_tunnel=Áss egy 3x3-as alagutat, ami 32 blokk hosszú.
+message.meecreeps.action.harvest_replant=Arasd le, és ültesd ujra ezeket a növényeket.
+message.meecreeps.action.harvest=Arasd le ezeket a növényeket.
+message.meecreeps.action.torches=Világítsd ki ezt a helyet!
+message.meecreeps.action.follow_and_lightup=Kövess, és világítsd ki a helyet!
+message.meecreeps.action.pickup=Szedd össze a tárgyakat!
+message.meecreeps.action.follow_and_pickup=Kövess, és szedd össze a tárgyakat
+message.meecreeps.action.move_stuff=Szedd össze és kövess!
+message.meecreeps.action.idle=Csak maradj itt egy kicsit.
+
+message.meecreeps.action.what_direction=Melyik irányba ássak?
+message.meecreeps.action.flatten_area_size=Melyik területet szertnéd ha kisimítanám?
+message.meecreeps.action.house_size=Mekkora házat szeretnél?
+message.meecreeps.action.platform_size=Mekkara platformot szeretnél?
+message.meecreeps.action.to_north=Északra
+message.meecreeps.action.to_south=Délre
+message.meecreeps.action.to_west=Nyugatra
+message.meecreeps.action.to_east=Keletre
+message.meecreeps.action.flatten_9x9=9x9-es méret jó lessz!
+message.meecreeps.action.flatten_11x11=11x11-eset, kérlek!
+message.meecreeps.action.flatten_13x13=Szükségem lessz egy 13x13-ra!
+message.meecreeps.action.house_9x9=9x9-eset, természetesen!
+message.meecreeps.action.house_11x11=11x11-es nyilvánvalóan gyengébb, de jó lessz...
+message.meecreeps.action.house_13x13=Szükségem van egy szobára, szóval 13x13
+message.meecreeps.action.platform_9x9=9x9-es tökéletes méret!
+message.meecreeps.action.platform_11x11=11x11-eset akarok, mert mohó vagyok!
+message.meecreeps.action.platform_13x13=Különleges vagyok, így csinálj egy 13x13-at!
+
+message.meecreeps.tooltip.cartridge_item=\
+    §aPortálvetőbe való patron\n\
+    §fnyomd meg a jobb egérgombot és feltölti\n\
+    §fender pearl-el a felszerelésedből\n\
+    §aHasználhatóság: §e%s
+
+message.meecreeps.tooltip.cube_intro=\
+    §aJobb egérgomb: §fMeeCreep idézése\n\
+    §aShift+Jobb egérgomb: §fIsmételje meg az előző műveletet
+
+message.meecreeps.tooltip.cube_uses=\
+    §aHasználhatóság: §e%s
+
+message.meecreeps.tooltip.emptyportalgun=\
+    §aSzereld össze egy Patronnal\n\
+    §aa barkácsasztalban
+
+message.meecreeps.tooltip.portalgun=\
+    §Shift+Jobb egérgomb: §fÉrkezési helyek\n\
+    §Jobb egérgomb: §fPortál nyitása a választott érkezési helyre\n\
+    §Jobb egérgomb a portálon: §fPortál bezárása\n\
+    §aHasználhatóság: §e%s
+
+
+key.last_message=Az utolsó üzenet ismétlése
+key.categories.meecreeps=MeeCreeps
