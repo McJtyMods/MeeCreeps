@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.lib.varia.BlockTools;
 import mcjty.lib.varia.SoundTools;
 import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.MeeCreeps;
@@ -21,12 +22,10 @@ import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -640,15 +639,7 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void placeStackAt(ItemStack blockStack, World world, BlockPos pos) {
-        if (blockStack.getItem() instanceof ItemBlock) {
-            Block block = ((ItemBlock) blockStack.getItem()).getBlock();
-            IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, blockStack.getItem().getMetadata(blockStack), GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
-            entity.getWorld().setBlockState(pos, stateForPlacement, 3);
-            SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
-        } else {
-            GeneralTools.getHarvester().setPosition(entity.getEntity().posX, entity.getEntity().posY, entity.getEntity().posZ);
-            blockStack.getItem().onItemUse(GeneralTools.getHarvester(), world, pos, EnumHand.MAIN_HAND, EnumFacing.UP, 0, 0, 0);
-        }
+        BlockTools.placeStackAt(GeneralTools.getHarvester(), blockStack, world, pos);
     }
 
 
