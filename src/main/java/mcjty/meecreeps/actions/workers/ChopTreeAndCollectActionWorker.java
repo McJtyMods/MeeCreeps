@@ -1,10 +1,9 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.lib.varia.Counter;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.api.PreferedChest;
-import mcjty.meecreeps.varia.Counter;
-import net.minecraft.block.BlockPlanks;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;

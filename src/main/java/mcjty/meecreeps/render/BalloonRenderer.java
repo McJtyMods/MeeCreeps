@@ -79,21 +79,21 @@ public class BalloonRenderer {
         GlStateManager.disableLighting();
 
         mc.getTextureManager().bindTexture(gui_top);
-        RenderHelper.drawTexturedModalRect(guiLeft, guiTop, 0, 0, WIDTH, 10);
+        mcjty.lib.gui.RenderHelper.drawTexturedModalRect(guiLeft, guiTop, 0, 0, WIDTH, 10);
         int y = guiTop+10;
 
         for (int i = 0; i < messages.size()-1 ; i++) {
-            RenderHelper.drawTexturedModalRect(guiLeft, y, 0, 10, WIDTH, 15);
+            mcjty.lib.gui.RenderHelper.drawTexturedModalRect(guiLeft, y, 0, 10, WIDTH, 15);
             y += 14;
         }
-        RenderHelper.drawTexturedModalRect(guiLeft, y, 0, 25, WIDTH, 15);
+        mcjty.lib.gui.RenderHelper.drawTexturedModalRect(guiLeft, y, 0, 25, WIDTH, 15);
 
         List<Pair<Integer, String>> newMessages = new ArrayList<>();
 
         y = guiTop+7;
         for (Pair<Integer, String> pair : messages) {
             String msg = pair.getRight();
-            RenderHelper.renderText(mc, guiLeft+15, y, msg, 0);
+            mcjty.lib.gui.RenderHelper.renderText(mc, guiLeft+15, y, msg, 0);
             y += 14;
             if (pair.getLeft() > 0) {
                 newMessages.add(Pair.of(pair.getLeft()-1, msg));

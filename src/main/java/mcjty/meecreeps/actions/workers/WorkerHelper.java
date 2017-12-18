@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.lib.varia.SoundTools;
 import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.*;
@@ -8,12 +9,10 @@ import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.items.CreepCubeItem;
-import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.network.MeeCreepsMessages;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.InventoryTools;
-import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockDynamicLiquid;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -385,7 +384,7 @@ public class WorkerHelper implements IWorkerHelper {
         lastMessage = message;
         EntityPlayerMP player = getPlayer();
         if (player != null) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient(message, parameters), player);
+            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient(message, parameters), player);
         }
     }
 

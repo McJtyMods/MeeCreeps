@@ -1,10 +1,14 @@
 package mcjty.meecreeps.gui;
 
+import mcjty.lib.network.Arguments;
+import mcjty.lib.network.PacketSendServerCommand;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
-import mcjty.meecreeps.actions.*;
+import mcjty.meecreeps.actions.ActionOptions;
+import mcjty.meecreeps.actions.ClientActionManager;
 import mcjty.meecreeps.actions.MeeCreepActionType;
-import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.actions.PacketPerformAction;
+import mcjty.meecreeps.network.MeeCreepsMessages;
 import mcjty.meecreeps.proxy.GuiProxy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -68,7 +72,7 @@ public class GuiMeeCreeps extends GuiScreen {
     private void resume() {
         confirmedAction = true;
         if (options != null) {
-            PacketHandler.INSTANCE.sendToServer(new PacketResumeAction(options));
+            MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, MeeCreeps.CMD_RESUME_ACTION, Arguments.builder().value(options.getActionId()).build()));
         }
     }
 
@@ -80,7 +84,7 @@ public class GuiMeeCreeps extends GuiScreen {
     private void dismiss() {
         confirmedAction = true;
         if (options != null) {
-            PacketHandler.INSTANCE.sendToServer(new PacketCancelAction(options));
+            MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, MeeCreeps.CMD_CANCEL_ACTION, Arguments.builder().value(options.getActionId()).build()));
         }
     }
 
@@ -115,7 +119,7 @@ public class GuiMeeCreeps extends GuiScreen {
         String heading = factory.getFactory().getFurtherQuestionHeading(Minecraft.getMinecraft().world, options.getTargetPos(), options.getTargetSide());
         if (heading == null || furtherQuestionId != null) {
             confirmedAction = true;
-            PacketHandler.INSTANCE.sendToServer(new PacketPerformAction(options, type, furtherQuestionId));
+            MeeCreepsMessages.INSTANCE.sendToServer(new PacketPerformAction(options, type, furtherQuestionId));
             close();
         } else {
             furtherQuestionType = type;

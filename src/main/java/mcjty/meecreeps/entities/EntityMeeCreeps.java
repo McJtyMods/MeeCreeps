@@ -8,7 +8,7 @@ import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.actions.workers.WorkerHelper;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.blocks.ModBlocks;
-import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.network.MeeCreepsMessages;
 import mcjty.meecreeps.proxy.GuiProxy;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -169,7 +169,7 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
             if (actionId != 0) {
                 ActionOptions options = manager.getOptions(actionId);
                 if (options != null) {
-                    PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(options, GuiProxy.GUI_MEECREEP_DISMISS), (EntityPlayerMP) player);
+                    MeeCreepsMessages.INSTANCE.sendTo(new PacketActionOptionToClient(options, GuiProxy.GUI_MEECREEP_DISMISS), (EntityPlayerMP) player);
                     options.setPaused(true);
                 }
             }

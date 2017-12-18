@@ -1,7 +1,7 @@
 package mcjty.meecreeps.actions;
 
 import io.netty.buffer.ByteBuf;
-import mcjty.meecreeps.network.NetworkTools;
+import mcjty.lib.network.NetworkTools;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;

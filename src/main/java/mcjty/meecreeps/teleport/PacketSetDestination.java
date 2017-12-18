@@ -1,8 +1,8 @@
 package mcjty.meecreeps.teleport;
 
 import io.netty.buffer.ByteBuf;
+import mcjty.lib.network.NetworkTools;
 import mcjty.meecreeps.items.PortalGunItem;
-import mcjty.meecreeps.network.NetworkTools;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;

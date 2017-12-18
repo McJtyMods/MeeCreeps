@@ -3,7 +3,7 @@ package mcjty.meecreeps.items;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.config.Config;
-import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.network.MeeCreepsMessages;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
@@ -95,7 +95,7 @@ public class CartridgeItem extends Item {
         ItemStack heldItem = player.getHeldItem(hand);
         int charge = getCharge(heldItem);
         if (charge >= (Config.maxCharge-Config.chargesPerEnderpearl+1)) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cartridge_full"), (EntityPlayerMP) player);
+            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cartridge_full"), (EntityPlayerMP) player);
         } else {
             for (int i = 0 ; i < player.inventory.getSizeInventory() ; i++) {
                 ItemStack stack = player.inventory.getStackInSlot(i);
@@ -106,7 +106,7 @@ public class CartridgeItem extends Item {
                     return;
                 }
             }
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.missing_enderpearls"), (EntityPlayerMP) player);
+            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.missing_enderpearls"), (EntityPlayerMP) player);
         }
     }
 

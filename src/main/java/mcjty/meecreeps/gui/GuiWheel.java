@@ -1,13 +1,13 @@
 package mcjty.meecreeps.gui;
 
+import mcjty.lib.gui.RenderHelper;
+import mcjty.lib.network.Arguments;
+import mcjty.lib.network.PacketSendServerCommand;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ClientActionManager;
 import mcjty.meecreeps.items.PortalGunItem;
-import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.network.MeeCreepsMessages;
 import mcjty.meecreeps.proxy.GuiProxy;
-import mcjty.meecreeps.render.RenderHelper;
-import mcjty.meecreeps.teleport.PacketDeleteDestination;
-import mcjty.meecreeps.teleport.PacketSetCurrent;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.client.Minecraft;
@@ -68,7 +68,7 @@ public class GuiWheel extends GuiScreen {
                 ItemStack heldItem = PortalGunItem.getGun(mc.player);
                 List<TeleportDestination> destinations = PortalGunItem.getDestinations(heldItem);
                 if (destinations.get(lastSelected) != null) {
-                    PacketHandler.INSTANCE.sendToServer(new PacketDeleteDestination(lastSelected));
+                    MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, MeeCreeps.CMD_DELETE_DESTINATION, Arguments.builder().value(lastSelected).build()));
                 }
             }
         }
@@ -95,7 +95,7 @@ public class GuiWheel extends GuiScreen {
             if (!heldItem.isEmpty()) {
                 List<TeleportDestination> destinations = PortalGunItem.getDestinations(heldItem);
                 if (destinations.get(q) != null) {
-                    PacketHandler.INSTANCE.sendToServer(new PacketSetCurrent(q));
+                    MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, MeeCreeps.CMD_SET_CURRENT, Arguments.builder().value(q).build()));
                 } else {
                     BlockPos bestPosition = TeleportationTools.findBestPosition(mc.world, selectedBlock, selectedSide);
                     if (bestPosition == null) {

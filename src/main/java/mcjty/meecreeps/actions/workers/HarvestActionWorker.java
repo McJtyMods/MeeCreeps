@@ -1,9 +1,9 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.lib.varia.SoundTools;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
-import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockNetherWart;

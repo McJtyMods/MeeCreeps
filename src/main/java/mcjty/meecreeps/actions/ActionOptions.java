@@ -1,14 +1,14 @@
 package mcjty.meecreeps.actions;
 
 import io.netty.buffer.ByteBuf;
+import mcjty.lib.network.NetworkTools;
+import mcjty.lib.varia.SoundTools;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.api.IActionContext;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
-import mcjty.meecreeps.network.NetworkTools;
-import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.network.MeeCreepsMessages;
 import mcjty.meecreeps.proxy.GuiProxy;
-import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -29,7 +29,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
 public class ActionOptions implements IActionContext {
@@ -307,7 +306,7 @@ public class ActionOptions implements IActionContext {
                     } else {
                         EntityPlayer player = getPlayer();
                         if (player != null) {
-                            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_spawn_meecreep"), (EntityPlayerMP) player);
+                            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_spawn_meecreep"), (EntityPlayerMP) player);
                         }
                         return false;
                     }
@@ -365,7 +364,7 @@ public class ActionOptions implements IActionContext {
         MinecraftServer server = DimensionManager.getWorld(0).getMinecraftServer();
         EntityPlayerMP player = server.getPlayerList().getPlayerByUUID(playerId);
         if (player != null) {
-            PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(this, GuiProxy.GUI_MEECREEP_QUESTION), player);
+            MeeCreepsMessages.INSTANCE.sendTo(new PacketActionOptionToClient(this, GuiProxy.GUI_MEECREEP_QUESTION), player);
         } else {
             return false;
         }

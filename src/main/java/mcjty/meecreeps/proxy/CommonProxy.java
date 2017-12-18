@@ -1,6 +1,7 @@
 package mcjty.meecreeps.proxy;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import mcjty.lib.McJtyLib;
 import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.blocks.HeldCubeBlock;
@@ -10,7 +11,7 @@ import mcjty.meecreeps.blocks.PortalTileEntity;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.entities.ModEntities;
 import mcjty.meecreeps.items.*;
-import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.network.MeeCreepsMessages;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -25,6 +26,7 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import java.io.File;
@@ -38,14 +40,15 @@ public class CommonProxy {
 
     public void preInit(FMLPreInitializationEvent e) {
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandlers());
-
+        McJtyLib.preInit(e, MeeCreeps.instance);
         MeeCreeps.api.registerFactories();
 
         File directory = e.getModConfigurationDirectory();
         config = new Configuration(new File(directory.getPath(), "meecreeps.cfg"));
         Config.readConfig();
 
-        PacketHandler.registerMessages("meecreeps");
+        SimpleNetworkWrapper network = mcjty.lib.network.PacketHandler.registerMessages(MeeCreeps.MODID, "meecreeps");
+        MeeCreepsMessages.registerMessages(network);
 
         // Initialization of blocks and items typically goes here:
         ModEntities.init();

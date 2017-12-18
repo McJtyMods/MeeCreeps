@@ -1,15 +1,22 @@
 package mcjty.meecreeps;
 
+import mcjty.lib.base.ModBase;
+import mcjty.lib.network.Arguments;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.api.IMeeCreepsApi;
 import mcjty.meecreeps.commands.CommandClearActions;
 import mcjty.meecreeps.commands.CommandListActions;
 import mcjty.meecreeps.commands.CommandTestApi;
 import mcjty.meecreeps.items.ModItems;
+import mcjty.meecreeps.items.PortalGunItem;
 import mcjty.meecreeps.proxy.CommonProxy;
+import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.*;
@@ -19,13 +26,22 @@ import java.util.Optional;
 import java.util.function.Function;
 
 @Mod(modid = MeeCreeps.MODID, name = "MeeCreeps",
-        dependencies = "after:forge@[" + MeeCreeps.MIN_FORGE_VER + ",)",
+        dependencies =
+                "required-after:mcjtylib_ng@[" + MeeCreeps.MIN_MCJTYLIB_VER + ",);" +
+                "after:forge@[" + MeeCreeps.MIN_FORGE_VER + ",)",
         version = MeeCreeps.VERSION,
         acceptedMinecraftVersions = "[1.12,1.13)")
-public class MeeCreeps {
+public class MeeCreeps implements ModBase {
     public static final String MODID = "meecreeps";
     public static final String VERSION = "1.0.1";
+    public static final String MIN_MCJTYLIB_VER = "2.5.0";
     public static final String MIN_FORGE_VER = "14.22.0.2464";
+
+    public static final String CMD_CANCEL_PORTAL = "cancel_portal";
+    public static final String CMD_DELETE_DESTINATION = "delete_dest";
+    public static final String CMD_SET_CURRENT = "set_current";
+    public static final String CMD_RESUME_ACTION = "resume_action";
+    public static final String CMD_CANCEL_ACTION = "cancel_action";
 
     @SidedProxy(clientSide = "mcjty.meecreeps.proxy.ClientProxy", serverSide = "mcjty.meecreeps.proxy.ServerProxy")
     public static CommonProxy proxy;
@@ -97,4 +113,35 @@ public class MeeCreeps {
         ServerActionManager.clearInstance();
     }
 
+    @Override
+    public String getModId() {
+        return MODID;
+    }
+
+    @Override
+    public void openManual(EntityPlayer entityPlayer, int i, String s) {
+        // @todo
+    }
+
+
+    @Override
+    public void handleCommand(EntityPlayer player, String command, Arguments arguments) {
+        if (CMD_CANCEL_PORTAL.equals(command)) {
+            ItemStack heldItem = PortalGunItem.getGun(player);
+            if (heldItem.isEmpty()) return; // Something went wrong
+            TeleportationTools.cancelPortalPair(player, arguments.getBlockPos());
+        } else if (CMD_DELETE_DESTINATION.equals(command)) {
+            ItemStack heldItem = PortalGunItem.getGun(player);
+            if (heldItem.isEmpty()) return; // Something went wrong
+            PortalGunItem.addDestination(heldItem, null, arguments.getInt());
+        } else if (CMD_SET_CURRENT.equals(command)) {
+            ItemStack heldItem = PortalGunItem.getGun(player);
+            if (heldItem.isEmpty()) return; // Something went wrong
+            PortalGunItem.setCurrentDestination(heldItem, arguments.getInt());
+        } else if (CMD_RESUME_ACTION.equals(command)) {
+            ServerActionManager.getManager().resumeAction((EntityPlayerMP) player, arguments.getInt());
+        } else if (CMD_CANCEL_PORTAL.equals(command)) {
+            ServerActionManager.getManager().cancelAction((EntityPlayerMP) player, arguments.getInt());
+        }
+    }
 }

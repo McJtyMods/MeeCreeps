@@ -1,9 +1,9 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.lib.varia.Counter;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.config.Config;
-import mcjty.meecreeps.varia.Counter;
 import mcjty.meecreeps.varia.GeneralTools;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLeaves;

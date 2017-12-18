@@ -1,10 +1,10 @@
 package mcjty.meecreeps.blocks;
 
+import mcjty.lib.varia.SoundTools;
+import mcjty.lib.varia.TeleportationTools;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.teleport.TeleportDestination;
-import mcjty.meecreeps.teleport.TeleportationTools;
-import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;

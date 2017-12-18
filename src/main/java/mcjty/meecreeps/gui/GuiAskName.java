@@ -1,7 +1,7 @@
 package mcjty.meecreeps.gui;
 
 import mcjty.meecreeps.MeeCreeps;
-import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.network.MeeCreepsMessages;
 import mcjty.meecreeps.teleport.PacketSetDestination;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import net.minecraft.client.gui.Gui;
@@ -75,7 +75,7 @@ public class GuiAskName extends GuiScreen {
             close();
         } else if (keyCode == Keyboard.KEY_RETURN) {
             destination = new TeleportDestination(text, destination.getDimension(), destination.getPos(), destination.getSide());
-            PacketHandler.INSTANCE.sendToServer(new PacketSetDestination(destination, destinationIndex));
+            MeeCreepsMessages.INSTANCE.sendToServer(new PacketSetDestination(destination, destinationIndex));
             close();
         } else if (typedChar != 0) {
             if (text.length() < 15) {

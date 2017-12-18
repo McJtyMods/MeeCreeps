@@ -4,22 +4,14 @@ import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.blocks.PortalTileEntity;
 import mcjty.meecreeps.config.Config;
-import mcjty.meecreeps.network.PacketHandler;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
+import mcjty.meecreeps.network.MeeCreepsMessages;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
-import net.minecraftforge.common.DimensionManager;
 
 import javax.annotation.Nullable;
 
@@ -56,23 +48,23 @@ public class TeleportationTools {
         World sourceWorld = player.getEntityWorld();
         BlockPos sourcePortalPos = findBestPosition(sourceWorld, selectedBlock, selectedSide);
         if (sourcePortalPos == null) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_find_portal_spot"), (EntityPlayerMP) player);
+            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_find_portal_spot"), (EntityPlayerMP) player);
             return;
         }
 
-        World destWorld = getWorldForDimension(dest.getDimension());
+        World destWorld = mcjty.lib.varia.TeleportationTools.getWorldForDimension(dest.getDimension());
         if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.portalBlock) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.portal_already_there"), (EntityPlayerMP) player);
+            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.portal_already_there"), (EntityPlayerMP) player);
             return;
         }
         if (dest.getSide() == EnumFacing.DOWN) {
             if (!canPlacePortal(destWorld, dest.getPos()) || canCollideWith(destWorld, dest.getPos().down())) {
-                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), (EntityPlayerMP) player);
+                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), (EntityPlayerMP) player);
                 return;
             }
         } else {
             if (!canPlacePortal(destWorld, dest.getPos()) || canCollideWith(destWorld, dest.getPos().up())) {
-                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), (EntityPlayerMP) player);
+                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), (EntityPlayerMP) player);
                 return;
             }
         }
@@ -98,7 +90,7 @@ public class TeleportationTools {
             return;
         }
 
-        World destWorld = getWorldForDimension(dest.getDimension());
+        World destWorld = mcjty.lib.varia.TeleportationTools.getWorldForDimension(dest.getDimension());
         if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.portalBlock) {
             return;
         }
@@ -154,127 +146,5 @@ public class TeleportationTools {
         return null;
     }
 
-
-    public static void performTeleport(EntityPlayer player, TeleportDestination dest) {
-        BlockPos c = dest.getPos();
-        int oldId = player.getEntityWorld().provider.getDimension();
-
-        if (oldId != dest.getDimension()) {
-            TeleportationTools.teleportToDimension(player, dest.getDimension(), c.getX() + 0.5, c.getY() + 1.5, c.getZ() + 0.5);
-        } else {
-            player.setPositionAndUpdate(c.getX() + 0.5, c.getY() + 1, c.getZ() + 0.5);
-        }
-
-//        if (TeleportConfiguration.whooshMessage) {
-//            Logging.message(player, "Whoosh!");
-//        }
-
-//            if (TeleportConfiguration.teleportVolume >= 0.01) {
-//                SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(RFTools.MODID, "teleport_whoosh"));
-//                if (sound == null) {
-//                    throw new RuntimeException("Could not find sound 'teleport_whoosh'!");
-//                } else {
-//                    SoundTools.playSound(player.getEntityWorld(), sound, player.posX, player.posY, player.posZ, TeleportConfiguration.teleportVolume, 1.0f);
-//                }
-//            }
-    }
-
-    /**
-     * Get a world for a dimension, possibly loading it from the configuration manager.
-     */
-    public static World getWorldForDimension(int id) {
-        World w = DimensionManager.getWorld(id);
-        if (w == null) {
-            w = DimensionManager.getWorld(0).getMinecraftServer().getWorld(id);
-        }
-        return w;
-    }
-
-
-    public static void teleportToDimension(EntityPlayer player, int dimension, double x, double y, double z) {
-        int oldDimension = player.getEntityWorld().provider.getDimension();
-        EntityPlayerMP entityPlayerMP = (EntityPlayerMP) player;
-        MinecraftServer server = player.getEntityWorld().getMinecraftServer();
-        WorldServer worldServer = server.getWorld(dimension);
-        player.addExperienceLevel(0);
-
-
-        worldServer.getMinecraftServer().getPlayerList().transferPlayerToDimension(entityPlayerMP, dimension, new MeeCreepsTeleporter(worldServer, x, y, z));
-        player.setPositionAndUpdate(x, y, z);
-        if (oldDimension == 1) {
-            // For some reason teleporting out of the end does weird things.
-            player.setPositionAndUpdate(x, y, z);
-            worldServer.spawnEntity(player);
-            worldServer.updateEntityWithOptionalForce(player, false);
-        }
-    }
-
-    private static void facePosition(Entity entity, double newX, double newY, double newZ, BlockPos dest) {
-        double d0 = dest.getX() - newX;
-        double d1 = dest.getY() - (newY + entity.getEyeHeight());
-        double d2 = dest.getZ() - newZ;
-
-        double d3 = MathHelper.sqrt(d0 * d0 + d2 * d2);
-        float f = (float) (MathHelper.atan2(d2, d0) * (180D / Math.PI)) - 90.0F;
-        float f1 = (float) (-(MathHelper.atan2(d1, d3) * (180D / Math.PI)));
-        entity.rotationPitch = updateRotation(entity.rotationPitch, f1);
-        entity.rotationYaw = updateRotation(entity.rotationYaw, f);
-    }
-
-    private static float updateRotation(float angle, float targetAngle) {
-        float f = MathHelper.wrapDegrees(targetAngle - angle);
-        return angle + f;
-    }
-
-
-    public static Entity teleportEntity(Entity entity, World destWorld, double newX, double newY, double newZ, EnumFacing facing) {
-        World world = entity.getEntityWorld();
-        if (entity instanceof EntityPlayer) {
-            if (world.provider.getDimension() != destWorld.provider.getDimension()) {
-                TeleportationTools.teleportToDimension((EntityPlayer) entity, destWorld.provider.getDimension(), newX, newY, newZ);
-            }
-
-            fixOrientation(entity, newX, newY, newZ, facing);
-            entity.setPositionAndUpdate(newX, newY, newZ);
-            return entity;
-        } else {
-            if (world.provider.getDimension() != destWorld.provider.getDimension()) {
-                NBTTagCompound tagCompound = new NBTTagCompound();
-                entity.writeToNBT(tagCompound);
-                tagCompound.removeTag("Dimension");
-                Class<? extends Entity> entityClass = entity.getClass();
-                world.removeEntity(entity);
-                entity.isDead = false;
-                world.updateEntityWithOptionalForce(entity, false);
-
-                Entity newEntity = EntityList.newEntity(entityClass, destWorld);
-                newEntity.readFromNBT(tagCompound);
-                fixOrientation(newEntity, newX, newY, newZ, facing);
-                newEntity.setLocationAndAngles(newX, newY, newZ, newEntity.rotationYaw, newEntity.rotationPitch);
-                boolean flag = newEntity.forceSpawn;
-                newEntity.forceSpawn = true;
-                destWorld.spawnEntity(newEntity);
-                newEntity.forceSpawn = flag;
-                destWorld.updateEntityWithOptionalForce(newEntity, false);
-
-                entity.isDead = true;
-
-                ((WorldServer)world).resetUpdateEntityTick();
-                ((WorldServer)destWorld).resetUpdateEntityTick();
-                return newEntity;
-            } else {
-                fixOrientation(entity, newX, newY, newZ, facing);
-                entity.setLocationAndAngles(newX, newY, newZ, entity.rotationYaw, entity.rotationPitch);
-                destWorld.updateEntityWithOptionalForce(entity, false);
-                return entity;
-            }
-        }
-    }
-
-    private static void fixOrientation(Entity entity, double newX, double newY, double newZ, EnumFacing facing) {
-        if (facing != EnumFacing.DOWN && facing != EnumFacing.UP) {
-            facePosition(entity, newX, newY, newZ, new BlockPos(newX, newY, newZ).offset(facing, 4));
-        }
-    }
 
 }

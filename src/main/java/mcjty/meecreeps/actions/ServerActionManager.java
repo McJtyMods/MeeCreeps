@@ -1,5 +1,7 @@
 package mcjty.meecreeps.actions;
 
+import mcjty.lib.varia.SoundTools;
+import mcjty.lib.varia.TeleportationTools;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.actions.workers.WorkerHelper;
@@ -7,8 +9,6 @@ import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.config.Config;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.items.CreepCubeItem;
-import mcjty.meecreeps.teleport.TeleportationTools;
-import mcjty.meecreeps.varia.SoundTools;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
