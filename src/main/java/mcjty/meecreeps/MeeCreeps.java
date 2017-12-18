@@ -138,7 +138,7 @@ public class MeeCreeps implements ModBase {
             PortalGunItem.setCurrentDestination(heldItem, arguments.getInt());
         } else if (CMD_RESUME_ACTION.equals(command)) {
             ServerActionManager.getManager().resumeAction((EntityPlayerMP) player, arguments.getInt());
-        } else if (CMD_CANCEL_PORTAL.equals(command)) {
+        } else if (CMD_CANCEL_ACTION.equals(command)) {
             ServerActionManager.getManager().cancelAction((EntityPlayerMP) player, arguments.getInt());
         }
     }
