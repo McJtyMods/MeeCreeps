@@ -639,7 +639,8 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void placeStackAt(ItemStack blockStack, World world, BlockPos pos) {
-        BlockTools.placeStackAt(GeneralTools.getHarvester(), blockStack, world, pos);
+        IBlockState state = BlockTools.placeStackAt(GeneralTools.getHarvester(), blockStack, world, pos);
+        SoundTools.playSound(world, state.getBlock().getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
     }
 
 
