@@ -2,6 +2,7 @@ package mcjty.meecreeps.gui;
 
 import mcjty.lib.network.Arguments;
 import mcjty.lib.network.PacketSendServerCommand;
+import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.actions.ActionOptions;
@@ -72,7 +73,7 @@ public class GuiMeeCreeps extends GuiScreen {
     private void resume() {
         confirmedAction = true;
         if (options != null) {
-            MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, MeeCreeps.CMD_RESUME_ACTION, Arguments.builder().value(options.getActionId()).build()));
+            MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_RESUME_ACTION, Arguments.builder().value(options.getActionId()).build()));
         }
     }
 
@@ -84,7 +85,7 @@ public class GuiMeeCreeps extends GuiScreen {
     private void dismiss() {
         confirmedAction = true;
         if (options != null) {
-            MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, MeeCreeps.CMD_CANCEL_ACTION, Arguments.builder().value(options.getActionId()).build()));
+            MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_ACTION, Arguments.builder().value(options.getActionId()).build()));
         }
     }
 

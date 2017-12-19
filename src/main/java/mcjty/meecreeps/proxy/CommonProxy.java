@@ -2,6 +2,7 @@ package mcjty.meecreeps.proxy;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import mcjty.lib.McJtyLib;
+import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.blocks.HeldCubeBlock;
@@ -40,7 +41,9 @@ public class CommonProxy {
 
     public void preInit(FMLPreInitializationEvent e) {
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandlers());
-        McJtyLib.preInit(e, MeeCreeps.instance);
+        McJtyLib.preInit(e);
+        CommandHandler.registerCommands();
+
         MeeCreeps.api.registerFactories();
 
         File directory = e.getModConfigurationDirectory();
