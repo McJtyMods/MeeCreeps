@@ -28,7 +28,7 @@ import java.util.function.Function;
 public class MeeCreeps implements ModBase {
     public static final String MODID = "meecreeps";
     public static final String VERSION = "1.0.1";
-    public static final String MIN_MCJTYLIB_VER = "2.5.0";
+    public static final String MIN_MCJTYLIB_VER = "2.5.2";
     public static final String MIN_FORGE_VER = "14.22.0.2464";
 
     @SidedProxy(clientSide = "mcjty.meecreeps.proxy.ClientProxy", serverSide = "mcjty.meecreeps.proxy.ServerProxy")
