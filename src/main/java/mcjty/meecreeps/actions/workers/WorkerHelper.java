@@ -860,8 +860,10 @@ public class WorkerHelper implements IWorkerHelper {
             showMessage("message.meecreeps.i_gave_some_things");
             List<ItemStack> remaining = new ArrayList<>();
             for (ItemStack stack : entity.getInventory()) {
-                if (!player.inventory.addItemStackToInventory(stack)) {
-                    remaining.add(stack);
+                if (!stack.isEmpty()) {
+                    if (!player.inventory.addItemStackToInventory(stack)) {
+                        remaining.add(stack);
+                    }
                 }
             }
             player.openContainer.detectAndSendChanges();

@@ -68,7 +68,7 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
                 });
                 EntityItem entityItem = items.get(0);
                 helper.navigateTo(entityItem, (pos) -> helper.pickup(entityItem));
-            } else if (!entity.getInventory().isEmpty()) {
+            } else if (entity.hasStuffInInventory()) {
                 helper.navigateTo(helper.findSuitablePositionNearPlayer(1.0), blockPos -> helper.giveToPlayerOrDrop());
             } else {
                 // Find a spot close to the player where we can navigate too

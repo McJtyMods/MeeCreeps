@@ -89,7 +89,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
         if (!positions.isEmpty()) {
             BlockPos cropPos = positions.get(0);
             helper.navigateTo(cropPos, this::harvest);
-        } else if (!entity.getInventory().isEmpty()) {
+        } else if (entity.hasStuffInInventory()) {
             helper.putStuffAway();
         }
     }
