@@ -108,6 +108,8 @@ dependencies {
     deobfCompile "com.github.mcjty:intwheel:${intwheel_version}"
     if (!project.hasProperty("singleproject")) {
         deobfCompile "com.github.mcjty:mcjtylib:${mcjtylib_version}"
+    } else {
+	compile project(':McJtyLib')
     }
 }
 
