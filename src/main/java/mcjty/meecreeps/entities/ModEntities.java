@@ -15,7 +15,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class ModEntities {
 
     public static void init() {
-        // Every bindings in our mod has an ID (local to this mod)
+        // Every entity in our mod has an ID (local to this mod)
         int id = 1;
         EntityRegistry.registerModEntity(new ResourceLocation(MeeCreeps.MODID, "meecreeps"), EntityMeeCreeps.class, "MeeCreeps", id++, MeeCreeps.instance, 64, 3, true, 0x0CD5F2, 0xFF7300);
         EntityRegistry.registerModEntity(new ResourceLocation(MeeCreeps.MODID, "meecreeps_projectile"), EntityProjectile.class, "meecreeps_projectile", id++, MeeCreeps.instance, 100, 5, true);
