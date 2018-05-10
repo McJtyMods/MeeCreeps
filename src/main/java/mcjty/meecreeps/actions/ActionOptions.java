@@ -219,7 +219,7 @@ public class ActionOptions implements IActionContext {
 
     public void registerDrops(BlockPos pos, @Nonnull List<ItemStack> drops) {
         for (ItemStack drop : drops) {
-            // Drops can be empty because they can be 'consumed' by the entity
+            // Drops can be empty because they can be 'consumed' by the bindings
             if (!drop.isEmpty()) {
                 this.drops.add(Pair.of(pos, drop.copy()));
             }
@@ -327,7 +327,7 @@ public class ActionOptions implements IActionContext {
                     }
                     break;
                 case WORKING:
-                    // It is up to the entity to set stage to DONE when done early
+                    // It is up to the bindings to set stage to DONE when done early
                     setStage(Stage.TIME_IS_UP);
                     break;
                 case TIME_IS_UP:

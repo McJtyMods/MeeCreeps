@@ -12,7 +12,7 @@ import java.util.Random;
 
 public class RenderMeeCreeps extends RenderLiving<EntityMeeCreeps> {
 
-    private ResourceLocation mobTexture = new ResourceLocation("meecreeps:textures/entity/meecreeps.png");
+    private ResourceLocation mobTexture = new ResourceLocation("meecreeps:textures/bindings/meecreeps.png");
 
     private static Random rand = new Random();
 

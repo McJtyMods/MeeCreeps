@@ -27,7 +27,7 @@ public interface IWorkerHelper {
     IActionContext getContext();
 
     /**
-     * Return the MeeCreep entity
+     * Return the MeeCreep bindings
      */
     IMeeCreep getMeeCreep();
 
@@ -119,7 +119,7 @@ public interface IWorkerHelper {
     boolean harvestAndDrop(BlockPos pos);
 
     /**
-     * Pick up as much of the entity item as possible. If everything was picked up the entity item
+     * Pick up as much of the bindings item as possible. If everything was picked up the bindings item
      * will be marked dead. Otherwise the MeeCreep will try to get the rest later
      */
     void pickup(EntityItem item);
@@ -171,19 +171,19 @@ public interface IWorkerHelper {
     void navigateTo(BlockPos pos, Consumer<BlockPos> job);
 
     /**
-     * Navigate to the given entity. If the entity is dead or too far this will return false and
+     * Navigate to the given bindings. If the bindings is dead or too far this will return false and
      * nothing happens (the job is not executed). Otherwise the job will be executed as soon as
      * the MeeCreep arrives at the destination.
-     * If the entity dies during the navigation then the MeeCreep will stop moving towards it
+     * If the bindings dies during the navigation then the MeeCreep will stop moving towards it
      * and normal operations resume
      */
     boolean navigateTo(Entity dest, Consumer<BlockPos> job, double maxDist);
 
     /**
-     * Navigate to the given entity. If the entity is dead this will return false and
+     * Navigate to the given bindings. If the bindings is dead this will return false and
      * nothing happens (the job is not executed). Otherwise the job will be executed as soon as
      * the MeeCreep arrives at the destination
-     * If the entity dies during the navigation then the MeeCreep will stop moving towards it
+     * If the bindings dies during the navigation then the MeeCreep will stop moving towards it
      * and normal operations resume
      */
     boolean navigateTo(Entity dest, Consumer<BlockPos> job);

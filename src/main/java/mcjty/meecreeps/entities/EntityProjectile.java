@@ -66,7 +66,7 @@ public class EntityProjectile extends EntityThrowable {
     }
 
     /**
-     * Called when this EntityThrowable hits a block or entity.
+     * Called when this EntityThrowable hits a block or bindings.
      */
     @Override
     protected void onImpact(RayTraceResult result) {

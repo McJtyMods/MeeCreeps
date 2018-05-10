@@ -233,7 +233,7 @@ public class ServerActionManager extends WorldSavedData {
             updateEntityCache(actionId, entities.get(0));
             return entities.get(0);
         }
-        // Lets try to find the entity in other dimensions that are still loaded
+        // Lets try to find the bindings in other dimensions that are still loaded
         for (WorldServer w : DimensionManager.getWorlds()) {
             entities = w.getEntities(EntityMeeCreeps.class, input -> input != null && input.getActionId() == actionId && !input.isDead);
             if (!entities.isEmpty()) {

@@ -262,7 +262,7 @@ public class WorkerHelper implements IWorkerHelper {
             }
             return findSpotToBuild(schematic, progress, toSkip);
         }
-        BlockPos position = entity.getEntity().getPosition().subtract(tpos);        // Make entity position relative for distance calculation
+        BlockPos position = entity.getEntity().getPosition().subtract(tpos);        // Make bindings position relative for distance calculation
         todo.sort((o1, o2) -> {
             double d1 = position.distanceSq(o1);
             double d2 = position.distanceSq(o2);
@@ -410,7 +410,7 @@ public class WorkerHelper implements IWorkerHelper {
             prevPosY = entity.posY;
             prevPosZ = entity.posZ;
             stuckCounter = 0;
-//            prevPosX = entity.posX;
+//            prevPosX = bindings.posX;
         }
     }
 
@@ -1203,7 +1203,7 @@ public class WorkerHelper implements IWorkerHelper {
 
 //    @Override
 //    public List<BlockPos> findInventoriesWithMostSpace(AxisAlignedBB box) {
-//        World world = entity.getEntityWorld();
+//        World world = bindings.getEntityWorld();
 //        List<BlockPos> inventories = new ArrayList<>();
 //        Map<BlockPos, Float> countMatching = new HashMap<>();
 //        GeneralTools.traverseBox(world, box,
