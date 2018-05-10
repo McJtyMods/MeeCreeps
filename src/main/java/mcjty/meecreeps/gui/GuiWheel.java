@@ -1,6 +1,6 @@
 package mcjty.meecreeps.gui;
 
-import mcjty.lib.gui.RenderHelper;
+import mcjty.lib.client.RenderHelper;
 import mcjty.lib.network.Arguments;
 import mcjty.lib.network.PacketSendServerCommand;
 import mcjty.meecreeps.CommandHandler;
