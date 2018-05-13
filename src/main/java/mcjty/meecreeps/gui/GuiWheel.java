@@ -1,8 +1,8 @@
 package mcjty.meecreeps.gui;
 
 import mcjty.lib.client.RenderHelper;
-import mcjty.lib.network.Arguments;
 import mcjty.lib.network.PacketSendServerCommand;
+import mcjty.lib.typed.TypedMap;
 import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ClientActionManager;
@@ -69,7 +69,8 @@ public class GuiWheel extends GuiScreen {
                 ItemStack heldItem = PortalGunItem.getGun(mc.player);
                 List<TeleportDestination> destinations = PortalGunItem.getDestinations(heldItem);
                 if (destinations.get(lastSelected) != null) {
-                    MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_DELETE_DESTINATION, Arguments.builder().value(lastSelected).build()));
+                    MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_DELETE_DESTINATION,
+                            TypedMap.builder().put(CommandHandler.PARAM_ID, lastSelected).build()));
                 }
             }
         }
@@ -96,7 +97,8 @@ public class GuiWheel extends GuiScreen {
             if (!heldItem.isEmpty()) {
                 List<TeleportDestination> destinations = PortalGunItem.getDestinations(heldItem);
                 if (destinations.get(q) != null) {
-                    MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_SET_CURRENT, Arguments.builder().value(q).build()));
+                    MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_SET_CURRENT,
+                            TypedMap.builder().put(CommandHandler.PARAM_ID, q).build()));
                 } else {
                     BlockPos bestPosition = TeleportationTools.findBestPosition(mc.world, selectedBlock, selectedSide);
                     if (bestPosition == null) {
