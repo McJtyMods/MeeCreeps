@@ -1,7 +1,6 @@
 package mcjty.meecreeps.proxy;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import mcjty.lib.McJtyLib;
+import mcjty.lib.proxy.AbstractCommonProxy;
 import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.MeeCreeps;
@@ -14,10 +13,8 @@ import mcjty.meecreeps.entities.ModEntities;
 import mcjty.meecreeps.items.*;
 import mcjty.meecreeps.network.MeeCreepsMessages;
 import net.minecraft.block.Block;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
-import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
@@ -31,24 +28,21 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import java.io.File;
-import java.util.concurrent.Callable;
 
 @Mod.EventBusSubscriber
-public class CommonProxy {
+public class CommonProxy extends AbstractCommonProxy {
 
-    // Config instance
-    public static Configuration config;
-
+    @Override
     public void preInit(FMLPreInitializationEvent e) {
+        super.preInit(e);
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandlers());
-        McJtyLib.preInit(e);
         CommandHandler.registerCommands();
 
         MeeCreeps.api.registerFactories();
 
         File directory = e.getModConfigurationDirectory();
-        config = new Configuration(new File(directory.getPath(), "meecreeps.cfg"));
-        Config.readConfig();
+        mainConfig = new Configuration(new File(directory.getPath(), "meecreeps.cfg"));
+        Config.readConfig(mainConfig);
 
         SimpleNetworkWrapper network = mcjty.lib.network.PacketHandler.registerMessages(MeeCreeps.MODID, "meecreeps");
         MeeCreepsMessages.registerMessages(network);
@@ -57,13 +51,17 @@ public class CommonProxy {
         ModEntities.init();
     }
 
+    @Override
     public void init(FMLInitializationEvent e) {
+        super.init(e);
         NetworkRegistry.INSTANCE.registerGuiHandler(MeeCreeps.instance, new GuiProxy());
     }
 
+    @Override
     public void postInit(FMLPostInitializationEvent e) {
-        if (config.hasChanged()) {
-            config.save();
+        super.postInit(e);
+        if (mainConfig.hasChanged()) {
+            mainConfig.save();
         }
     }
 
@@ -83,21 +81,4 @@ public class CommonProxy {
         event.getRegistry().register(new CartridgeItem());
         event.getRegistry().register(new ItemBlock(ModBlocks.portalBlock).setRegistryName(ModBlocks.portalBlock.getRegistryName()));
     }
-
-    public World getClientWorld() {
-        throw new IllegalStateException("This should only be called from client side");
-    }
-
-    public EntityPlayer getClientPlayer() {
-        throw new IllegalStateException("This should only be called from client side");
-    }
-
-    public <V> ListenableFuture<V> addScheduledTaskClient(Callable<V> callableToSchedule) {
-        throw new IllegalStateException("This should only be called from client side");
-    }
-
-    public ListenableFuture<Object> addScheduledTaskClient(Runnable runnableToSchedule) {
-        throw new IllegalStateException("This should only be called from client side");
-    }
-
 }

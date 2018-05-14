@@ -14,8 +14,7 @@ public class Config {
     private static final String CATEGORY_GENERAL = "general";
     private static final String CATEGORY_PERMISSON = "permission";
 
-    public static void readConfig() {
-        Configuration cfg = CommonProxy.config;
+    public static void readConfig(Configuration cfg) {
         try {
             cfg.load();
             initGeneralConfig(cfg);
