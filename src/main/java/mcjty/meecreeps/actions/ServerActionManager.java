@@ -2,6 +2,7 @@ package mcjty.meecreeps.actions;
 
 import mcjty.lib.varia.SoundTools;
 import mcjty.lib.varia.TeleportationTools;
+import mcjty.lib.worlddata.AbstractWorldData;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.actions.workers.WorkerHelper;
@@ -23,7 +24,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.Constants;
 import org.apache.commons.lang3.tuple.Pair;
@@ -32,10 +32,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
-public class ServerActionManager extends WorldSavedData {
+public class ServerActionManager extends AbstractWorldData<ServerActionManager> {
 
-    public static final String NAME = "MeeCreepsData";
-    private static ServerActionManager instance = null;
+    private static final String NAME = "MeeCreepsData";
 
     private List<ActionOptions> options = new ArrayList<>();
     private Map<Integer, ActionOptions> optionMap = new HashMap<>();
@@ -47,10 +46,12 @@ public class ServerActionManager extends WorldSavedData {
         super(name);
     }
 
-    public void save() {
-        World world = DimensionManager.getWorld(0);
-        world.setData(NAME, this);
-        markDirty();
+    @Override
+    public void clear() {
+        options.clear();
+        optionMap.clear();
+        lastId = 0;
+        entityCache.clear();
     }
 
     /**
@@ -104,12 +105,6 @@ public class ServerActionManager extends WorldSavedData {
         }
     }
 
-    public static void clearInstance() {
-        if (instance != null) {
-            instance = null;
-        }
-    }
-
     public void updateEntityCache(int actionId, @Nullable EntityMeeCreeps entity) {
         if (entity == null) {
             entityCache.remove(actionId);
@@ -144,15 +139,7 @@ public class ServerActionManager extends WorldSavedData {
 
     @Nonnull
     public static ServerActionManager getManager() {
-        if (instance != null) {
-            return instance;
-        }
-        WorldServer world = DimensionManager.getWorld(0);
-        instance = (ServerActionManager) world.loadData(ServerActionManager.class, NAME);
-        if (instance == null) {
-            instance = new ServerActionManager(NAME);
-        }
-        return instance;
+        return getData(ServerActionManager.class, NAME);
     }
 
     public int createActionOptions(World world, BlockPos pos, EnumFacing side, @Nullable EntityPlayer player) {

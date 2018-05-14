@@ -1,7 +1,6 @@
 package mcjty.meecreeps;
 
 import mcjty.lib.base.ModBase;
-import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.api.IMeeCreepsApi;
 import mcjty.meecreeps.commands.CommandClearActions;
 import mcjty.meecreeps.commands.CommandListActions;
@@ -94,11 +93,6 @@ public class MeeCreeps implements ModBase {
         event.registerServerCommand(new CommandTestApi());
         event.registerServerCommand(new CommandClearActions());
         event.registerServerCommand(new CommandListActions());
-    }
-
-    @Mod.EventHandler
-    public void serverStopped(FMLServerStoppedEvent event) {
-        ServerActionManager.clearInstance();
     }
 
     @Override
