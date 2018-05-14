@@ -131,7 +131,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
         IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         Block block = ((ItemBlock) item).getBlock();
-        IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, item.getMetadata(actual), GeneralTools.getHarvester(), EnumHand.MAIN_HAND);
+        IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, item.getMetadata(actual), GeneralTools.getHarvester(world), EnumHand.MAIN_HAND);
         world.setBlockState(pos, stateForPlacement, 3);
         SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
     }

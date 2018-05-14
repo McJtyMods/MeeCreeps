@@ -279,7 +279,7 @@ public class WorkerHelper implements IWorkerHelper {
             return;
         }
         IBlockState state = world.getBlockState(pos);
-        if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester())) {
+        if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester(world))) {
             return;
         }
         Block block = state.getBlock();
@@ -613,7 +613,7 @@ public class WorkerHelper implements IWorkerHelper {
     public boolean placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock) {
         World world = entity.getWorld();
         if (!world.isAirBlock(pos) && !world.getBlockState(pos).getBlock().isReplaceable(world, pos)) {
-            if (!allowedToHarvest(world.getBlockState(pos), world, pos, GeneralTools.getHarvester())) {
+            if (!allowedToHarvest(world.getBlockState(pos), world, pos, GeneralTools.getHarvester(world))) {
                 return false;
             }
             delayForHardBlocks(pos, pp -> {
@@ -639,7 +639,7 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void placeStackAt(ItemStack blockStack, World world, BlockPos pos) {
-        IBlockState state = BlockTools.placeStackAt(GeneralTools.getHarvester(), blockStack, world, pos);
+        IBlockState state = BlockTools.placeStackAt(GeneralTools.getHarvester(world), blockStack, world, pos);
         SoundTools.playSound(world, state.getBlock().getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
     }
 
@@ -651,14 +651,14 @@ public class WorkerHelper implements IWorkerHelper {
             return true;
         }
         IBlockState state = world.getBlockState(pos);
-        if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester())) {
+        if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester(world))) {
             return false;
         }
         Block block = state.getBlock();
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
-        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
+        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester(world));
         SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
-        block.onBlockHarvested(world, pos, state, GeneralTools.getHarvester());
+        block.onBlockHarvested(world, pos, state, GeneralTools.getHarvester(world));
         entity.getEntityWorld().setBlockToAir(pos);
         giveDropsToMeeCreeps(drops);
         return true;
@@ -672,16 +672,16 @@ public class WorkerHelper implements IWorkerHelper {
             return true;
         }
         IBlockState state = world.getBlockState(pos);
-        if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester())) {
+        if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester(world))) {
             return false;
         }
 
         Block block = state.getBlock();
 
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
-        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
+        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester(world));
         SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
-        block.onBlockHarvested(world, pos, state, GeneralTools.getHarvester());
+        block.onBlockHarvested(world, pos, state, GeneralTools.getHarvester(world));
         entity.getEntityWorld().setBlockToAir(pos);
         for (ItemStack stack : drops) {
             entity.entityDropItem(stack, 0.0f);

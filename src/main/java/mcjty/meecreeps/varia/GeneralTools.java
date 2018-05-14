@@ -20,11 +20,12 @@ public class GeneralTools {
 
     private static FakePlayer harvester = null;
 
-    public static FakePlayer getHarvester() {
+    public static FakePlayer getHarvester(World world) {
         if (harvester == null) {
-            harvester = FakePlayerFactory.get(DimensionManager.getWorld(0), new GameProfile(new UUID(656, 123), "meecreps"));
+            harvester = FakePlayerFactory.get(DimensionManager.getWorld(0), new GameProfile(UUID.nameUUIDFromBytes("meecreeps".getBytes()), "meecreps"));
         }
         // @todo config, make it possible to specify lesser pickaxe in config
+        harvester.setWorld(world);
         harvester.setHeldItem(EnumHand.MAIN_HAND, new ItemStack(Items.DIAMOND_PICKAXE));
         return harvester;
     }

@@ -79,7 +79,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
                         BlockPos p = pos.add(x, y, z);
                         if (!alreadyDone.contains(p)) {
                             IBlockState log = entity.getWorld().getBlockState(p);
-                            if (helper.allowedToHarvest(log, entity.getWorld(), p, GeneralTools.getHarvester())) {
+                            if (helper.allowedToHarvest(log, entity.getWorld(), p, GeneralTools.getHarvester(entity.getWorld()))) {
                                 if (log.getBlock() == woodBlock) {
                                     traverseTreeLogs(alreadyDone, p, woodBlock);
                                 }

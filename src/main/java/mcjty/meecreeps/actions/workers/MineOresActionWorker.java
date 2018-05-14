@@ -42,7 +42,7 @@ public class MineOresActionWorker extends AbstractActionWorker {
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
-        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
+        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester(world));
         SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
         world.setBlockToAir(pos);
         helper.giveDropsToMeeCreeps(drops);
@@ -64,7 +64,7 @@ public class MineOresActionWorker extends AbstractActionWorker {
         World world = entity.getWorld();
         List<BlockPos> positions = new ArrayList<>();
         GeneralTools.traverseBox(world, box,
-                (pos, state) -> state.getBlock() == Blocks.FARMLAND && helper.allowedToHarvest(state, world, pos, GeneralTools.getHarvester()),
+                (pos, state) -> state.getBlock() == Blocks.FARMLAND && helper.allowedToHarvest(state, world, pos, GeneralTools.getHarvester(world)),
                 (pos, state) -> {
                     IBlockState cropState = world.getBlockState(pos.up());
                     Block cropBlock = cropState.getBlock();

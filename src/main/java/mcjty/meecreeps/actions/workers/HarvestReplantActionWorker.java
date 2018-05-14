@@ -48,7 +48,7 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
         List<ItemStack> drops = block.getDrops(world, pos, state, 0);
-        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester());
+        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester(world));
         SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
         world.setBlockToAir(pos);
         boolean replanted = false;
