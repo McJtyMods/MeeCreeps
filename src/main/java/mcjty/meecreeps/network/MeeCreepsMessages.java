@@ -24,12 +24,12 @@ public class MeeCreepsMessages {
 
     public static void registerMessages() {
         // Server side
-        INSTANCE.registerMessage(PacketPerformAction.Handler.class, PacketPerformAction.class, PacketHandler.nextID(), Side.SERVER);
-        INSTANCE.registerMessage(PacketSetDestination.Handler.class, PacketSetDestination.class, PacketHandler.nextID(), Side.SERVER);
-        INSTANCE.registerMessage(PacketMakePortals.Handler.class, PacketMakePortals.class, PacketHandler.nextID(), Side.SERVER);
+        INSTANCE.registerMessage(PacketPerformAction.Handler.class, PacketPerformAction.class, PacketHandler.nextPacketID(), Side.SERVER);
+        INSTANCE.registerMessage(PacketSetDestination.Handler.class, PacketSetDestination.class, PacketHandler.nextPacketID(), Side.SERVER);
+        INSTANCE.registerMessage(PacketMakePortals.Handler.class, PacketMakePortals.class, PacketHandler.nextPacketID(), Side.SERVER);
 
         // Client side
-        INSTANCE.registerMessage(PacketActionOptionToClient.Handler.class, PacketActionOptionToClient.class, PacketHandler.nextID(), Side.CLIENT);
-        INSTANCE.registerMessage(PacketShowBalloonToClient.Handler.class, PacketShowBalloonToClient.class, PacketHandler.nextID(), Side.CLIENT);
+        INSTANCE.registerMessage(PacketActionOptionToClient.Handler.class, PacketActionOptionToClient.class, PacketHandler.nextPacketID(), Side.CLIENT);
+        INSTANCE.registerMessage(PacketShowBalloonToClient.Handler.class, PacketShowBalloonToClient.class, PacketHandler.nextPacketID(), Side.CLIENT);
     }
 }
