@@ -1,0 +1,3 @@
+1.2.0alpha:
+- Made compatible with the latest McJtyLib (3.0.0)
+- Make usages of fakeplayer more sane. This might solve some issues in combination with FTB Utilities
