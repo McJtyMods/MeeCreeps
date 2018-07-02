@@ -99,7 +99,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
             ActionOptions options = entry.getValue();
             Stage stage = options.getStage();
             MeeCreepActionType task = options.getTask();
-            EntityMeeCreeps entity = findMeeCreep(sender.getEntityWorld(), entry.getKey());
+            EntityMeeCreeps entity = findMeeCreep(sender.getEntityWorld(), entry.getKey(), options.getDimension());
             String name = entity == null ? "<none>" : entity.getUniqueID().toString();
             sender.sendMessage(new TextComponentString("Action " + entry.getKey() + ", Task " + task.getId() + ", Stage " + stage + ", Entity " + name));
         }
@@ -210,7 +210,8 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
         }
     }
 
-    private EntityMeeCreeps findMeeCreep(World world, int actionId) {
+    // The dimension parameter is the dimension where the meecreep was last seen
+    private EntityMeeCreeps findMeeCreep(World world, int actionId, int dimension) {
         EntityMeeCreeps cachedEntity = getCachedEntity(actionId);
         if (cachedEntity != null && !cachedEntity.isDead) {
             return cachedEntity;
@@ -228,15 +229,12 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
                 return entities.get(0);
             }
         }
-        // Last attempt. Also check unloaded dimensions
-        Integer[] iDs = DimensionManager.getStaticDimensionIDs();
-        for (Integer id : iDs) {
-            World w = TeleportationTools.getWorldForDimension(id);
-            entities = w.getEntities(EntityMeeCreeps.class, input -> input != null && input.getActionId() == actionId && !input.isDead);
-            if (!entities.isEmpty()) {
-                updateEntityCache(actionId, entities.get(0));
-                return entities.get(0);
-            }
+        // Last attempt. Also check the last dimension from the meecreep
+        World w = TeleportationTools.getWorldForDimension(dimension);
+        entities = w.getEntities(EntityMeeCreeps.class, input -> input != null && input.getActionId() == actionId && !input.isDead);
+        if (!entities.isEmpty()) {
+            updateEntityCache(actionId, entities.get(0));
+            return entities.get(0);
         }
 
         return null;
@@ -247,7 +245,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
         List<ActionOptions> newlist = new ArrayList<>();
         Map<Integer, ActionOptions> newmap = new HashMap<>();
         for (ActionOptions option : options) {
-            EntityMeeCreeps meeCreep = findMeeCreep(DimensionManager.getWorld(0), option.getActionId());
+            EntityMeeCreeps meeCreep = findMeeCreep(DimensionManager.getWorld(0), option.getActionId(), option.getDimension());
             boolean keep = true;
 
             World world = meeCreep == null ? DimensionManager.getWorld(option.getDimension()) : meeCreep.getEntityWorld();
@@ -305,6 +303,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
                         BlockPos p = WorkerHelper.findSuitablePositionNearPlayer(meeCreep, player, 4.0);
                         meeCreep = (EntityMeeCreeps) TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX() + .5, p.getY(), p.getZ() + .5, EnumFacing.NORTH);
                         updateEntityCache(option.getActionId(), meeCreep);
+                        option.setDimension(player.getEntityWorld().provider.getDimension());
                     }
                 }
             }

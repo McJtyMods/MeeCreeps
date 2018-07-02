@@ -37,7 +37,7 @@ public class ActionOptions implements IActionContext {
     private final List<MeeCreepActionType> maybeActionOptions;
     private final BlockPos targetPos;
     private final EnumFacing targetSide;
-    private final int dimension;
+    private int dimension;
     @Nullable private final UUID playerId;
     private final int actionId;
 
@@ -254,6 +254,10 @@ public class ActionOptions implements IActionContext {
 
     public int getDimension() {
         return dimension;
+    }
+
+    public void setDimension(int dimension) {
+        this.dimension = dimension;
     }
 
     public int getActionId() {
