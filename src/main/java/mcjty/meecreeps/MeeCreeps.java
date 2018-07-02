@@ -26,7 +26,7 @@ import java.util.function.Function;
         acceptedMinecraftVersions = "[1.12,1.13)")
 public class MeeCreeps implements ModBase {
     public static final String MODID = "meecreeps";
-    public static final String VERSION = "1.2.0";
+    public static final String VERSION = "1.2.1";
     public static final String MIN_MCJTYLIB_VER = "3.0.0";
     public static final String MIN_FORGE_VER = "14.22.0.2464";
 

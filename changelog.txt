@@ -1,3 +1,8 @@
+1.2.1:
+- Aemande added support for Menril torches from Integrated Dynamics
+- Improved performance for meecreeps trying to follow the player accross dimensions
+- When a meecreep cannot be found for some time it will remove the action now. This should prevent actions from staying around forever and possibly eating system resources
+
 1.2.0:
 - Made compatible with the latest McJtyLib (3.0.0)
 - Make usages of fakeplayer more sane. This might solve some issues in combination with FTB Utilities
