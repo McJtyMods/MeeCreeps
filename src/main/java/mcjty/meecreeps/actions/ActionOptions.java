@@ -38,6 +38,7 @@ public class ActionOptions implements IActionContext {
     private final BlockPos targetPos;
     private final EnumFacing targetSide;
     private int dimension;
+    private int failureCount;                       // After how many ticks do we give up trying to find this MeeCreep
     @Nullable private final UUID playerId;
     private final int actionId;
 
@@ -56,6 +57,7 @@ public class ActionOptions implements IActionContext {
         this.targetPos = targetPos;
         this.targetSide = targetSide;
         this.dimension = dimension;
+        failureCount = 60;
         this.playerId = playerId;
         this.actionId = actionId;
         timeout = 10;
@@ -81,6 +83,7 @@ public class ActionOptions implements IActionContext {
         targetPos = NetworkTools.readPos(buf);
         targetSide = EnumFacing.VALUES[buf.readByte()];
         dimension = buf.readInt();
+        failureCount = buf.readInt();
         if (buf.readBoolean()) {
             playerId = new UUID(buf.readLong(), buf.readLong());
         } else {
@@ -122,6 +125,7 @@ public class ActionOptions implements IActionContext {
         }
 
         dimension = tagCompound.getInteger("dim");
+        failureCount = tagCompound.getInteger("failure");
         targetPos = BlockPos.fromLong(tagCompound.getLong("pos"));
         targetSide = EnumFacing.VALUES[tagCompound.getByte("targetSide")];
         if (tagCompound.hasKey("player")) {
@@ -155,6 +159,7 @@ public class ActionOptions implements IActionContext {
         NetworkTools.writePos(buf, targetPos);
         buf.writeByte(targetSide.ordinal());
         buf.writeInt(dimension);
+        buf.writeInt(failureCount);
         if (playerId != null) {
             buf.writeBoolean(true);
             buf.writeLong(playerId.getMostSignificantBits());
@@ -200,6 +205,7 @@ public class ActionOptions implements IActionContext {
         tagCompound.setTag("drops", list);
 
         tagCompound.setInteger("dim", dimension);
+        tagCompound.setInteger("failure", failureCount);
         tagCompound.setLong("pos", targetPos.toLong());
         tagCompound.setByte("targetSide", (byte) targetSide.ordinal());
         if (playerId != null) {
@@ -250,6 +256,14 @@ public class ActionOptions implements IActionContext {
     @Override
     public EnumFacing getTargetSide() {
         return targetSide;
+    }
+
+    public int getFailureCount() {
+        return failureCount;
+    }
+
+    public void setFailureCount(int failureCount) {
+        this.failureCount = failureCount;
     }
 
     public int getDimension() {

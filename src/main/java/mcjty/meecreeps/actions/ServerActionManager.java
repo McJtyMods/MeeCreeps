@@ -265,6 +265,16 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
                 keep = false;
             }
 
+            if (meeCreep == null) {
+                int failureCount = option.getFailureCount();
+                failureCount--;
+                option.setFailureCount(failureCount);
+                if (failureCount <= 0) {
+                    System.out.println("ServerActionManager.tick: FAILURE");
+                    keep = false;
+                }
+            }
+
             if (keep) {
                 newlist.add(option);
                 newmap.put(option.getActionId(), option);
