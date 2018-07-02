@@ -86,6 +86,8 @@ public class WorkerHelper implements IWorkerHelper {
     static {
         TORCHES.add("minecraft:torch");
         TORCHES.add("tconstruct:stone_torch");
+        TORCHES.add("integrateddynamics:menril_torch");
+        TORCHES.add("integrateddynamics:menril_torch_stone");
     }
 
     public static boolean isTorch(ItemStack stack) {
