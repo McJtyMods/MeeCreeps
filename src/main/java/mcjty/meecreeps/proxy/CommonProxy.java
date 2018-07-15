@@ -1,5 +1,6 @@
 package mcjty.meecreeps.proxy;
 
+import mcjty.lib.datafix.fixes.TileEntityNamespace;
 import mcjty.lib.proxy.AbstractCommonProxy;
 import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.ForgeEventHandlers;
@@ -15,9 +16,12 @@ import mcjty.meecreeps.network.MeeCreepsMessages;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.util.datafix.FixTypes;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.util.ModFixs;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -28,6 +32,8 @@ import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 @Mod.EventBusSubscriber
 public class CommonProxy extends AbstractCommonProxy {
@@ -67,9 +73,19 @@ public class CommonProxy extends AbstractCommonProxy {
 
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
+        ModFixs modFixs = FMLCommonHandler.instance().getDataFixer().init(MeeCreeps.MODID, 1);
+        Map<String, String> oldToNewIdMap = new HashMap<>();
+
         event.getRegistry().register(new HeldCubeBlock());
         event.getRegistry().register(new PortalBlock());
-        GameRegistry.registerTileEntity(PortalTileEntity.class, MeeCreeps.MODID + "_portalblock");
+        GameRegistry.registerTileEntity(PortalTileEntity.class, MeeCreeps.MODID + ":portalblock");
+
+        // We used to accidentally register TEs with names like "minecraft:meecreeps_portalblock" instead of "meecreeps:portalblock".
+        // Set up a DataFixer to map these incorrect names to the correct ones, so that we don't break old saved games.
+        // @todo Remove all this if we ever break saved-game compatibility.
+        oldToNewIdMap.put(MeeCreeps.MODID + "_portalblock", MeeCreeps.MODID + ":portalblock");
+        oldToNewIdMap.put("minecraft:" + MeeCreeps.MODID + "_portalblock", MeeCreeps.MODID + ":portalblock");
+        modFixs.registerFix(FixTypes.BLOCK_ENTITY, new TileEntityNamespace(oldToNewIdMap, 1));
     }
 
     @SubscribeEvent
