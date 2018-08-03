@@ -22,7 +22,7 @@ public class GeneralTools {
 
     public static FakePlayer getHarvester(World world) {
         if (harvester == null) {
-            harvester = FakePlayerFactory.get(DimensionManager.getWorld(0), new GameProfile(UUID.nameUUIDFromBytes("meecreeps".getBytes()), "meecreps"));
+            harvester = FakePlayerFactory.get(DimensionManager.getWorld(0), new GameProfile(UUID.nameUUIDFromBytes("meecreeps".getBytes()), "meecreeps"));
         }
         // @todo config, make it possible to specify lesser pickaxe in config
         harvester.setWorld(world);
