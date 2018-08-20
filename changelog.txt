@@ -1,6 +1,7 @@
 1.2.2:
 - WARNING: Do not load any worlds with MeeCreeps 1.2.1 or earlier if you last saved them with MeeCreeps 1.2.2 or later!
 - Joseph fixed log warnings due to tile entities being registered with names like "minecraft:meecreeps_portalblock" instead of "meecreeps:portalblock".
+- Fixed a typo in fake player name which might cause some issues with other mods (perhaps Mine Colonies)
 
 1.2.1:
 - Aemande added support for Menril torches from Integrated Dynamics
