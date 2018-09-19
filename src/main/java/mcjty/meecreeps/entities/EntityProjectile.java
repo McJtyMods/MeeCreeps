@@ -58,7 +58,7 @@ public class EntityProjectile extends EntityThrowable {
         } else {
             destination = null;
         }
-        if (compound.hasKey("playerId")) {
+        if (compound.hasUniqueId("playerId")) {
             playerId = compound.getUniqueId("playerId");
         } else {
             playerId = null;

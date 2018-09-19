@@ -1,3 +1,6 @@
+1.2.3 (upcoming):
+- Bugfix with storing the correct player with actions that are ongoing while the world is saved
+
 1.2.2:
 - WARNING: Do not load any worlds with MeeCreeps 1.2.1 or earlier if you last saved them with MeeCreeps 1.2.2 or later!
 - Joseph fixed log warnings due to tile entities being registered with names like "minecraft:meecreeps_portalblock" instead of "meecreeps:portalblock".

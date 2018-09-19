@@ -128,7 +128,7 @@ public class ActionOptions implements IActionContext {
         failureCount = tagCompound.getInteger("failure");
         targetPos = BlockPos.fromLong(tagCompound.getLong("pos"));
         targetSide = EnumFacing.VALUES[tagCompound.getByte("targetSide")];
-        if (tagCompound.hasKey("player")) {
+        if (tagCompound.hasUniqueId("player")) {
             playerId = tagCompound.getUniqueId("player");
         } else {
             playerId = null;
