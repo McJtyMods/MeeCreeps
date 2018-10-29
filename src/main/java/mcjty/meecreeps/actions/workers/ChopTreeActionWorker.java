@@ -56,8 +56,10 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
                     BlockPos p = pos.add(x, y, z);
                     IBlockState st = world.getBlockState(p);
                     if (st.getBlock().isLeaves(st, world, p)) {
-                        if (st.getValue(BlockLeaves.DECAYABLE)) {
-                            leavesToTick.put(p, 500);
+                        if (st.getPropertyKeys().contains(BlockLeaves.DECAYABLE)) {
+                            if (st.getValue(BlockLeaves.DECAYABLE)) {
+                                leavesToTick.put(p, 500);
+                            }
                         }
                     }
                 }
