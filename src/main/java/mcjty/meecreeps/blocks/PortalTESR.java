@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.lwjgl.opengl.GL11;
 
 public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
@@ -156,5 +157,9 @@ public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
         u = -v;
         v = swap;
         buffer.pos(face.x3, face.y3, face.z3).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
+    }
+
+    public static void register() {
+        ClientRegistry.bindTileEntitySpecialRenderer(PortalTileEntity.class, new PortalTESR());
     }
 }
