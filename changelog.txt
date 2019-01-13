@@ -1,6 +1,8 @@
-1.2.3 (upcoming):
+1.2.3:
 - Bugfix with storing the correct player with actions that are ongoing while the world is saved
 - Protection for working around crashes with blocks that report they are leaves but don't support DECAYABLE
+- Needs McJtyLib 3.1.0
+- Some cleanups
 
 1.2.2:
 - WARNING: Do not load any worlds with MeeCreeps 1.2.1 or earlier if you last saved them with MeeCreeps 1.2.2 or later!

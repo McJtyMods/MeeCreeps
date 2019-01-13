@@ -26,8 +26,8 @@ import java.util.function.Function;
         acceptedMinecraftVersions = "[1.12,1.13)")
 public class MeeCreeps implements ModBase {
     public static final String MODID = "meecreeps";
-    public static final String VERSION = "1.2.2";
-    public static final String MIN_MCJTYLIB_VER = "3.0.4";
+    public static final String VERSION = "1.2.3";
+    public static final String MIN_MCJTYLIB_VER = "3.1.0";
     public static final String MIN_FORGE_VER = "14.22.0.2464";
 
     @SidedProxy(clientSide = "mcjty.meecreeps.proxy.ClientProxy", serverSide = "mcjty.meecreeps.proxy.ServerProxy")
