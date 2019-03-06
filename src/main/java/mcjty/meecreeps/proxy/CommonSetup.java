@@ -1,7 +1,7 @@
 package mcjty.meecreeps.proxy;
 
 import mcjty.lib.datafix.fixes.TileEntityNamespace;
-import mcjty.lib.proxy.AbstractCommonProxy;
+import mcjty.lib.setup.DefaultCommonSetup;
 import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.MeeCreeps;
@@ -16,6 +16,7 @@ import mcjty.meecreeps.network.MeeCreepsMessages;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.datafix.FixTypes;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
@@ -36,7 +37,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Mod.EventBusSubscriber
-public class CommonProxy extends AbstractCommonProxy {
+public class CommonSetup extends DefaultCommonSetup {
 
     @Override
     public void preInit(FMLPreInitializationEvent e) {
@@ -55,6 +56,11 @@ public class CommonProxy extends AbstractCommonProxy {
 
         // Initialization of blocks and items typically goes here:
         ModEntities.init();
+    }
+
+    @Override
+    public void createTabs() {
+        createTab("meecreeps", new ItemStack(ModItems.portalGunItem));
     }
 
     @Override

@@ -1018,7 +1018,7 @@ public class WorkerHelper implements IWorkerHelper {
             if (stack == null) {
                 // There are still bad mods!
                 String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
-                MeeCreeps.logger.warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
+                MeeCreeps.setup.getLogger().warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
             } else if (!stack.isEmpty() && matcher.test(stack)) {
                 ItemStack extracted = handler.extractItem(i, Math.min(maxAmount, stack.getCount()), false);
                 ItemStack remaining = entity.addStack(extracted);
@@ -1047,7 +1047,7 @@ public class WorkerHelper implements IWorkerHelper {
                 if (stack == null) {
                     // There are still bad mods!
                     String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
-                    MeeCreeps.logger.warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
+                    MeeCreeps.setup.getLogger().warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
                 } else if (!stack.isEmpty()) {
                     if (matcher.test(stack)) {
                         cnt += stack.getCount();
@@ -1084,7 +1084,7 @@ public class WorkerHelper implements IWorkerHelper {
                         if (stack == null) {
                             // There are still bad mods!
                             String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
-                            MeeCreeps.logger.warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
+                            MeeCreeps.setup.getLogger().warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
                         } else if (!stack.isEmpty()) {
                             if (matcher.test(stack)) {
                                 cnt += stack.getCount();
@@ -1177,7 +1177,7 @@ public class WorkerHelper implements IWorkerHelper {
                             if (stack == null) {
                                 // There are still bad mods!
                                 String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
-                                MeeCreeps.logger.warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
+                                MeeCreeps.setup.getLogger().warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
                             } else if (!stack.isEmpty()) {
                                 if (matcher.test(stack)) {
                                     cnt += stack.getCount();

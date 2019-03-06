@@ -2,7 +2,6 @@ package mcjty.meecreeps.config;
 
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
-import mcjty.meecreeps.proxy.CommonProxy;
 import net.minecraftforge.common.config.Configuration;
 import org.apache.logging.log4j.Level;
 
@@ -20,7 +19,7 @@ public class Config {
             initGeneralConfig(cfg);
             initPermissionConfig(cfg);
         } catch (Exception e1) {
-            MeeCreeps.logger.log(Level.ERROR, "Problem loading config file!", e1);
+            MeeCreeps.setup.getLogger().log(Level.ERROR, "Problem loading config file!", e1);
         } finally {
             if (cfg.hasChanged()) {
                 cfg.save();

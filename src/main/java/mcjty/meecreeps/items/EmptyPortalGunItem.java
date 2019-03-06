@@ -30,7 +30,7 @@ public class EmptyPortalGunItem extends Item {
         setRegistryName("emptyportalgun");
         setUnlocalizedName(MeeCreeps.MODID + ".emptyportalgun");
         setMaxStackSize(1);
-        setCreativeTab(MeeCreeps.creativeTab);
+        setCreativeTab(MeeCreeps.setup.getTab());
     }
 
     @Override

@@ -1,15 +1,12 @@
 package mcjty.meecreeps.proxy;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import mcjty.lib.setup.DefaultClientProxy;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.entities.ModEntities;
 import mcjty.meecreeps.input.KeyBindings;
 import mcjty.meecreeps.input.KeyInputHandler;
 import mcjty.meecreeps.items.ModItems;
 import mcjty.meecreeps.render.BalloonRenderer;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.world.World;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -21,10 +18,8 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
-import java.util.concurrent.Callable;
-
 @Mod.EventBusSubscriber(Side.CLIENT)
-public class ClientProxy extends CommonProxy {
+public class ClientProxy extends DefaultClientProxy {
     @Override
     public void preInit(FMLPreInitializationEvent e) {
         super.preInit(e);
@@ -65,25 +60,4 @@ public class ClientProxy extends CommonProxy {
 
         BalloonRenderer.renderBalloon();
     }
-
-    @Override
-    public World getClientWorld() {
-        return Minecraft.getMinecraft().world;
-    }
-
-    @Override
-    public EntityPlayer getClientPlayer() {
-        return Minecraft.getMinecraft().player;
-    }
-
-    @Override
-    public <V> ListenableFuture<V> addScheduledTaskClient(Callable<V> callableToSchedule) {
-        return Minecraft.getMinecraft().addScheduledTask(callableToSchedule);
-    }
-
-    @Override
-    public ListenableFuture<Object> addScheduledTaskClient(Runnable runnableToSchedule) {
-        return Minecraft.getMinecraft().addScheduledTask(runnableToSchedule);
-    }
-
 }

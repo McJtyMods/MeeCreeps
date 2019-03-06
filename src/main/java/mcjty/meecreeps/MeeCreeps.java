@@ -1,19 +1,16 @@
 package mcjty.meecreeps;
 
 import mcjty.lib.base.ModBase;
+import mcjty.lib.proxy.IProxy;
 import mcjty.meecreeps.api.IMeeCreepsApi;
 import mcjty.meecreeps.commands.CommandClearActions;
 import mcjty.meecreeps.commands.CommandListActions;
 import mcjty.meecreeps.commands.CommandTestApi;
-import mcjty.meecreeps.items.ModItems;
-import mcjty.meecreeps.proxy.CommonProxy;
-import net.minecraft.creativetab.CreativeTabs;
+import mcjty.meecreeps.proxy.CommonSetup;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.*;
-import org.apache.logging.log4j.Logger;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -31,22 +28,13 @@ public class MeeCreeps implements ModBase {
     public static final String MIN_FORGE_VER = "14.22.0.2464";
 
     @SidedProxy(clientSide = "mcjty.meecreeps.proxy.ClientProxy", serverSide = "mcjty.meecreeps.proxy.ServerProxy")
-    public static CommonProxy proxy;
+    public static IProxy proxy;
+    public static CommonSetup setup = new CommonSetup();
 
     @Mod.Instance(MODID)
     public static MeeCreeps instance;
 
     public static MeeCreepsApi api = new MeeCreepsApi();
-
-    public static Logger logger;
-
-    public static CreativeTabs creativeTab = new CreativeTabs("meecreeps") {
-        @Override
-        public ItemStack getTabIconItem() {
-            return new ItemStack(ModItems.portalGunItem);
-        }
-    };
-
 
     /**
      * Run before anything else. Read your config, create blocks, items, etc, and
@@ -54,8 +42,8 @@ public class MeeCreeps implements ModBase {
      */
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
-        logger = e.getModLog();
-        this.proxy.preInit(e);
+        setup.preInit(e);
+        proxy.preInit(e);
     }
 
     @Mod.EventHandler
@@ -66,7 +54,7 @@ public class MeeCreeps implements ModBase {
                 if (value.isPresent()) {
                     value.get().apply(api);
                 } else {
-                    logger.warn("Some mod didn't return a valid result with getMeeCreepsApi!");
+                    setup.getLogger().warn("Some mod didn't return a valid result with getMeeCreepsApi!");
                 }
             }
         }
@@ -77,7 +65,8 @@ public class MeeCreeps implements ModBase {
      */
     @Mod.EventHandler
     public void init(FMLInitializationEvent e) {
-        this.proxy.init(e);
+        setup.init(e);
+        proxy.init(e);
     }
 
     /**
@@ -85,7 +74,8 @@ public class MeeCreeps implements ModBase {
      */
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent e) {
-        this.proxy.postInit(e);
+        setup.postInit(e);
+        proxy.postInit(e);
     }
 
     @Mod.EventHandler
