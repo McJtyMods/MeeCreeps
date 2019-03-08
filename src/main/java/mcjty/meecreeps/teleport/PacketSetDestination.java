@@ -2,15 +2,15 @@ package mcjty.meecreeps.teleport;
 
 import io.netty.buffer.ByteBuf;
 import mcjty.lib.network.NetworkTools;
+import mcjty.lib.thirteen.Context;
 import mcjty.meecreeps.items.PortalGunItem;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+
+import java.util.function.Supplier;
 
 public class PacketSetDestination implements IMessage {
 
@@ -37,24 +37,23 @@ public class PacketSetDestination implements IMessage {
     public PacketSetDestination() {
     }
 
+    public PacketSetDestination(ByteBuf buf) {
+        fromBytes(buf);
+    }
+
     public PacketSetDestination(TeleportDestination destination, int destinationIndex) {
         this.destination = destination;
         this.destinationIndex = destinationIndex;
     }
 
-    public static class Handler implements IMessageHandler<PacketSetDestination, IMessage> {
-        @Override
-        public IMessage onMessage(PacketSetDestination message, MessageContext ctx) {
-            FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(() -> handle(message, ctx));
-            return null;
-        }
-
-        private void handle(PacketSetDestination message, MessageContext ctx) {
-            EntityPlayerMP player = ctx.getServerHandler().player;
+    public void handle(Supplier<Context> supplier) {
+        Context ctx = supplier.get();
+        ctx.enqueueWork(() -> {
+            EntityPlayerMP player = ctx.getSender();
             ItemStack heldItem = PortalGunItem.getGun(player);
             if (heldItem.isEmpty()) return;
-            PortalGunItem.addDestination(heldItem, message.destination, message.destinationIndex);
-        }
+            PortalGunItem.addDestination(heldItem, destination, destinationIndex);
+        });
+        ctx.setPacketHandled(true);
     }
-
 }

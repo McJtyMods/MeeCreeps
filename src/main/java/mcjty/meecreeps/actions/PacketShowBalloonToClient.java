@@ -2,10 +2,10 @@ package mcjty.meecreeps.actions;
 
 import io.netty.buffer.ByteBuf;
 import mcjty.lib.network.NetworkTools;
-import mcjty.meecreeps.MeeCreeps;
+import mcjty.lib.thirteen.Context;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+
+import java.util.function.Supplier;
 
 public class PacketShowBalloonToClient implements IMessage {
     private String message;
@@ -37,21 +37,20 @@ public class PacketShowBalloonToClient implements IMessage {
     public PacketShowBalloonToClient() {
     }
 
+    public PacketShowBalloonToClient(ByteBuf buf) {
+        fromBytes(buf);
+    }
+
     public PacketShowBalloonToClient(String message, String... parameters) {
         this.message = message;
         this.parameters = parameters;
     }
 
-    public static class Handler implements IMessageHandler<PacketShowBalloonToClient, IMessage> {
-        @Override
-        public IMessage onMessage(PacketShowBalloonToClient message, MessageContext ctx) {
-            MeeCreeps.proxy.addScheduledTaskClient(() -> handle(message, ctx));
-            return null;
-        }
-
-        private void handle(PacketShowBalloonToClient message, MessageContext ctx) {
-            ClientActionManager.showProblem(message.message, message.parameters);
-        }
+    public void handle(Supplier<Context> supplier) {
+        Context ctx = supplier.get();
+        ctx.enqueueWork(() -> {
+            ClientActionManager.showProblem(message, parameters);
+        });
+        ctx.setPacketHandled(true);
     }
-
 }

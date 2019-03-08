@@ -2,13 +2,16 @@ package mcjty.meecreeps.network;
 
 
 import mcjty.lib.network.PacketHandler;
+import mcjty.lib.thirteen.ChannelBuilder;
+import mcjty.lib.thirteen.SimpleChannel;
+import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.PacketActionOptionToClient;
 import mcjty.meecreeps.actions.PacketPerformAction;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.teleport.PacketMakePortals;
 import mcjty.meecreeps.teleport.PacketSetDestination;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import net.minecraftforge.fml.relauncher.Side;
 
 public class MeeCreepsMessages {
 
@@ -17,19 +20,27 @@ public class MeeCreepsMessages {
     public MeeCreepsMessages() {
     }
 
-    public static void registerMessages(SimpleNetworkWrapper net) {
-        INSTANCE = net;
-        registerMessages();
-    }
+    public static void registerMessages(String name) {
+        SimpleChannel net = ChannelBuilder
+                .named(new ResourceLocation(MeeCreeps.MODID, name))
+                .networkProtocolVersion(() -> "1.0")
+                .clientAcceptedVersions(s -> true)
+                .serverAcceptedVersions(s -> true)
+                .simpleChannel();
 
-    public static void registerMessages() {
+        INSTANCE = net.getNetwork();
+
         // Server side
-        INSTANCE.registerMessage(PacketPerformAction.Handler.class, PacketPerformAction.class, PacketHandler.nextPacketID(), Side.SERVER);
-        INSTANCE.registerMessage(PacketSetDestination.Handler.class, PacketSetDestination.class, PacketHandler.nextPacketID(), Side.SERVER);
-        INSTANCE.registerMessage(PacketMakePortals.Handler.class, PacketMakePortals.class, PacketHandler.nextPacketID(), Side.SERVER);
+        net.registerMessageServer(id(), PacketPerformAction.class, PacketPerformAction::toBytes, PacketPerformAction::new, PacketPerformAction::handle);
+        net.registerMessageServer(id(), PacketSetDestination.class, PacketSetDestination::toBytes, PacketSetDestination::new, PacketSetDestination::handle);
+        net.registerMessageServer(id(), PacketMakePortals.class, PacketMakePortals::toBytes, PacketMakePortals::new, PacketMakePortals::handle);
 
         // Client side
-        INSTANCE.registerMessage(PacketActionOptionToClient.Handler.class, PacketActionOptionToClient.class, PacketHandler.nextPacketID(), Side.CLIENT);
-        INSTANCE.registerMessage(PacketShowBalloonToClient.Handler.class, PacketShowBalloonToClient.class, PacketHandler.nextPacketID(), Side.CLIENT);
+        net.registerMessageClient(id(), PacketActionOptionToClient.class, PacketActionOptionToClient::toBytes, PacketActionOptionToClient::new, PacketActionOptionToClient::handle);
+        net.registerMessageClient(id(), PacketShowBalloonToClient.class, PacketShowBalloonToClient::toBytes, PacketShowBalloonToClient::new, PacketShowBalloonToClient::handle);
+    }
+
+    private static int id() {
+        return PacketHandler.nextPacketID();
     }
 }

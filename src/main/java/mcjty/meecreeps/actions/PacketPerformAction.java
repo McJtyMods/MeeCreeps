@@ -2,10 +2,10 @@ package mcjty.meecreeps.actions;
 
 import io.netty.buffer.ByteBuf;
 import mcjty.lib.network.NetworkTools;
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import mcjty.lib.thirteen.Context;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+
+import java.util.function.Supplier;
 
 public class PacketPerformAction implements IMessage {
 
@@ -30,23 +30,21 @@ public class PacketPerformAction implements IMessage {
     public PacketPerformAction() {
     }
 
+    public PacketPerformAction(ByteBuf buf) {
+        fromBytes(buf);
+    }
+
     public PacketPerformAction(ActionOptions options, MeeCreepActionType type, String furtherQuestionId) {
         this.id = options.getActionId();
         this.type = type;
         this.furtherQuestionId = furtherQuestionId;
     }
 
-    public static class Handler implements IMessageHandler<PacketPerformAction, IMessage> {
-        @Override
-        public IMessage onMessage(PacketPerformAction message, MessageContext ctx) {
-            FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(() -> handle(message, ctx));
-            return null;
-        }
-
-        private void handle(PacketPerformAction message, MessageContext ctx) {
-            ServerActionManager.getManager().performAction(ctx.getServerHandler().player, message.id, message.type,
-                    message.furtherQuestionId);
-        }
+    public void handle(Supplier<Context> supplier) {
+        Context ctx = supplier.get();
+        ctx.enqueueWork(() -> {
+            ServerActionManager.getManager().performAction(ctx.getSender(), id, type, furtherQuestionId);
+        });
+        ctx.setPacketHandled(true);
     }
-
 }

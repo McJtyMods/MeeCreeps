@@ -29,7 +29,6 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import java.io.File;
@@ -51,8 +50,7 @@ public class CommonSetup extends DefaultCommonSetup {
         mainConfig = new Configuration(new File(directory.getPath(), "meecreeps.cfg"));
         Config.readConfig(mainConfig);
 
-        SimpleNetworkWrapper network = mcjty.lib.network.PacketHandler.registerMessages(MeeCreeps.MODID, "meecreeps");
-        MeeCreepsMessages.registerMessages(network);
+        MeeCreepsMessages.registerMessages("meecreeps");
 
         // Initialization of blocks and items typically goes here:
         ModEntities.init();
