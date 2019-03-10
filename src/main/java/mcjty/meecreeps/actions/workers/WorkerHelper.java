@@ -289,10 +289,10 @@ public class WorkerHelper implements IWorkerHelper {
             nextJob.accept(pos);
         } else {
             float hardness = state.getBlockHardness(world, pos);
-            if (hardness < Config.delayAtHardness) {
+            if (hardness < Config.delayAtHardness.get()) {
                 nextJob.accept(pos);
             } else {
-                delay((int) (hardness * Config.delayFactor), () -> nextJob.accept(pos));
+                delay((int) (hardness * Config.delayFactor.get()), () -> nextJob.accept(pos));
             }
         }
     }
@@ -517,7 +517,7 @@ public class WorkerHelper implements IWorkerHelper {
         World world = entity.getWorld();
 
         int cnt = world.countEntities(EntityMeeCreeps.class);
-        if (cnt >= Config.maxSpawnCount) {
+        if (cnt >= Config.maxSpawnCount.get()) {
             return;
         }
 

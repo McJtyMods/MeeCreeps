@@ -54,7 +54,7 @@ public class CreepCubeItem extends Item {
             tooltip.add(TextFormatting.YELLOW + "    (" + I18n.format(factory.getMessage()) + ")");
         }
         if (isLimited()) {
-            Collections.addAll(tooltip, StringUtils.split(I18n.format("message.meecreeps.tooltip.cube_uses", Integer.toString(Config.meeCreepBoxMaxUsage - getUsages(stack))), "\n"));
+            Collections.addAll(tooltip, StringUtils.split(I18n.format("message.meecreeps.tooltip.cube_uses", Integer.toString(Config.meeCreepBoxMaxUsage.get() - getUsages(stack))), "\n"));
         }
     }
 
@@ -64,7 +64,7 @@ public class CreepCubeItem extends Item {
     }
 
     private boolean isLimited() {
-        return Config.meeCreepBoxMaxUsage > 0;
+        return Config.meeCreepBoxMaxUsage.get() > 0;
     }
 
     public static void setLastAction(ItemStack cube, MeeCreepActionType type, @Nullable String furtherQuestionId) {
@@ -117,7 +117,7 @@ public class CreepCubeItem extends Item {
 
     @Override
     public double getDurabilityForDisplay(ItemStack stack) {
-        int max = Config.meeCreepBoxMaxUsage;
+        int max = Config.meeCreepBoxMaxUsage.get();
         int usages = getUsages(stack);
         return usages / (double) max;
     }
@@ -143,17 +143,17 @@ public class CreepCubeItem extends Item {
 
         if (isLimited()) {
             ItemStack heldItem = player.getHeldItem(hand);
-            if (getUsages(heldItem) >= Config.meeCreepBoxMaxUsage) {
+            if (getUsages(heldItem) >= Config.meeCreepBoxMaxUsage.get()) {
                 MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.box_unusable"), (EntityPlayerMP) player);
                 return EnumActionResult.SUCCESS;
             }
             setUsages(heldItem, getUsages(heldItem)+1);
         }
 
-        if (Config.maxMeecreepsPerPlayer >= 0) {
+        if (Config.maxMeecreepsPerPlayer.get() >= 0) {
             int cnt = ServerActionManager.getManager().countMeeCreeps(player);
-            if (cnt >= Config.maxMeecreepsPerPlayer) {
-                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.max_spawn_reached", Integer.toString(Config.maxMeecreepsPerPlayer)), (EntityPlayerMP) player);
+            if (cnt >= Config.maxMeecreepsPerPlayer.get()) {
+                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.max_spawn_reached", Integer.toString(Config.maxMeecreepsPerPlayer.get())), (EntityPlayerMP) player);
                 return EnumActionResult.SUCCESS;
             }
         }

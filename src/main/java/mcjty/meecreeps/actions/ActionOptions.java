@@ -415,7 +415,7 @@ public class ActionOptions implements IActionContext {
         entity.setActionId(actionId);
         world.spawnEntity(entity);
 
-        if (doSound && Config.meeCreepVolume > 0.01f) {
+        if (doSound && Config.meeCreepVolume.get() > 0.01f) {
             String snd = "intro1";
             switch (entity.getRandom().nextInt(4)) {
                 case 0:
@@ -432,7 +432,7 @@ public class ActionOptions implements IActionContext {
                     break;
             }
             SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, snd));
-            SoundTools.playSound(world, sound, p.getX(), p.getY(), p.getZ(), Config.meeCreepVolume, 1);
+            SoundTools.playSound(world, sound, p.getX(), p.getY(), p.getZ(), Config.meeCreepVolume.get(), 1);
         }
 
         return true;

@@ -70,7 +70,7 @@ public class CartridgeItem extends Item {
 
     @Override
     public double getDurabilityForDisplay(ItemStack stack) {
-        int max = Config.maxCharge;
+        int max = Config.maxCharge.get();
         int stored = getCharge(stack);
         return (max - stored) / (double) max;
     }
@@ -94,14 +94,14 @@ public class CartridgeItem extends Item {
     private void chargeCartridge(EntityPlayer player, World world, BlockPos pos, EnumHand hand) {
         ItemStack heldItem = player.getHeldItem(hand);
         int charge = getCharge(heldItem);
-        if (charge >= (Config.maxCharge-Config.chargesPerEnderpearl+1)) {
+        if (charge >= (Config.maxCharge.get()-Config.chargesPerEnderpearl.get()+1)) {
             MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cartridge_full"), (EntityPlayerMP) player);
         } else {
             for (int i = 0 ; i < player.inventory.getSizeInventory() ; i++) {
                 ItemStack stack = player.inventory.getStackInSlot(i);
                 if (stack.getItem() == Items.ENDER_PEARL) {
                     ItemStack splitted = stack.splitStack(1);
-                    charge += Config.chargesPerEnderpearl;
+                    charge += Config.chargesPerEnderpearl.get();
                     setCharge(heldItem, charge);
                     return;
                 }

@@ -209,7 +209,7 @@ public class PortalGunItem extends Item {
 
     @Override
     public double getDurabilityForDisplay(ItemStack stack) {
-        int max = Config.maxCharge;
+        int max = Config.maxCharge.get();
         int stored = getCharge(stack);
         return (max - stored) / (double) max;
     }

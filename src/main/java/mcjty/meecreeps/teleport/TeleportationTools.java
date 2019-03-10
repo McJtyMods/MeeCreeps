@@ -75,11 +75,11 @@ public class TeleportationTools {
         destWorld.setBlockState(dest.getPos(), ModBlocks.portalBlock.getDefaultState(), 3);
         PortalTileEntity destination = (PortalTileEntity) destWorld.getTileEntity(dest.getPos());
 
-        source.setTimeout(Config.portalTimeout);
+        source.setTimeout(Config.portalTimeout.get());
         source.setOther(dest);
         source.setPortalSide(selectedSide);
 
-        destination.setTimeout(Config.portalTimeout);
+        destination.setTimeout(Config.portalTimeout.get());
         destination.setOther(new TeleportDestination("", sourceWorld.provider.getDimension(), sourcePortalPos, selectedSide));
         destination.setPortalSide(dest.getSide());
     }
@@ -110,11 +110,11 @@ public class TeleportationTools {
         destWorld.setBlockState(dest.getPos(), ModBlocks.portalBlock.getDefaultState(), 3);
         PortalTileEntity destination = (PortalTileEntity) destWorld.getTileEntity(dest.getPos());
 
-        source.setTimeout(Config.portalTimeout);
+        source.setTimeout(Config.portalTimeout.get());
         source.setOther(dest);
         source.setPortalSide(selectedSide);
 
-        destination.setTimeout(Config.portalTimeout);
+        destination.setTimeout(Config.portalTimeout.get());
         destination.setOther(new TeleportDestination("", sourceWorld.provider.getDimension(), sourcePortalPos, selectedSide));
         destination.setPortalSide(dest.getSide());
     }

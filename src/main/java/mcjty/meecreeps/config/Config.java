@@ -1,5 +1,6 @@
 package mcjty.meecreeps.config;
 
+import mcjty.lib.thirteen.ConfigSpec;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
 import net.minecraftforge.common.config.Configuration;
@@ -16,8 +17,7 @@ public class Config {
     public static void readConfig(Configuration cfg) {
         try {
             cfg.load();
-            initGeneralConfig(cfg);
-            initPermissionConfig(cfg);
+            initConfig(cfg);
         } catch (Exception e1) {
             MeeCreeps.setup.getLogger().log(Level.ERROR, "Problem loading config file!", e1);
         } finally {
@@ -27,54 +27,103 @@ public class Config {
         }
     }
 
-    public static int portalTimeout = 30*20;
-    public static int portalTimeoutAfterEntry = 5*20;
-    public static int maxCharge = 64;
-    public static int chargesPerEnderpearl = 4;
+    public static ConfigSpec.IntValue portalTimeout;
+    public static ConfigSpec.IntValue portalTimeoutAfterEntry;
+    public static ConfigSpec.IntValue maxCharge;
+    public static ConfigSpec.IntValue chargesPerEnderpearl;
 
-    public static int meeCreepBoxMaxUsage = -1;
-    public static int maxMeecreepsPerPlayer = 4;
+    public static ConfigSpec.IntValue meeCreepBoxMaxUsage;
+    public static ConfigSpec.IntValue maxMeecreepsPerPlayer;
 
-    public static float meeCreepVolume = 1.0f;
-    public static float teleportVolume = 1.0f;
+    public static ConfigSpec.DoubleValue meeCreepVolume;
+    public static ConfigSpec.DoubleValue teleportVolume;
 
-    public static int messageTimeout = 120;
-    public static int messageX = 0;
-    public static int messageY = 10;
+    public static ConfigSpec.IntValue messageTimeout;
+    public static ConfigSpec.IntValue messageX;
+    public static ConfigSpec.IntValue messageY;
 
-    public static int maxSpawnCount = 60;
-    public static int maxTreeBlocks = 2000;
+    public static ConfigSpec.IntValue maxSpawnCount;
+    public static ConfigSpec.IntValue maxTreeBlocks;
 
-    public static float delayAtHardness = 10;
-    public static float delayFactor = 0.75f;
+    public static ConfigSpec.DoubleValue delayAtHardness;
+    public static ConfigSpec.DoubleValue delayFactor;
 
     public static Set<String> allowedActions = new HashSet<>();
 
+    private static final ConfigSpec.Builder SERVER_BUILDER = new ConfigSpec.Builder();
+    private static final ConfigSpec.Builder CLIENT_BUILDER = new ConfigSpec.Builder();
+
+    static {
+        SERVER_BUILDER.comment("General configuration").push(CATEGORY_GENERAL);
+        CLIENT_BUILDER.comment("General configuration").push(CATEGORY_GENERAL);
+
+        portalTimeout = SERVER_BUILDER
+                .comment("Amount of ticks until the portalpair disappears")
+                .defineInRange("portalTimeout", 30*20, 1, 1000000);
+        portalTimeoutAfterEntry = SERVER_BUILDER
+                .comment("Amount of ticks until the portalpair disappears after an entity has gone through")
+                .defineInRange("portalTimeoutAfterEntry", 5*20, 1, 1000000);
+        maxCharge = SERVER_BUILDER
+                .comment("Maximum charge in a portalgun/cartridge")
+                .defineInRange("maxCharge", 64, 1, 1000000);
+        chargesPerEnderpearl = SERVER_BUILDER
+                .comment("Number of charges per enderpearl")
+                .defineInRange("chargesPerEnderpearl", 4, 1, 1000000);
+        meeCreepBoxMaxUsage = SERVER_BUILDER
+                .comment("Maximum number of uses for a single MeeCreep box (-1 means unlimited)")
+                .defineInRange("meeCreepBoxMaxUsage", -1, -1, 1000000);
+        maxMeecreepsPerPlayer = SERVER_BUILDER
+                .comment("Maximum number of active MeeCreeps per player (-1 means unlimited)")
+                .defineInRange("maxMeecreepsPerPlayer", 4, -1, 1000000);
+
+        meeCreepVolume = SERVER_BUILDER
+                .comment("Volume of the MeeCreep")
+                .defineInRange("meeCreepVolume", 1.0, 0, 1);
+        teleportVolume = SERVER_BUILDER
+                .comment("Volume of the Portal Gun")
+                .defineInRange("teleportVolume", 1.0, 0, 1);
+
+        messageX = CLIENT_BUILDER
+                .comment("Balloon horizontal postion: 0 means centered, positive means percentage offset from left side, negative means percentage offset from right side")
+                .defineInRange("messageX", 0, -100, 100);
+        messageY = CLIENT_BUILDER
+                .comment("Balloon vertical position: 0 means centered, positive means percentage offset from top side, negative means percentage offset from bottom side")
+                .defineInRange("messageY", 10, -100, 100);
+        messageTimeout = CLIENT_BUILDER
+                .comment("Number of ticks (20 ticks per second) before the balloon message disappears")
+                .defineInRange("messageTimeout", 120, 1, 10000);
+
+        maxSpawnCount = SERVER_BUILDER
+                .comment("Spawn cap for an angry MeeCreep (a MeeCreep with a box)")
+                .defineInRange("maxSpawnCount", 60, 1, 200);
+        maxTreeBlocks = SERVER_BUILDER
+                .comment("Maximum number of tree blocks a single MeeCreep can chop down")
+                .defineInRange("maxTreeBlocks", 2000, 1, 100000);
+
+        delayAtHardness = SERVER_BUILDER
+                .comment("Delay harvest of blocks if hardness is bigger then this value")
+                .defineInRange("delayAtHardness", 10.0, 0, 10000000);
+        delayFactor = SERVER_BUILDER
+                .comment("Speed modifier for harvesting (i.e. how much faster a MeeCreep is compared to a player)")
+                .defineInRange("delayFactor", 0.75, 0, 1000);
+
+        SERVER_BUILDER.pop();
+        CLIENT_BUILDER.pop();
+    }
+
+    public static ConfigSpec SERVER_CONFIG;
+    public static ConfigSpec CLIENT_CONFIG;
+
+
+    private static void initConfig(Configuration cfg) {
+        SERVER_CONFIG = SERVER_BUILDER.build(cfg);
+        CLIENT_CONFIG = CLIENT_BUILDER.build(cfg);
+
+        initPermissionConfig(cfg);
+    }
+
     // @todo
     // config for type of pickaxe
-
-    private static void initGeneralConfig(Configuration cfg) {
-        cfg.addCustomCategoryComment(CATEGORY_GENERAL, "General configuration");
-        portalTimeout = cfg.getInt("portalTimeout", CATEGORY_GENERAL, portalTimeout, 1, 1000000, "Amount of ticks until the portalpair disappears");
-        portalTimeoutAfterEntry = cfg.getInt("portalTimeoutAfterEntry", CATEGORY_GENERAL, portalTimeoutAfterEntry, 1, 1000000, "Amount of ticks until the portalpair disappears after an entity has gone through");
-        maxCharge = cfg.getInt("maxCharge", CATEGORY_GENERAL, maxCharge, 1, 1000000, "Maximum charge in a portalgun/cartridge");
-        chargesPerEnderpearl = cfg.getInt("chargesPerEnderpearl", CATEGORY_GENERAL, chargesPerEnderpearl, 1, 1000000, "Number of charges per enderpearl");
-        meeCreepBoxMaxUsage = cfg.getInt("meeCreepBoxMaxUsage", CATEGORY_GENERAL, meeCreepBoxMaxUsage, -1, 1000000, "Maximum number of uses for a single MeeCreep box (-1 means unlimited)");
-        maxMeecreepsPerPlayer = cfg.getInt("maxMeecreepsPerPlayer", CATEGORY_GENERAL, maxMeecreepsPerPlayer, -1, 1000000, "Maximum number of active MeeCreeps per player (-1 means unlimited)");
-
-        meeCreepVolume = cfg.getFloat("meeCreepVolume", CATEGORY_GENERAL, meeCreepVolume, 0, 1, "Volume of the MeeCreep");
-        teleportVolume = cfg.getFloat("teleportVolume", CATEGORY_GENERAL, teleportVolume, 0, 1, "Volume of the Portal Gun");
-
-        messageX = cfg.getInt("messageX", CATEGORY_GENERAL, messageX, -100, 100, "Balloon horizontal postion: 0 means centered, positive means percentage offset from left side, negative means percentage offset from right side");
-        messageY = cfg.getInt("messageY", CATEGORY_GENERAL, messageY, -100, 100, "Balloon vertical position: 0 means centered, positive means percentage offset from top side, negative means percentage offset from bottom side");
-        messageTimeout = cfg.getInt("messageTimeout", CATEGORY_GENERAL, messageTimeout, 1, 10000, "Number of ticks (20 ticks per second) before the balloon message disappears");
-
-        maxSpawnCount = cfg.getInt("maxSpawnCount", CATEGORY_GENERAL, maxSpawnCount, 1, 200, "Spawn cap for an angry MeeCreep (a MeeCreep with a box)");
-        maxTreeBlocks = cfg.getInt("maxTreeBlocks", CATEGORY_GENERAL, maxTreeBlocks, 1, 100000, "Maximum number of tree blocks a single MeeCreep can chop down");
-
-        delayAtHardness = cfg.getFloat("delayAtHardness", CATEGORY_GENERAL, delayAtHardness, 0, 10000000, "Delay harvest of blocks if hardness is bigger then this value");
-        delayFactor = cfg.getFloat("delayFactor", CATEGORY_GENERAL, delayFactor, 0, 1000, "Speed modifier for harvesting (i.e. how much faster a MeeCreep is compared to a player)");
-    }
 
     private static void initPermissionConfig(Configuration cfg) {
         cfg.addCustomCategoryComment(CATEGORY_PERMISSON, "Permission configuration");

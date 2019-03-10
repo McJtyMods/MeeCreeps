@@ -46,7 +46,7 @@ public class PortalTileEntity extends TileEntity implements ITickable {
                 return;
             }
 
-            if ((!soundStart) && timeout > Config.portalTimeout-10) {
+            if ((!soundStart) && timeout > Config.portalTimeout.get()-10) {
                 soundStart = true;
                 SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "portal"));
                 // @todo config
@@ -55,9 +55,9 @@ public class PortalTileEntity extends TileEntity implements ITickable {
 
             if ((!soundEnd) && timeout < 10) {
                 soundEnd = true;
-                if (Config.teleportVolume > 0.01f) {
+                if (Config.teleportVolume.get() > 0.01f) {
                     SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "portal"));
-                    SoundTools.playSound(world, sound, pos.getX(), pos.getY(), pos.getZ(), Config.teleportVolume, 1);
+                    SoundTools.playSound(world, sound, pos.getX(), pos.getY(), pos.getZ(), Config.teleportVolume.get(), 1);
                 }
             }
 
@@ -74,13 +74,13 @@ public class PortalTileEntity extends TileEntity implements ITickable {
                             oy -= entity.height + .7;
                         }
                         TeleportationTools.teleportEntity(entity, otherPortal.getWorld(), otherX, oy, otherZ, otherPortal.getPortalSide());
-                        setTimeout(Config.portalTimeoutAfterEntry);
-                        otherPortal.setTimeout(Config.portalTimeoutAfterEntry);
+                        setTimeout(Config.portalTimeoutAfterEntry.get());
+                        otherPortal.setTimeout(Config.portalTimeoutAfterEntry.get());
 
                         if (entity instanceof EntityPlayer) {
-                            if (Config.teleportVolume > 0.01f) {
+                            if (Config.teleportVolume.get() > 0.01f) {
                                 SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "teleport"));
-                                SoundTools.playSound(otherPortal.getWorld(), sound, otherX, otherY, otherZ, Config.teleportVolume, 1);
+                                SoundTools.playSound(otherPortal.getWorld(), sound, otherX, otherY, otherZ, Config.teleportVolume.get(), 1);
                             }
                         }
                     }
@@ -99,7 +99,7 @@ public class PortalTileEntity extends TileEntity implements ITickable {
     public SPacketUpdateTileEntity getUpdatePacket() {
         NBTTagCompound nbtTag = new NBTTagCompound();
         nbtTag.setInteger("timeout", timeout);
-        nbtTag.setInteger("start", Config.portalTimeout - timeout);
+        nbtTag.setInteger("start", Config.portalTimeout.get() - timeout);
         nbtTag.setByte("portalSide", (byte) portalSide.ordinal());
         return new SPacketUpdateTileEntity(getPos(), 1, nbtTag);
     }

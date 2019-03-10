@@ -70,7 +70,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
     protected void traverseTreeLogs(Set<BlockPos> alreadyDone, BlockPos pos, Block woodBlock) {
         alreadyDone.add(pos);
         blocks.add(pos);
-        if (blocks.size() > Config.maxTreeBlocks) {
+        if (blocks.size() > Config.maxTreeBlocks.get()) {
             return;
         }
         IMeeCreep entity = helper.getMeeCreep();

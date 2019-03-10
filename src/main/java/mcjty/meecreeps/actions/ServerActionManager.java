@@ -178,7 +178,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
                     CreepCubeItem.setLastAction(cube, type, furtherQuestionId);
                 }
 
-                if (Config.meeCreepVolume > 0.01f) {
+                if (Config.meeCreepVolume.get() > 0.01f) {
                     String snd = "ok";
                     switch (random.nextInt(2)) {
                         case 0:
@@ -189,7 +189,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
                             break;
                     }
                     SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, snd));
-                    SoundTools.playSound(player.getEntityWorld(), sound, player.posX, player.posY, player.posZ, Config.meeCreepVolume, 1);
+                    SoundTools.playSound(player.getEntityWorld(), sound, player.posX, player.posY, player.posZ, Config.meeCreepVolume.get(), 1);
                 }
             }
         }
