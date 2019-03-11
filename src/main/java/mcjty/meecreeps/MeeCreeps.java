@@ -6,7 +6,7 @@ import mcjty.meecreeps.api.IMeeCreepsApi;
 import mcjty.meecreeps.commands.CommandClearActions;
 import mcjty.meecreeps.commands.CommandListActions;
 import mcjty.meecreeps.commands.CommandTestApi;
-import mcjty.meecreeps.setup.CommonSetup;
+import mcjty.meecreeps.setup.ModSetup;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -29,7 +29,7 @@ public class MeeCreeps implements ModBase {
 
     @SidedProxy(clientSide = "mcjty.meecreeps.setup.ClientProxy", serverSide = "mcjty.meecreeps.setup.ServerProxy")
     public static IProxy proxy;
-    public static CommonSetup setup = new CommonSetup();
+    public static ModSetup setup = new ModSetup();
 
     @Mod.Instance(MODID)
     public static MeeCreeps instance;
