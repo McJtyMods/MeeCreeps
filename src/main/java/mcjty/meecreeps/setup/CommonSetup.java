@@ -1,4 +1,4 @@
-package mcjty.meecreeps.proxy;
+package mcjty.meecreeps.setup;
 
 import mcjty.lib.datafix.fixes.TileEntityNamespace;
 import mcjty.lib.setup.DefaultCommonSetup;

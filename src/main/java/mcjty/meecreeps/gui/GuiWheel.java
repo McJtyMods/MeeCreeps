@@ -8,7 +8,7 @@ import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ClientActionManager;
 import mcjty.meecreeps.items.PortalGunItem;
 import mcjty.meecreeps.network.MeeCreepsMessages;
-import mcjty.meecreeps.proxy.GuiProxy;
+import mcjty.meecreeps.setup.GuiProxy;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.client.Minecraft;

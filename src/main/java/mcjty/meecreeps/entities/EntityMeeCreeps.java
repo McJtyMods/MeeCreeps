@@ -9,7 +9,7 @@ import mcjty.meecreeps.actions.workers.WorkerHelper;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.network.MeeCreepsMessages;
-import mcjty.meecreeps.proxy.GuiProxy;
+import mcjty.meecreeps.setup.GuiProxy;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;

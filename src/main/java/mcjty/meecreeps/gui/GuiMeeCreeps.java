@@ -10,7 +10,7 @@ import mcjty.meecreeps.actions.ClientActionManager;
 import mcjty.meecreeps.actions.MeeCreepActionType;
 import mcjty.meecreeps.actions.PacketPerformAction;
 import mcjty.meecreeps.network.MeeCreepsMessages;
-import mcjty.meecreeps.proxy.GuiProxy;
+import mcjty.meecreeps.setup.GuiProxy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;

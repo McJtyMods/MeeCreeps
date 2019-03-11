@@ -8,7 +8,7 @@ import mcjty.meecreeps.api.IActionContext;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.network.MeeCreepsMessages;
-import mcjty.meecreeps.proxy.GuiProxy;
+import mcjty.meecreeps.setup.GuiProxy;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;

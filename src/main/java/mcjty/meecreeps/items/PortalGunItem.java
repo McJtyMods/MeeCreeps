@@ -10,7 +10,7 @@ import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityProjectile;
 import mcjty.meecreeps.gui.GuiWheel;
 import mcjty.meecreeps.network.MeeCreepsMessages;
-import mcjty.meecreeps.proxy.GuiProxy;
+import mcjty.meecreeps.setup.GuiProxy;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.I18n;

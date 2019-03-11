@@ -1,4 +1,4 @@
-package mcjty.meecreeps.proxy;
+package mcjty.meecreeps.setup;
 
 import mcjty.lib.setup.DefaultClientProxy;
 import mcjty.meecreeps.blocks.ModBlocks;

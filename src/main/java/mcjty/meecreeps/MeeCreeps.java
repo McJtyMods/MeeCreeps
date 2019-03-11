@@ -6,7 +6,7 @@ import mcjty.meecreeps.api.IMeeCreepsApi;
 import mcjty.meecreeps.commands.CommandClearActions;
 import mcjty.meecreeps.commands.CommandListActions;
 import mcjty.meecreeps.commands.CommandTestApi;
-import mcjty.meecreeps.proxy.CommonSetup;
+import mcjty.meecreeps.setup.CommonSetup;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
