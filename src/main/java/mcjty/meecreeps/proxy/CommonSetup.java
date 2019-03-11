@@ -46,9 +46,7 @@ public class CommonSetup extends DefaultCommonSetup {
 
         MeeCreeps.api.registerFactories();
 
-        File directory = e.getModConfigurationDirectory();
-        mainConfig = new Configuration(new File(directory.getPath(), "meecreeps.cfg"));
-        Config.readConfig(mainConfig);
+        Config.readConfig();
 
         MeeCreepsMessages.registerMessages("meecreeps");
 
@@ -70,8 +68,8 @@ public class CommonSetup extends DefaultCommonSetup {
     @Override
     public void postInit(FMLPostInitializationEvent e) {
         super.postInit(e);
-        if (mainConfig.hasChanged()) {
-            mainConfig.save();
+        if (Config.mainConfig.hasChanged()) {
+            Config.mainConfig.save();
         }
     }
 

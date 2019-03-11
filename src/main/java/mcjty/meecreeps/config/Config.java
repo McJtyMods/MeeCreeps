@@ -6,6 +6,7 @@ import mcjty.meecreeps.MeeCreepsApi;
 import net.minecraftforge.common.config.Configuration;
 import org.apache.logging.log4j.Level;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,15 +15,18 @@ public class Config {
     private static final String CATEGORY_GENERAL = "general";
     private static final String CATEGORY_PERMISSON = "permission";
 
-    public static void readConfig(Configuration cfg) {
+    public static Configuration mainConfig;
+
+    public static void readConfig() {
+        mainConfig = new Configuration(new File(MeeCreeps.setup.getModConfigDir().getPath(), "meecreeps.cfg"));
         try {
-            cfg.load();
-            initConfig(cfg);
+            mainConfig.load();
+            initConfig(mainConfig);
         } catch (Exception e1) {
             MeeCreeps.setup.getLogger().log(Level.ERROR, "Problem loading config file!", e1);
         } finally {
-            if (cfg.hasChanged()) {
-                cfg.save();
+            if (mainConfig.hasChanged()) {
+                mainConfig.save();
             }
         }
     }
