@@ -9,7 +9,7 @@ import mcjty.meecreeps.blocks.HeldCubeBlock;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.blocks.PortalBlock;
 import mcjty.meecreeps.blocks.PortalTileEntity;
-import mcjty.meecreeps.config.Config;
+import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.ModEntities;
 import mcjty.meecreeps.items.*;
 import mcjty.meecreeps.network.MeeCreepsMessages;
@@ -19,19 +19,16 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.datafix.FixTypes;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.ModFixs;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,16 +38,16 @@ public class CommonSetup extends DefaultCommonSetup {
     @Override
     public void preInit(FMLPreInitializationEvent e) {
         super.preInit(e);
+
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandlers());
+        NetworkRegistry.INSTANCE.registerGuiHandler(MeeCreeps.instance, new GuiProxy());
+
         CommandHandler.registerCommands();
-
         MeeCreeps.api.registerFactories();
-
-        Config.readConfig();
 
         MeeCreepsMessages.registerMessages("meecreeps");
 
-        // Initialization of blocks and items typically goes here:
+        ConfigSetup.init();
         ModEntities.init();
     }
 
@@ -60,17 +57,9 @@ public class CommonSetup extends DefaultCommonSetup {
     }
 
     @Override
-    public void init(FMLInitializationEvent e) {
-        super.init(e);
-        NetworkRegistry.INSTANCE.registerGuiHandler(MeeCreeps.instance, new GuiProxy());
-    }
-
-    @Override
     public void postInit(FMLPostInitializationEvent e) {
         super.postInit(e);
-        if (Config.mainConfig.hasChanged()) {
-            Config.mainConfig.save();
-        }
+        ConfigSetup.postInit();
     }
 
     @SubscribeEvent

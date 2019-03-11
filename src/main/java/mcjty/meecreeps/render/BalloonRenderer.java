@@ -1,7 +1,7 @@
 package mcjty.meecreeps.render;
 
 import mcjty.meecreeps.MeeCreeps;
-import mcjty.meecreeps.config.Config;
+import mcjty.meecreeps.config.ConfigSetup;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -24,7 +24,7 @@ public class BalloonRenderer {
         Minecraft mc = Minecraft.getMinecraft();
         List<String> strings = mc.fontRenderer.listFormattedStringToWidth(message, 230);
         for (String s : strings) {
-            BalloonRenderer.messages.add(Pair.of(Config.messageTimeout.get()*2, s));
+            BalloonRenderer.messages.add(Pair.of(ConfigSetup.messageTimeout.get()*2, s));
         }
         lastMessage = message;
     }
@@ -59,18 +59,18 @@ public class BalloonRenderer {
         int guiLeft;
         int guiTop;
 
-        if (Config.messageX.get() > 0) {
-            guiLeft = width * Config.messageX.get() / 100;
-        } else if (Config.messageX.get() < 0) {
-            guiLeft = (width + width * Config.messageX.get() / 100) - WIDTH;
+        if (ConfigSetup.messageX.get() > 0) {
+            guiLeft = width * ConfigSetup.messageX.get() / 100;
+        } else if (ConfigSetup.messageX.get() < 0) {
+            guiLeft = (width + width * ConfigSetup.messageX.get() / 100) - WIDTH;
         } else {
             guiLeft = (width - WIDTH) / 2;
         }
 
-        if (Config.messageY.get() > 0) {
-            guiTop = height * Config.messageY.get() / 100;
-        } else if (Config.messageY.get() < 0) {
-            guiTop = (height + height * Config.messageY.get() / 100) - HEIGHT;
+        if (ConfigSetup.messageY.get() > 0) {
+            guiTop = height * ConfigSetup.messageY.get() / 100;
+        } else if (ConfigSetup.messageY.get() < 0) {
+            guiTop = (height + height * ConfigSetup.messageY.get() / 100) - HEIGHT;
         } else {
             guiTop = (height - HEIGHT) / 2;
         }

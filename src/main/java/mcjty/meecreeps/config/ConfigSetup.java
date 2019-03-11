@@ -10,14 +10,14 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Config {
+public class ConfigSetup {
 
     private static final String CATEGORY_GENERAL = "general";
     private static final String CATEGORY_PERMISSON = "permission";
 
     public static Configuration mainConfig;
 
-    public static void readConfig() {
+    public static void init() {
         mainConfig = new Configuration(new File(MeeCreeps.setup.getModConfigDir().getPath(), "meecreeps.cfg"));
         try {
             mainConfig.load();
@@ -139,4 +139,9 @@ public class Config {
         }
     }
 
+    public static void postInit() {
+        if (mainConfig.hasChanged()) {
+            mainConfig.save();
+        }
+    }
 }

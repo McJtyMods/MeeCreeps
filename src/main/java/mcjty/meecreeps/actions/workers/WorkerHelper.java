@@ -7,7 +7,7 @@ import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.*;
 import mcjty.meecreeps.api.*;
 import mcjty.meecreeps.blocks.ModBlocks;
-import mcjty.meecreeps.config.Config;
+import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.items.CreepCubeItem;
 import mcjty.meecreeps.network.MeeCreepsMessages;
@@ -289,10 +289,10 @@ public class WorkerHelper implements IWorkerHelper {
             nextJob.accept(pos);
         } else {
             float hardness = state.getBlockHardness(world, pos);
-            if (hardness < Config.delayAtHardness.get()) {
+            if (hardness < ConfigSetup.delayAtHardness.get()) {
                 nextJob.accept(pos);
             } else {
-                delay((int) (hardness * Config.delayFactor.get()), () -> nextJob.accept(pos));
+                delay((int) (hardness * ConfigSetup.delayFactor.get()), () -> nextJob.accept(pos));
             }
         }
     }
@@ -517,7 +517,7 @@ public class WorkerHelper implements IWorkerHelper {
         World world = entity.getWorld();
 
         int cnt = world.countEntities(EntityMeeCreeps.class);
-        if (cnt >= Config.maxSpawnCount.get()) {
+        if (cnt >= ConfigSetup.maxSpawnCount.get()) {
             return;
         }
 

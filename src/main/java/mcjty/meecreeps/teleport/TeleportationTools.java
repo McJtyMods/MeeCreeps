@@ -3,7 +3,7 @@ package mcjty.meecreeps.teleport;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.blocks.PortalTileEntity;
-import mcjty.meecreeps.config.Config;
+import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.network.MeeCreepsMessages;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -75,11 +75,11 @@ public class TeleportationTools {
         destWorld.setBlockState(dest.getPos(), ModBlocks.portalBlock.getDefaultState(), 3);
         PortalTileEntity destination = (PortalTileEntity) destWorld.getTileEntity(dest.getPos());
 
-        source.setTimeout(Config.portalTimeout.get());
+        source.setTimeout(ConfigSetup.portalTimeout.get());
         source.setOther(dest);
         source.setPortalSide(selectedSide);
 
-        destination.setTimeout(Config.portalTimeout.get());
+        destination.setTimeout(ConfigSetup.portalTimeout.get());
         destination.setOther(new TeleportDestination("", sourceWorld.provider.getDimension(), sourcePortalPos, selectedSide));
         destination.setPortalSide(dest.getSide());
     }
@@ -110,11 +110,11 @@ public class TeleportationTools {
         destWorld.setBlockState(dest.getPos(), ModBlocks.portalBlock.getDefaultState(), 3);
         PortalTileEntity destination = (PortalTileEntity) destWorld.getTileEntity(dest.getPos());
 
-        source.setTimeout(Config.portalTimeout.get());
+        source.setTimeout(ConfigSetup.portalTimeout.get());
         source.setOther(dest);
         source.setPortalSide(selectedSide);
 
-        destination.setTimeout(Config.portalTimeout.get());
+        destination.setTimeout(ConfigSetup.portalTimeout.get());
         destination.setOther(new TeleportDestination("", sourceWorld.provider.getDimension(), sourcePortalPos, selectedSide));
         destination.setPortalSide(dest.getSide());
     }

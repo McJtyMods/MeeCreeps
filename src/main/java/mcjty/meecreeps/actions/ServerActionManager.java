@@ -7,7 +7,7 @@ import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.actions.workers.WorkerHelper;
 import mcjty.meecreeps.api.IActionWorker;
-import mcjty.meecreeps.config.Config;
+import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.items.CreepCubeItem;
 import net.minecraft.command.ICommandSender;
@@ -146,7 +146,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
         List<MeeCreepActionType> types = new ArrayList<>();
         List<MeeCreepActionType> maybeTypes = new ArrayList<>();
         for (MeeCreepsApi.Factory type : MeeCreeps.api.getFactories()) {
-            if (Config.allowedActions.contains(type.getId())) {
+            if (ConfigSetup.allowedActions.contains(type.getId())) {
                 if (type.getFactory().isPossible(world, pos, side)) {
                     types.add(new MeeCreepActionType(type.getId()));
                 } else if (type.getFactory().isPossibleSecondary(world, pos, side)) {
@@ -178,7 +178,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
                     CreepCubeItem.setLastAction(cube, type, furtherQuestionId);
                 }
 
-                if (Config.meeCreepVolume.get() > 0.01f) {
+                if (ConfigSetup.meeCreepVolume.get() > 0.01f) {
                     String snd = "ok";
                     switch (random.nextInt(2)) {
                         case 0:
@@ -189,7 +189,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
                             break;
                     }
                     SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, snd));
-                    SoundTools.playSound(player.getEntityWorld(), sound, player.posX, player.posY, player.posZ, Config.meeCreepVolume.get(), 1);
+                    SoundTools.playSound(player.getEntityWorld(), sound, player.posX, player.posY, player.posZ, ConfigSetup.meeCreepVolume.get(), 1);
                 }
             }
         }

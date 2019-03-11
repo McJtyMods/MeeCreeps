@@ -2,7 +2,7 @@ package mcjty.meecreeps.items;
 
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
-import mcjty.meecreeps.config.Config;
+import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.network.MeeCreepsMessages;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.I18n;
@@ -70,7 +70,7 @@ public class CartridgeItem extends Item {
 
     @Override
     public double getDurabilityForDisplay(ItemStack stack) {
-        int max = Config.maxCharge.get();
+        int max = ConfigSetup.maxCharge.get();
         int stored = getCharge(stack);
         return (max - stored) / (double) max;
     }
@@ -94,14 +94,14 @@ public class CartridgeItem extends Item {
     private void chargeCartridge(EntityPlayer player, World world, BlockPos pos, EnumHand hand) {
         ItemStack heldItem = player.getHeldItem(hand);
         int charge = getCharge(heldItem);
-        if (charge >= (Config.maxCharge.get()-Config.chargesPerEnderpearl.get()+1)) {
+        if (charge >= (ConfigSetup.maxCharge.get()- ConfigSetup.chargesPerEnderpearl.get()+1)) {
             MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cartridge_full"), (EntityPlayerMP) player);
         } else {
             for (int i = 0 ; i < player.inventory.getSizeInventory() ; i++) {
                 ItemStack stack = player.inventory.getStackInSlot(i);
                 if (stack.getItem() == Items.ENDER_PEARL) {
                     ItemStack splitted = stack.splitStack(1);
-                    charge += Config.chargesPerEnderpearl.get();
+                    charge += ConfigSetup.chargesPerEnderpearl.get();
                     setCharge(heldItem, charge);
                     return;
                 }
