@@ -27,7 +27,7 @@ public class MeeCreeps implements ModBase {
     public static final String MIN_MCJTYLIB_VER = "3.1.0";
     public static final String MIN_FORGE_VER = "14.22.0.2464";
 
-    @SidedProxy(clientSide = "mcjty.meecreeps.proxy.ClientProxy", serverSide = "mcjty.meecreeps.proxy.ServerProxy")
+    @SidedProxy(clientSide = "mcjty.meecreeps.setup.ClientProxy", serverSide = "mcjty.meecreeps.setup.ServerProxy")
     public static IProxy proxy;
     public static CommonSetup setup = new CommonSetup();
 
