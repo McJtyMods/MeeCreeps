@@ -52,6 +52,11 @@ public class CommonSetup extends DefaultCommonSetup {
     }
 
     @Override
+    protected void setupModCompat() {
+
+    }
+
+    @Override
     public void createTabs() {
         createTab("meecreeps", new ItemStack(ModItems.portalGunItem));
     }
