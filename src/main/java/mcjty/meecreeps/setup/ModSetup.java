@@ -23,8 +23,6 @@ public class ModSetup extends DefaultModSetup {
         MinecraftForge.EVENT_BUS.register(new ForgeEventHandlers());
         NetworkRegistry.INSTANCE.registerGuiHandler(MeeCreeps.instance, new GuiProxy());
 
-        ConfigSetup.init();
-
         CommandHandler.registerCommands();
         MeeCreeps.api.registerFactories();
 
@@ -36,6 +34,11 @@ public class ModSetup extends DefaultModSetup {
     @Override
     protected void setupModCompat() {
 
+    }
+
+    @Override
+    protected void setupConfig() {
+        ConfigSetup.init();
     }
 
     @Override
