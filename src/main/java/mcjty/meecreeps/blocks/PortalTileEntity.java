@@ -100,7 +100,7 @@ public class PortalTileEntity extends TileEntity implements ITickable {
         NBTTagCompound nbtTag = new NBTTagCompound();
         nbtTag.setInteger("timeout", timeout);
         nbtTag.setInteger("start", ConfigSetup.portalTimeout.get() - timeout);
-        nbtTag.setByte("portalSide", (byte) portalSide.ordinal());
+        nbtTag.setByte("portalSide", portalSide == null ? 127 : (byte) portalSide.ordinal());
         return new SPacketUpdateTileEntity(getPos(), 1, nbtTag);
     }
 
@@ -108,7 +108,8 @@ public class PortalTileEntity extends TileEntity implements ITickable {
     public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity packet) {
         timeout = packet.getNbtCompound().getInteger("timeout");
         start = packet.getNbtCompound().getInteger("start");
-        portalSide = EnumFacing.VALUES[packet.getNbtCompound().getByte("portalSide")];
+        byte side = packet.getNbtCompound().getByte("portalSide");
+        this.portalSide = side == 127 ? null : EnumFacing.VALUES[side];
     }
 
     private AxisAlignedBB getTeleportBox() {
@@ -213,7 +214,8 @@ public class PortalTileEntity extends TileEntity implements ITickable {
     public void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);
         timeout = compound.getInteger("timeout");
-        portalSide = EnumFacing.VALUES[compound.getByte("portalSide")];
+        byte pside = compound.getByte("portalSide");
+        this.portalSide = pside == 127 ? null : EnumFacing.VALUES[pside];
         BlockPos pos = BlockPos.fromLong(compound.getLong("pos"));
         int dim = compound.getInteger("dim");
         EnumFacing side = EnumFacing.VALUES[compound.getByte("side")];
@@ -230,7 +232,7 @@ public class PortalTileEntity extends TileEntity implements ITickable {
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         compound.setInteger("timeout", timeout);
-        compound.setByte("portalSide", (byte) portalSide.ordinal());
+        compound.setByte("portalSide", portalSide == null ? 127 : (byte) portalSide.ordinal());
         compound.setLong("pos", other.getPos().toLong());
         compound.setInteger("dim", other.getDimension());
         compound.setByte("side", (byte) other.getSide().ordinal());

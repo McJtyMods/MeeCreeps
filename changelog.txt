@@ -1,3 +1,6 @@
+Upcoming:
+- Fixed a potential crash with portals in some rare cases
+
 1.2.3:
 - Bugfix with storing the correct player with actions that are ongoing while the world is saved
 - Protection for working around crashes with blocks that report they are leaves but don't support DECAYABLE
