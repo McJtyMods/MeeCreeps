@@ -43,7 +43,7 @@ public class ModSetup extends DefaultModSetup {
 
     @Override
     public void createTabs() {
-        createTab("meecreeps", new ItemStack(ModItems.portalGunItem));
+        createTab("meecreeps", () -> new ItemStack(ModItems.portalGunItem));
     }
 
     @Override
