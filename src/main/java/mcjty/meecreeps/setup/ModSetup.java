@@ -24,7 +24,6 @@ public class ModSetup extends DefaultModSetup {
         NetworkRegistry.INSTANCE.registerGuiHandler(MeeCreeps.instance, new GuiProxy());
 
         CommandHandler.registerCommands();
-        MeeCreeps.api.registerFactories();
 
         MeeCreepsMessages.registerMessages("meecreeps");
 
@@ -38,6 +37,7 @@ public class ModSetup extends DefaultModSetup {
 
     @Override
     protected void setupConfig() {
+        MeeCreeps.api.registerFactories();
         ConfigSetup.init();
     }
 
