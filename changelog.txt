@@ -1,4 +1,4 @@
-upcoming:
+1.3.1:
 - Fixed a problem with the MeeCreeps being incredibly stupid. They didn't know how to do anything
 
 1.3.0:
