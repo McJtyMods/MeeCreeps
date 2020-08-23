@@ -1,6 +1,6 @@
 package mcjty.meecreeps.api;
 
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.tuple.Pair;
@@ -19,7 +19,7 @@ public interface IActionFactory {
      * Return true if this action is possible given the targetted block and
      * surroundings
      */
-    boolean isPossible(World world, BlockPos pos, EnumFacing side);
+    boolean isPossible(World world, BlockPos pos, Direction side);
 
     /**
      * Return true if this action is possible given the targetted block
@@ -27,14 +27,14 @@ public interface IActionFactory {
      * some items may be missing or some circumstances may be less ideal for this
      * task
      */
-    boolean isPossibleSecondary(World world, BlockPos pos, EnumFacing side);
+    boolean isPossibleSecondary(World world, BlockPos pos, Direction side);
 
     /**
      * Optionally return a heading for further questions. If this returns null then
      * there are no further questions. This is called client-side!
      */
     @Nullable
-    default String getFurtherQuestionHeading(World world, BlockPos pos, EnumFacing side) { return null; }
+    default String getFurtherQuestionHeading(World world, BlockPos pos, Direction side) { return null; }
 
     /**
      * Return a list of possible further questions. If there are no further questions this will
@@ -43,7 +43,7 @@ public interface IActionFactory {
      * This is called client-side!
      */
     @Nonnull
-    default List<Pair<String, String>> getFurtherQuestions(World world, BlockPos pos, EnumFacing side) { return Collections.emptyList(); }
+    default List<Pair<String, String>> getFurtherQuestions(World world, BlockPos pos, Direction side) { return Collections.emptyList(); }
 
     /**
      * Actually create the action. If this is a 'question' factory then

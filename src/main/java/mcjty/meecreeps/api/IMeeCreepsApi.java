@@ -1,7 +1,7 @@
 package mcjty.meecreeps.api;
 
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -49,6 +49,6 @@ public interface IMeeCreepsApi {
      *
      * Return false if the task was not possible for some reason (or invalid)
      */
-    boolean spawnMeeCreep(String id, @Nullable String furtherQuestionId, World world, BlockPos targetPos, EnumFacing targetSide,
-                          @Nullable EntityPlayerMP player, boolean doSound);
+    boolean spawnMeeCreep(String id, @Nullable String furtherQuestionId, World world, BlockPos targetPos, Direction targetSide,
+                          @Nullable ServerPlayerEntity player, boolean doSound);
 }
