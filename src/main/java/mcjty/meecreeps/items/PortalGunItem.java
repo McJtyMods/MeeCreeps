@@ -17,6 +17,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -49,7 +50,7 @@ public class PortalGunItem extends Item {
         setCreativeTab(MeeCreeps.setup.getTab());
     }
 
-    public static ItemStack getGun(ServerPlayerEntity player) {
+    public static ItemStack getGun(PlayerEntity player) {
         ItemStack heldItem = player.getHeldItem(Hand.MAIN_HAND);
         if (heldItem.getItem() != ModItems.portalGunItem) {
             heldItem = player.getHeldItem(Hand.OFF_HAND);
