@@ -1,16 +1,15 @@
 package mcjty.meecreeps.api;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -50,7 +49,7 @@ public interface IWorkerHelper {
     /**
      * Return true if it is legal to harvest this block
      */
-    boolean allowedToHarvest(IBlockState state, World world, BlockPos pos, EntityPlayer entityPlayer);
+    boolean allowedToHarvest(BlockState state, World world, BlockPos pos, PlayerEntity entityPlayer);
 
     /**
      * Place a building block at the specified location. If there is already a block there it will
@@ -122,7 +121,7 @@ public interface IWorkerHelper {
      * Pick up as much of the entity item as possible. If everything was picked up the entity item
      * will be marked dead. Otherwise the MeeCreep will try to get the rest later
      */
-    void pickup(EntityItem item);
+    void pickup(ItemEntity item);
 
     /**
      * It is time to stop. This will completely stop the MeeCreep from working. He will not be given
@@ -231,7 +230,7 @@ public interface IWorkerHelper {
      * Find an item that matches the predicate. If there is such an item then navigate to it and
      * finally execute the job. Otherwise return false.
      */
-    boolean findItemOnGround(AxisAlignedBB box, Predicate<ItemStack> matcher, Consumer<EntityItem> job);
+    boolean findItemOnGround(AxisAlignedBB box, Predicate<ItemStack> matcher, Consumer<ItemEntity> job);
 
     /**
      * Put the entire inventory in a given chest and drop everything else that didn't fit. Note that

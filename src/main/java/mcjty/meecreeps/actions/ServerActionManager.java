@@ -14,10 +14,12 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
@@ -143,7 +145,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
         return getData(ServerActionManager.class, NAME);
     }
 
-    public int createActionOptions(World world, BlockPos pos, EnumFacing side, @Nullable EntityPlayer player) {
+    public int createActionOptions(World world, BlockPos pos, Direction side, @Nullable PlayerEntity player) {
         List<MeeCreepActionType> types = new ArrayList<>();
         List<MeeCreepActionType> maybeTypes = new ArrayList<>();
         for (MeeCreepsApi.Factory type : MeeCreeps.api.getFactories()) {

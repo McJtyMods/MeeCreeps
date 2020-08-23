@@ -1,6 +1,6 @@
 package mcjty.meecreeps.api;
 
-import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.CreatureEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
@@ -13,7 +13,7 @@ import java.util.function.Predicate;
  */
 public interface IMeeCreep {
 
-    EntityCreature getEntity();
+    CreatureEntity getEntity();
 
     World getWorld();
 

@@ -1,6 +1,6 @@
 package mcjty.meecreeps.api;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
 
 import java.util.function.Predicate;
@@ -40,5 +40,5 @@ public interface IDesiredBlock {
     /**
      * This predicate should match all block states that correspond to this block in the world
      */
-    Predicate<IBlockState> getStateMatcher();
+    Predicate<BlockState> getStateMatcher();
 }

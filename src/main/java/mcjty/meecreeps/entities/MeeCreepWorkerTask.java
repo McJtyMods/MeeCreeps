@@ -7,10 +7,10 @@ import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.actions.Stage;
 import mcjty.meecreeps.actions.workers.WorkerHelper;
 import mcjty.meecreeps.api.IActionWorker;
-import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.nbt.CompoundNBT;
 
-public class MeeCreepWorkerTask extends EntityAIBase {
+public class MeeCreepWorkerTask extends Goal {
 
     private final EntityMeeCreeps meeCreep;
     private WorkerHelper helper = null;
@@ -52,8 +52,9 @@ public class MeeCreepWorkerTask extends EntityAIBase {
         return helper;
     }
 
+
     @Override
-    public void updateTask() {
+    public void tick() {
         ServerActionManager manager = ServerActionManager.getManager();
         int actionId = meeCreep.getActionId();
         if (actionId != 0) {
@@ -81,7 +82,7 @@ public class MeeCreepWorkerTask extends EntityAIBase {
         }
     }
 
-    public void readFromNBT(NBTTagCompound tag) {
+    public void readFromNBT(CompoundNBT tag) {
         if (!meeCreep.getWorld().isRemote) {
             ServerActionManager manager = ServerActionManager.getManager();
             int actionId = meeCreep.getActionId();
@@ -99,7 +100,7 @@ public class MeeCreepWorkerTask extends EntityAIBase {
         return helper;
     }
 
-    public void writeToNBT(NBTTagCompound tag) {
+    public void writeToNBT(CompoundNBT tag) {
         if (helper != null) {
             helper.writeToNBT(tag);
         }

@@ -1,6 +1,6 @@
 package mcjty.meecreeps.api;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.AxisAlignedBB;
 
 import javax.annotation.Nonnull;
@@ -57,7 +57,7 @@ public interface IActionWorker {
      */
     PreferedChest[] getPreferedChests();
 
-    default void readFromNBT(NBTTagCompound tag) {}
+    default void readFromNBT(CompoundNBT tag) {}
 
-    default void writeToNBT(NBTTagCompound tag) {}
+    default void writeToNBT(CompoundNBT tag) {}
 }

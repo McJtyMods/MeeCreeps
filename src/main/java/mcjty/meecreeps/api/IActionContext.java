@@ -1,7 +1,7 @@
 package mcjty.meecreeps.api;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nullable;
@@ -20,7 +20,7 @@ public interface IActionContext {
     /**
      * Get the side on the target position that was used to spawn this MeeCreep
      */
-    EnumFacing getTargetSide();
+    Direction getTargetSide();
 
     /**
      * If the action required further questions then this will be the id of the selected
@@ -33,5 +33,5 @@ public interface IActionContext {
      * If that player is still online this will return the player that spawned the MeeCreep. If not this returns null
      */
     @Nullable
-    EntityPlayer getPlayer();
+    PlayerEntity getPlayer();
 }

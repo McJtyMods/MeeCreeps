@@ -1,9 +1,8 @@
 package mcjty.meecreeps.config;
 
-import mcjty.lib.thirteen.ConfigSpec;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
-import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.ForgeConfigSpec;
 import org.apache.logging.log4j.Level;
 
 import java.io.File;
@@ -31,31 +30,31 @@ public class ConfigSetup {
         }
     }
 
-    public static ConfigSpec.IntValue portalTimeout;
-    public static ConfigSpec.IntValue portalTimeoutAfterEntry;
-    public static ConfigSpec.IntValue maxCharge;
-    public static ConfigSpec.IntValue chargesPerEnderpearl;
+    public static ForgeConfigSpec.IntValue portalTimeout;
+    public static ForgeConfigSpec.IntValue portalTimeoutAfterEntry;
+    public static ForgeConfigSpec.IntValue maxCharge;
+    public static ForgeConfigSpec.IntValue chargesPerEnderpearl;
 
-    public static ConfigSpec.IntValue meeCreepBoxMaxUsage;
-    public static ConfigSpec.IntValue maxMeecreepsPerPlayer;
+    public static ForgeConfigSpec.IntValue meeCreepBoxMaxUsage;
+    public static ForgeConfigSpec.IntValue maxMeecreepsPerPlayer;
 
-    public static ConfigSpec.DoubleValue meeCreepVolume;
-    public static ConfigSpec.DoubleValue teleportVolume;
+    public static ForgeConfigSpec.DoubleValue meeCreepVolume;
+    public static ForgeConfigSpec.DoubleValue teleportVolume;
 
-    public static ConfigSpec.IntValue messageTimeout;
-    public static ConfigSpec.IntValue messageX;
-    public static ConfigSpec.IntValue messageY;
+    public static ForgeConfigSpec.IntValue messageTimeout;
+    public static ForgeConfigSpec.IntValue messageX;
+    public static ForgeConfigSpec.IntValue messageY;
 
-    public static ConfigSpec.IntValue maxSpawnCount;
-    public static ConfigSpec.IntValue maxTreeBlocks;
+    public static ForgeConfigSpec.IntValue maxSpawnCount;
+    public static ForgeConfigSpec.IntValue maxTreeBlocks;
 
-    public static ConfigSpec.DoubleValue delayAtHardness;
-    public static ConfigSpec.DoubleValue delayFactor;
+    public static ForgeConfigSpec.DoubleValue delayAtHardness;
+    public static ForgeConfigSpec.DoubleValue delayFactor;
 
     public static Set<String> allowedActions = new HashSet<>();
 
-    private static final ConfigSpec.Builder SERVER_BUILDER = new ConfigSpec.Builder();
-    private static final ConfigSpec.Builder CLIENT_BUILDER = new ConfigSpec.Builder();
+    private static final ForgeConfigSpec.Builder SERVER_BUILDER = new ForgeConfigSpec.Builder();
+    private static final ForgeConfigSpec.Builder CLIENT_BUILDER = new ForgeConfigSpec.Builder();
 
     static {
         SERVER_BUILDER.comment("General configuration").push(CATEGORY_GENERAL);
@@ -115,8 +114,8 @@ public class ConfigSetup {
         CLIENT_BUILDER.pop();
     }
 
-    public static ConfigSpec SERVER_CONFIG;
-    public static ConfigSpec CLIENT_CONFIG;
+    public static ForgeConfigSpec SERVER_CONFIG;
+    public static ForgeConfigSpec CLIENT_CONFIG;
 
 
     private static void initConfig(Configuration cfg) {

@@ -13,12 +13,14 @@ import mcjty.meecreeps.network.PacketShowBalloonToClient;
 import mcjty.meecreeps.setup.GuiProxy;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
@@ -364,7 +366,7 @@ public class ActionOptions implements IActionContext {
 
     @Nullable
     @Override
-    public EntityPlayer getPlayer() {
+    public PlayerEntity getPlayer() {
         if (playerId == null) {
             return null;
         }
@@ -396,7 +398,7 @@ public class ActionOptions implements IActionContext {
         return world.isAirBlock(p) && (!world.isAirBlock(p.down()) || !world.isAirBlock(p.down(2))) && world.isAirBlock(p.up());
     }
 
-    public static boolean spawn(World world, BlockPos targetPos, EnumFacing targetSide, int actionId, boolean doSound) {
+    public static boolean spawn(World world, BlockPos targetPos, Direction targetSide, int actionId, boolean doSound) {
         BlockPos p;
         if (validSpawnPoint(world, targetPos.offset(targetSide))) {
             p = targetPos.offset(targetSide);
