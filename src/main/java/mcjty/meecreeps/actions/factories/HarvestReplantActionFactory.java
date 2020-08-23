@@ -5,12 +5,8 @@ import mcjty.meecreeps.api.IActionFactory;
 import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.InventoryTools;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockCrops;
-import net.minecraft.block.BlockNetherWart;
-import net.minecraft.block.state.BlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.block.*;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -21,7 +17,7 @@ import javax.annotation.Nonnull;
 public class HarvestReplantActionFactory implements IActionFactory {
 
     @Override
-    public boolean isPossible(World world, BlockPos pos, EnumFacing side) {
+    public boolean isPossible(World world, BlockPos pos, Direction side) {
         if (!InventoryTools.isInventory(world, pos)) {
             return false;
         }
@@ -37,18 +33,17 @@ public class HarvestReplantActionFactory implements IActionFactory {
                     if (state.getBlock() == Blocks.FARMLAND) {
                         BlockState cropState = world.getBlockState(p.up());
                         Block cropBlock = cropState.getBlock();
-                        boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(p), world, p, EnumFacing.UP, (IPlantable) cropBlock);
+                        boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(p), world, p, Direction.UP, (IPlantable) cropBlock);
                         if (hasCrops) {
-                            if (cropBlock instanceof BlockCrops) {
-                                BlockCrops crops = (BlockCrops) cropBlock;
-                                int age = crops.getAge(cropState);
+                            if (cropBlock instanceof CropsBlock) {
+                                CropsBlock crops = (CropsBlock) cropBlock;
+                                int age = cropState.get(crops.getAgeProperty());
                                 int maxAge = crops.getMaxAge();
                                 if (age >= maxAge) {
                                     return true;
                                 }
-                            } else if (cropBlock instanceof BlockNetherWart) {
-                                BlockNetherWart wart = (BlockNetherWart) cropBlock;
-                                int age = cropState.getValue(BlockNetherWart.AGE);
+                            } else if (cropBlock instanceof NetherWartBlock) {
+                                int age = cropState.get(NetherWartBlock.AGE);
                                 int maxAge = 3;
                                 if (age >= maxAge) {
                                     return true;
@@ -64,7 +59,7 @@ public class HarvestReplantActionFactory implements IActionFactory {
     }
 
     @Override
-    public boolean isPossibleSecondary(World world, BlockPos pos, EnumFacing side) {
+    public boolean isPossibleSecondary(World world, BlockPos pos, Direction side) {
         if (!InventoryTools.isInventory(world, pos)) {
             return false;
         }
@@ -80,7 +75,7 @@ public class HarvestReplantActionFactory implements IActionFactory {
                     if (state.getBlock() == Blocks.FARMLAND) {
                         BlockState cropState = world.getBlockState(p.up());
                         Block cropBlock = cropState.getBlock();
-                        boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(p), world, p, EnumFacing.UP, (IPlantable) cropBlock);
+                        boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(p), world, p, Direction.UP, (IPlantable) cropBlock);
                         if (hasCrops) {
                             return true;
                         }

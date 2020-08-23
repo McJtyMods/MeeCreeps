@@ -4,13 +4,14 @@ import mcjty.meecreeps.actions.workers.WorkerHelper;
 import mcjty.meecreeps.api.IBuildSchematic;
 import mcjty.meecreeps.api.IDesiredBlock;
 import mcjty.meecreeps.api.IWorkerHelper;
-import net.minecraft.block.BlockDoor;
-import net.minecraft.block.BlockGlass;
-import net.minecraft.block.state.BlockState;
-import net.minecraft.init.Blocks;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.DoorBlock;
+import net.minecraft.block.GlassBlock;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemDoor;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.item.TallBlockItem;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.function.Predicate;
@@ -67,7 +68,7 @@ public class SchematicHouse implements IBuildSchematic {
 
         @Override
         public Predicate<ItemStack> getMatcher() {
-            return stack -> stack.getItem() == Item.getItemFromBlock(Blocks.COBBLESTONE);
+            return stack -> stack.getItem() == Items.COBBLESTONE;
         }
 
         @Override
@@ -94,7 +95,7 @@ public class SchematicHouse implements IBuildSchematic {
 
         @Override
         public Predicate<BlockState> getStateMatcher() {
-            return blockState -> blockState.getBlock() instanceof BlockGlass;
+            return blockState -> blockState.getBlock() instanceof GlassBlock;
         }
     };
 
@@ -121,12 +122,12 @@ public class SchematicHouse implements IBuildSchematic {
 
         @Override
         public Predicate<ItemStack> getMatcher() {
-            return stack -> stack.getItem() instanceof ItemDoor;
+            return stack -> stack.getItem() instanceof TallBlockItem;
         }
 
         @Override
         public Predicate<BlockState> getStateMatcher() {
-            return blockState -> blockState.getBlock() instanceof BlockDoor;
+            return blockState -> blockState.getBlock() instanceof DoorBlock;
         }
     };
 
@@ -158,7 +159,7 @@ public class SchematicHouse implements IBuildSchematic {
 
         @Override
         public Predicate<BlockState> getStateMatcher() {
-            return blockState -> blockState.getBlock() instanceof BlockDoor;
+            return blockState -> blockState.getBlock() instanceof DoorBlock;
         }
     };
 

@@ -5,8 +5,8 @@ import mcjty.meecreeps.api.IActionFactory;
 import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.InventoryTools;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -16,18 +16,18 @@ import javax.annotation.Nonnull;
 public class PickupActionFactory implements IActionFactory {
 
     @Override
-    public boolean isPossible(World world, BlockPos pos, EnumFacing side) {
+    public boolean isPossible(World world, BlockPos pos, Direction side) {
         if (!InventoryTools.isInventory(world, pos)) {
             return false;
         }
 
         // @todo config for pickup area
         AxisAlignedBB box = new AxisAlignedBB(pos.add(-10, -10, -10), pos.add(10, 10, 10));
-        return !world.getEntitiesWithinAABB(EntityItem.class, box).isEmpty();
+        return !world.getEntitiesWithinAABB(ItemEntity.class, box).isEmpty();
     }
 
     @Override
-    public boolean isPossibleSecondary(World world, BlockPos pos, EnumFacing side) {
+    public boolean isPossibleSecondary(World world, BlockPos pos, Direction side) {
         return InventoryTools.isInventory(world, pos);
     }
 

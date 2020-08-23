@@ -3,10 +3,11 @@ package mcjty.meecreeps.actions.schematics;
 import mcjty.meecreeps.api.IBuildSchematic;
 import mcjty.meecreeps.api.IDesiredBlock;
 import mcjty.meecreeps.api.IWorkerHelper;
-import net.minecraft.block.state.BlockState;
-import net.minecraft.init.Blocks;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.function.Predicate;
@@ -44,7 +45,7 @@ public class SchematicPlatform implements IBuildSchematic {
 
         @Override
         public Predicate<ItemStack> getMatcher() {
-            return stack -> stack.getItem() == Item.getItemFromBlock(Blocks.COBBLESTONE);
+            return stack -> stack.getItem() == Items.COBBLESTONE;
         }
 
         @Override
