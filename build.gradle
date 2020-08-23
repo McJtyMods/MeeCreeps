@@ -1,39 +1,28 @@
 buildscript {
     repositories {
+        maven { url = 'https://files.minecraftforge.net/maven' }
+        maven { url 'https://plugins.gradle.org/m2/' }
         jcenter()
-        maven {
-            name = "forge"
-            url = "http://files.minecraftforge.net/maven"
-        }
-        maven {
-            name = "sonatype"
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
-        }
+        mavenCentral()
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath 'gradle.plugin.com.matthewprenger:CurseGradle:1.4.0'
     }
 }
 
-plugins {
-    id 'com.matthewprenger.cursegradle' version '1.1.0'
-}
-
-apply plugin: 'net.minecraftforge.gradle.forge'
-apply plugin: 'maven'
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+apply plugin: 'com.matthewprenger.cursegradle'
+apply plugin: 'maven-publish'
 
 repositories {
-    maven { // The repo from which to get waila
-        name "Mobius Repo"
-        url "http://tehnut.info/maven"
-        //url "http://mobiusstrip.eu/maven"
-    }
     maven { // JEI
-        url "http://dvs1.progwml6.com/files/maven"
+        url "https://dvs1.progwml6.com/files/maven"
     }
     maven {
-        name 'OC Repo'
-        url "http://maven.cil.li/"
+        name = "sonatype"
+        url = "https://oss.sonatype.org/content/repositories/snapshots/"
     }
     maven { // TOP
         name 'tterrag maven'
@@ -42,34 +31,82 @@ repositories {
     maven { // McJtyLib
         url "http://maven.k-4u.nl"
     }
-    maven { // OC Repo
-        url "http://maven.cil.li/"
-    }
-    maven {
-        name = "sonatype"
-        url = "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
-    maven {
-        name = "CoFH Maven"
-        url = "http://maven.covers1624.net"
-    }
 }
 
-def ENV = System.getenv()
-if (ENV.DRONE_BUILD_NUMBER) {
-    version += ".n" + ENV.DRONE_BUILD_NUMBER
-}
 group= "com.github.mcjty" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "meecreeps"
+
+if (System.getenv('BUILD_NUMBER') != null) {
+    version += "-${System.getenv('BUILD_NUMBER')}"
+}
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 minecraft {
-    version = "${minecraft_version}-${forge_version}"
-    runDir = "run"
-    mappings = mcp_mappings
-    useDepAts = true
+    mappings channel: 'snapshot', version: "${mcp_mappings}"
+    //accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+
+    runs {
+        client = {
+            // recommended logging data for a userdev environment
+            properties 'forge.logging.markers': 'SCAN,REGISTRIES,REGISTRYDUMP'
+            // recommended logging level for the console
+            properties 'forge.logging.console.level': 'debug'
+            workingDirectory project.file('run').canonicalPath
+            source sourceSets.main
+        }
+        server = {
+            // recommended logging data for a userdev environment
+            properties 'forge.logging.markers': 'SCAN,REGISTRIES,REGISTRYDUMP'
+            // recommended logging level for the console
+            properties 'forge.logging.console.level': 'debug'
+            workingDirectory project.file('run').canonicalPath
+            source sourceSets.main
+        }
+        data = {
+            workingDirectory project.file('run').canonicalPath
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            args '--mod', 'theoneprobe', '--all', '--output', file('src/generated/resources/'), '--existing', sourceSets.main.resources.srcDirs[0]
+            source sourceSets.main
+        }
+    }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    compileOnly fg.deobf("mezz.jei:jei-${jei_version}:api")
+    runtimeOnly fg.deobf("mezz.jei:jei-${jei_version}")
+
+    if (findProject(':TheOneProbe') != null) {
+        compile project(':TheOneProbe')
+    } else {
+        compile fg.deobf(project.dependencies.create("mcjty.theoneprobe:TheOneProbe-${top_version}") {
+            transitive = false
+        })
+    }
+
+    if (findProject(':McJtyLib') != null) {
+        compile project(':McJtyLib')
+    } else {
+        compile fg.deobf (project.dependencies.create("com.github.mcjty:mcjtylib:${mcjtylib_version}") {
+            transitive = false
+        })
+    }
+}
+
+jar {
+    manifest {
+        attributes "Specification-Title": "meecreeps",
+                "Specification-Vendor": "McJty",
+                "Specification-Version": "1",
+                "Implementation-Title": project.name,
+                "Implementation-Version": "${version}",
+                "Implementation-Vendor" :"McJty",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+    }
 }
 
 task deobfJar(type: Jar) {
@@ -78,43 +115,29 @@ task deobfJar(type: Jar) {
 }
 
 artifacts {
-    archives sourceJar
+//    archives sourceJar
     archives deobfJar
 }
 
-
-dependencies {
-    deobfCompile "mezz.jei:jei_${jei_version}"
-    deobfCompile "mcp.mobius.waila:Hwyla:${waila_version}"
-    deobfCompile "mcjty.theoneprobe:TheOneProbe-${top_version}"
-    deobfCompile "cofh:RedstoneFlux:${redstoneflux_version}"
-    deobfCompile "com.github.mcjty:intwheel:${intwheel_version}"
-    if (!project.hasProperty("singleproject")) {
-        deobfCompile "com.github.mcjty:mcjtylib:${mcjtylib_version}"
-    } else {
-	compile project(':McJtyLib')
-    }
-}
-
-processResources
-{
-    // this will ensure that this task is redone when the versions change.
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
-
-    // replace stuff in mcmod.info, nothing else
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-                
-        // replace version and mcversion
-        expand 'version':project.version, 'mcversion':project.minecraft.version
-    }
-        
-    // copy everything else, thats not the mcmod.info
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
-    }
-}
+//processResources
+//{
+//    // this will ensure that this task is redone when the versions change.
+//    inputs.property "version", project.version
+//    inputs.property "mcversion", project.minecraft.version
+//
+//    // replace stuff in mcmod.info, nothing else
+//    from(sourceSets.main.resources.srcDirs) {
+//        include 'mcmod.info'
+//
+//        // replace version and mcversion
+//        expand 'version':project.version, 'mcversion':project.minecraft.version
+//    }
+//
+//    // copy everything else, thats not the mcmod.info
+//    from(sourceSets.main.resources.srcDirs) {
+//        exclude 'mcmod.info'
+//    }
+//}
 
 task("uploadJars", dependsOn: "reobf") {
     description = "uploads JARs"
@@ -205,7 +228,7 @@ curseforge {
         changelog = System.getenv('CHANGELOG') == null || System.getenv('CHANGELOG').equals('none') ? getChangelogText() : System.getenv('CHANGELOG')
         changelogType = 'html'
         releaseType = project.curse_type
-        addGameVersion '1.12.2'
+        addGameVersion '1.15.2'
         mainArtifact(jar) {
             displayName = "${modname} - ${version}"
         }
