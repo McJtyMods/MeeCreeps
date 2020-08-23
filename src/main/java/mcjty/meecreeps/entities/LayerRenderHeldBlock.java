@@ -1,6 +1,6 @@
 package mcjty.meecreeps.entities;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.GlStateManager;
@@ -20,9 +20,9 @@ public class LayerRenderHeldBlock implements LayerRenderer<EntityMeeCreeps> {
 
     @Override
     public void doRenderLayer(EntityMeeCreeps entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-        IBlockState iblockstate = entitylivingbaseIn.getHeldBlockState();
+        BlockState BlockState = entitylivingbaseIn.getHeldBlockState();
 
-        if (iblockstate != null) {
+        if (BlockState != null) {
             BlockRendererDispatcher blockrendererdispatcher = Minecraft.getMinecraft().getBlockRendererDispatcher();
             GlStateManager.enableRescaleNormal();
             GlStateManager.pushMatrix();
@@ -38,7 +38,7 @@ public class LayerRenderHeldBlock implements LayerRenderer<EntityMeeCreeps> {
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, j, k);
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             this.endermanRenderer.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-            blockrendererdispatcher.renderBlockBrightness(iblockstate, 1.0F);
+            blockrendererdispatcher.renderBlockBrightness(BlockState, 1.0F);
             GlStateManager.popMatrix();
             GlStateManager.disableRescaleNormal();
         }

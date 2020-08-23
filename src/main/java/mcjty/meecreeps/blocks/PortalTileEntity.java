@@ -5,6 +5,7 @@ import mcjty.lib.varia.TeleportationTools;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.teleport.TeleportDestination;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.tileentity.ITickableTileEntity;
@@ -149,7 +150,7 @@ public class PortalTileEntity extends TileEntity implements ITickableTileEntity 
     private void markDirtyClient() {
         markDirty();
         if (getWorld() != null) {
-            IBlockState state = getWorld().getBlockState(getPos());
+            BlockState state = getWorld().getBlockState(getPos());
             getWorld().notifyBlockUpdate(getPos(), state, state, 3);
         }
     }
@@ -192,7 +193,7 @@ public class PortalTileEntity extends TileEntity implements ITickableTileEntity 
     }
 
     public void killPortal() {
-        world.setBlockToAir(getPos());
+        world.setBlockState(getPos(), Blocks.AIR.getDefaultState());
     }
 
     private Optional<PortalTileEntity> getOther() {

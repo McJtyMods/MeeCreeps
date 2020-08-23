@@ -4,7 +4,7 @@ import mcjty.meecreeps.api.BuildProgress;
 import mcjty.meecreeps.api.IBuildSchematic;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 
@@ -69,14 +69,14 @@ public abstract class AbstractBuildActionWorker extends AbstractActionWorker {
 
 
     @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        progress.setHeight(tag.getInteger("stage"));
-        progress.setPass(tag.getInteger("pass"));
+    public void readFromNBT(CompoundNBT tag) {
+        progress.setHeight(tag.getInt("stage"));
+        progress.setPass(tag.getInt("pass"));
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound tag) {
-        tag.setInteger("stage", progress.getHeight());
-        tag.setInteger("pass", progress.getPass());
+    public void writeToNBT(CompoundNBT tag) {
+        tag.putInt("stage", progress.getHeight());
+        tag.putInt("pass", progress.getPass());
     }
 }

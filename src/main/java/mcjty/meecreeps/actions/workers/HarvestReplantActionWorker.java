@@ -1,18 +1,19 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.lib.varia.SoundTools;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.IPlantable;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class HarvestReplantActionWorker extends HarvestActionWorker {
@@ -30,10 +31,10 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
         needToReplant.remove(pos);
         for (ItemStack stack : entity.getInventory()) {
             if (stack.getItem() instanceof IPlantable) {
-                IBlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
+                BlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
                 if (plant.getBlock() == block) {
                     // This is a valid seed
-                    stack.splitStack(1);
+                    stack.split(1);
                     world.setBlockState(pos, plant);
                     break;
                 }
@@ -45,19 +46,20 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
     protected void harvest(BlockPos pos) {
         IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
-        IBlockState state = world.getBlockState(pos);
-        Block block = state.getBlock();
-        List<ItemStack> drops = block.getDrops(world, pos, state, 0);
+        BlockState state = world.getBlockState(pos);
+
+        NonNullList<ItemStack> drops = NonNullList.create();
+        drops.addAll(Block.getDrops(state, (ServerWorld) world, pos, world.getTileEntity(pos)));
         net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester(world));
-        SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
-        world.setBlockToAir(pos);
+
+        world.setBlockState(pos, Blocks.AIR.getDefaultState());
         boolean replanted = false;
         for (ItemStack stack : drops) {
             if ((!replanted) && stack.getItem() instanceof IPlantable) {
-                IBlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
+                BlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
                 if (plant.getBlock() == state.getBlock()) {
                     // This is a valid seed
-                    ItemStack seed = stack.splitStack(1);
+                    ItemStack seed = stack.split(1);
                     world.setBlockState(pos, plant);
                     replanted = true;
                 }
@@ -72,10 +74,10 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
         // a seed in our inventory so we can use that.
         for (ItemStack stack : entity.getInventory()) {
             if (stack.getItem() instanceof IPlantable) {
-                IBlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
+                BlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
                 if (plant.getBlock() == state.getBlock()) {
                     // This is a valid seed
-                    ItemStack seed = stack.splitStack(1);
+                    ItemStack seed = stack.split(1);
                     world.setBlockState(pos, plant);
                     replanted = true;
                     break;
@@ -97,7 +99,7 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
             Block block = entry.getValue();
             for (ItemStack stack : entity.getInventory()) {
                 if (stack.getItem() instanceof IPlantable) {
-                    IBlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
+                    BlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
                     if (plant.getBlock() == block) {
                         // This is a valid seed
                         return pos;

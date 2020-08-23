@@ -5,18 +5,17 @@ import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import net.minecraft.block.*;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.item.*;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.IFluidBlock;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -29,7 +28,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     private int numStairs = 0;
     private int numCobble = 0;
 
-    private EnumFacing direction = null;
+    private Direction direction = null;
 
     // We cannot break those so skip them
     private Set<BlockPos> positionsToSkip = new HashSet<BlockPos>();
@@ -49,10 +48,10 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         return true;
     }
 
-    private EnumFacing getDirection() {
+    private Direction getDirection() {
         if (direction == null) {
             String id = options.getFurtherQuestionId();
-            direction = EnumFacing.byName(id);
+            direction = Direction.byName(id);
         }
         return direction;
     }
@@ -68,13 +67,13 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
 
 
     private boolean isSupportBlock(ItemStack stack) {
-        return stack.getItem() instanceof ItemBlock ? DigTunnelActionWorker.isNotInterestedIn(((ItemBlock) stack.getItem()).getBlock()) : false;
+        return stack.getItem() instanceof BlockItem ? DigTunnelActionWorker.isNotInterestedIn(((BlockItem) stack.getItem()).getBlock()) : false;
     }
 
     private void dig(BlockPos p) {
         IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
-        IBlockState state = world.getBlockState(p);
+        BlockState state = world.getBlockState(p);
         boolean result;
         if (DigTunnelActionWorker.isNotInterestedIn(state.getBlock())) {
             result = helper.harvestAndDrop(p);
@@ -87,7 +86,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         }
     }
 
-    private BlockPos getBlockToDig(BlockPos p, EnumFacing facing, int blockidx) {
+    private BlockPos getBlockToDig(BlockPos p, Direction facing, int blockidx) {
         switch (blockidx) {
             case 0:
                 return p.up(1).offset(facing.rotateY());
@@ -123,27 +122,27 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         return p;
     }
 
-    private void buildSupport(BlockPos pos, EntityItem entityItem) {
+    private void buildSupport(BlockPos pos, ItemEntity entityItem) {
         IMeeCreep entity = helper.getMeeCreep();
         ItemStack blockStack = entityItem.getItem();
-        ItemStack actual = blockStack.splitStack(1);
+        ItemStack actual = blockStack.split(1);
         if (blockStack.isEmpty()) {
-            entityItem.setDead();
+            entityItem.remove();
         }
         if (actual.isEmpty()) {
             return;
         }
         Item item = actual.getItem();
-        if (!(item instanceof ItemBlock)) {
+        if (!(item instanceof BlockItem)) {
             // Safety
             return;
         }
 
         World world = entity.getWorld();
-        Block block = ((ItemBlock) item).getBlock();
-        IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, item.getMetadata(actual), GeneralTools.getHarvester(world), EnumHand.MAIN_HAND);
+        Block block = ((BlockItem) item).getBlock();
+        BlockState stateForPlacement = block.getStateForPlacement(new BlockItemUseContext(new ItemUseContext(GeneralTools.getHarvester(world), Hand.MAIN_HAND, new BlockRayTraceResult(Vec3d.ZERO, Direction.UP, pos, false)))); // todo: see if we a proper trace here
         world.setBlockState(pos, stateForPlacement, 3);
-        SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        SoundTools.playSound(world, block.getSoundType(stateForPlacement).getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
     }
 
     private void buildStairs(BlockPos pos) {
@@ -151,23 +150,23 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         numStairs--;
         World world = entity.getWorld();
         Block block = Blocks.STONE_STAIRS;
-        IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, getDirection().getOpposite().ordinal()-2, GeneralTools.getHarvester(world), EnumHand.MAIN_HAND);
-        stateForPlacement = stateForPlacement.withProperty(BlockStairs.FACING, getDirection().getOpposite());
+        BlockState stateForPlacement = block.getStateForPlacement(new BlockItemUseContext(new ItemUseContext(GeneralTools.getHarvester(world), Hand.MAIN_HAND, new BlockRayTraceResult(Vec3d.ZERO, Direction.UP, pos, false)))); // todo: see if we a proper trace here
+        stateForPlacement = stateForPlacement.with(StairsBlock.FACING, getDirection().getOpposite());
         world.setBlockState(pos, stateForPlacement, 3);
-        SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        SoundTools.playSound(world, block.getSoundType(stateForPlacement).getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
     }
 
-    private void collectCobble(EntityItem entityItem) {
+    private void collectCobble(ItemEntity entityItem) {
         ItemStack blockStack = entityItem.getItem();
-        ItemStack actual = blockStack.splitStack(6);
+        ItemStack actual = blockStack.split(6);
         if (blockStack.isEmpty()) {
-            entityItem.setDead();
+            entityItem.remove();
         }
         if (actual.isEmpty()) {
             return;
         }
         Item item = actual.getItem();
-        if (!(item instanceof ItemBlock)) {
+        if (!(item instanceof BlockItem)) {
             // Safety
             return;
         }
@@ -175,11 +174,11 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     }
 
     private boolean isStair(ItemStack stack) {
-        return stack.getItem() instanceof ItemBlock && ((ItemBlock) stack.getItem()).getBlock() instanceof BlockStairs;
+        return stack.getItem() instanceof BlockItem && ((BlockItem) stack.getItem()).getBlock() instanceof StairsBlock;
     }
 
     private boolean isCobble(ItemStack stack) {
-        return stack.getItem() instanceof ItemBlock && ((ItemBlock) stack.getItem()).getBlock() == Blocks.COBBLESTONE;
+        return stack.getItem() instanceof BlockItem && ((BlockItem) stack.getItem()).getBlock() == Blocks.COBBLESTONE;
     }
 
     @Override
@@ -198,7 +197,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
             return;
         }
 
-        EnumFacing facing = getDirection();
+        Direction facing = getDirection();
 
         BlockPos p = helper.getContext().getTargetPos().up().offset(facing, this.offset).down(this.offset+1);
         if (p.getY() < 6) {
@@ -218,7 +217,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         handleNextPosition(facing, p);
     }
 
-    private void handleNextPosition(EnumFacing facing, BlockPos p) {
+    private void handleNextPosition(Direction facing, BlockPos p) {
         IMeeCreep entity = helper.getMeeCreep();
         blockidx++;
         if (blockidx >= 15) {
@@ -260,18 +259,18 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         }
     }
 
-    private void placeStair(EnumFacing facing, BlockPos pos, EntityItem entityItem) {
+    private void placeStair(Direction facing, BlockPos pos, ItemEntity entityItem) {
         ItemStack blockStack = entityItem.getItem();
-        ItemStack actual = blockStack.splitStack(32);
+        ItemStack actual = blockStack.split(32);
         numStairs += 32;
         if (blockStack.isEmpty()) {
-            entityItem.setDead();
+            entityItem.remove();
         }
         if (actual.isEmpty()) {
             return;
         }
         Item item = actual.getItem();
-        if (!(item instanceof ItemBlock)) {
+        if (!(item instanceof BlockItem)) {
             // Safety
             return;
         }
@@ -279,7 +278,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         placeStair(facing, pos);
     }
 
-    private void placeStair(EnumFacing facing, BlockPos p) {
+    private void placeStair(Direction facing, BlockPos p) {
         IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         if (!isStair(p.down(), world)) {
@@ -295,7 +294,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         return blockidx >= 6 && blockidx <= 8;
     }
 
-    private boolean checkClear(BlockPos p, EnumFacing facing) {
+    private boolean checkClear(BlockPos p, Direction facing) {
         IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         if (canDig(p, world)) {
@@ -337,7 +336,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         return true;
     }
 
-    private boolean checkForStairs(BlockPos p, EnumFacing facing) {
+    private boolean checkForStairs(BlockPos p, Direction facing) {
         IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         if (!isStair(p.down(), world)) {
@@ -357,14 +356,14 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     }
 
     private boolean canDigOrStair(BlockPos p, World world) {
-        return !world.isAirBlock(p) && !positionsToSkip.contains(p) && !(world.getBlockState(p).getBlock() instanceof BlockStairs);
+        return !world.isAirBlock(p) && !positionsToSkip.contains(p) && !(world.getBlockState(p).getBlock() instanceof StairsBlock);
     }
 
     private boolean isStair(BlockPos p, World world) {
-        return positionsToSkip.contains(p) || world.getBlockState(p).getBlock() instanceof BlockStairs;
+        return positionsToSkip.contains(p) || world.getBlockState(p).getBlock() instanceof StairsBlock;
     }
 
-    private boolean checkSupports(EnumFacing facing, BlockPos p) {
+    private boolean checkSupports(Direction facing, BlockPos p) {
 //        if (checkForSupport(p.down(2))) {
 //            return true;
 //        }
@@ -445,22 +444,22 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     private boolean isLiquid(BlockPos p) {
         IMeeCreep entity = helper.getMeeCreep();
         Block block = entity.getWorld().getBlockState(p).getBlock();
-        return block instanceof BlockLiquid || block instanceof BlockDynamicLiquid || block instanceof BlockStaticLiquid;
+        return block instanceof IFluidBlock || block instanceof FlowingFluidBlock;
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        offset = tag.getInteger("offset");
-        blockidx = tag.getInteger("blockidx");
-        numStairs = tag.getInteger("stairs");
-        numCobble = tag.getInteger("cobble");
+    public void readFromNBT(CompoundNBT tag) {
+        offset = tag.getInt("offset");
+        blockidx = tag.getInt("blockidx");
+        numStairs = tag.getInt("stairs");
+        numCobble = tag.getInt("cobble");
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound tag) {
-        tag.setInteger("offset", offset);
-        tag.setInteger("blockidx", blockidx);
-        tag.setInteger("stairs", numStairs);
-        tag.setInteger("cobble", numCobble);
+    public void writeToNBT(CompoundNBT tag) {
+        tag.putInt("offset", offset);
+        tag.putInt("blockidx", blockidx);
+        tag.putInt("stairs", numStairs);
+        tag.putInt("cobble", numCobble);
     }
 }

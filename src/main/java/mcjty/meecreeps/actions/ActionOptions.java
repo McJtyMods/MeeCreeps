@@ -2,6 +2,7 @@ package mcjty.meecreeps.actions;
 
 import io.netty.buffer.ByteBuf;
 import mcjty.lib.network.NetworkTools;
+import mcjty.lib.varia.DimensionId;
 import mcjty.lib.varia.SoundTools;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.api.IActionContext;
@@ -11,17 +12,13 @@ import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.network.PacketActionOptionToClient;
 import mcjty.meecreeps.network.PacketShowBalloonToClient;
 import mcjty.meecreeps.setup.GuiProxy;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Direction;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
@@ -41,8 +38,8 @@ public class ActionOptions implements IActionContext {
     private final List<MeeCreepActionType> actionOptions;
     private final List<MeeCreepActionType> maybeActionOptions;
     private final BlockPos targetPos;
-    private final EnumFacing targetSide;
-    private int dimension;
+    private final Direction targetSide;
+    private DimensionId dimension;
     private int failureCount;                       // After how many ticks do we give up trying to find this MeeCreep
     @Nullable private final UUID playerId;
     private final int actionId;
@@ -56,7 +53,7 @@ public class ActionOptions implements IActionContext {
 
     // playerId can be null in case we have a player-less action
     public ActionOptions(List<MeeCreepActionType> actionOptions, List<MeeCreepActionType> maybeActionOptions,
-                         BlockPos targetPos, EnumFacing targetSide, int dimension, @Nullable UUID playerId, int actionId) {
+                         BlockPos targetPos, Direction targetSide, DimensionId dimension, @Nullable UUID playerId, int actionId) {
         this.actionOptions = actionOptions;
         this.maybeActionOptions = maybeActionOptions;
         this.targetPos = targetPos;
@@ -72,7 +69,7 @@ public class ActionOptions implements IActionContext {
         paused = false;
     }
 
-    public ActionOptions(ByteBuf buf) {
+    public ActionOptions(PacketBuffer buf) {
         int size = buf.readInt();
         actionOptions = new ArrayList<>();
         while (size > 0) {
@@ -85,9 +82,9 @@ public class ActionOptions implements IActionContext {
             maybeActionOptions.add(new MeeCreepActionType(NetworkTools.readStringUTF8(buf)));
             size--;
         }
-        targetPos = NetworkTools.readPos(buf);
-        targetSide = EnumFacing.VALUES[buf.readByte()];
-        dimension = buf.readInt();
+        targetPos = buf.readBlockPos();
+        targetSide = Direction.values()[buf.readByte()];
+        dimension = DimensionId.fromPacket(buf);
         failureCount = buf.readInt();
         if (buf.readBoolean()) {
             playerId = new UUID(buf.readLong(), buf.readLong());
@@ -106,7 +103,7 @@ public class ActionOptions implements IActionContext {
         // Drops not needed on client so no persistance
     }
 
-    public ActionOptions(NBTTagCompound tagCompound) {
+    public ActionOptions(CompoundNBT tagCompound) {
         NBTTagList list = tagCompound.getTagList("options", Constants.NBT.TAG_STRING);
         actionOptions = new ArrayList<>();
         for (int i = 0 ; i < list.tagCount() ; i++) {
@@ -152,7 +149,7 @@ public class ActionOptions implements IActionContext {
         paused = tagCompound.getBoolean("paused");
     }
 
-    public void writeToBuf(ByteBuf buf) {
+    public void writeToBuf(PacketBuffer buf) {
         buf.writeInt(actionOptions.size());
         for (MeeCreepActionType option : actionOptions) {
             NetworkTools.writeStringUTF8(buf, option.getId());
@@ -161,9 +158,9 @@ public class ActionOptions implements IActionContext {
         for (MeeCreepActionType option : maybeActionOptions) {
             NetworkTools.writeStringUTF8(buf, option.getId());
         }
-        NetworkTools.writePos(buf, targetPos);
+        buf.writeBlockPos(targetPos);
         buf.writeByte(targetSide.ordinal());
-        buf.writeInt(dimension);
+        buf.writeInt(dimension.getInternalId());
         buf.writeInt(failureCount);
         if (playerId != null) {
             buf.writeBoolean(true);
@@ -418,7 +415,7 @@ public class ActionOptions implements IActionContext {
         EntityMeeCreeps entity = new EntityMeeCreeps(world);
         entity.setLocationAndAngles(p.getX()+.5, p.getY(), p.getZ()+.5, 0, 0);
         entity.setActionId(actionId);
-        world.spawnEntity(entity);
+        world.addEntity(entity);
 
         if (doSound && ConfigSetup.meeCreepVolume.get() > 0.01f) {
             String snd = "intro1";

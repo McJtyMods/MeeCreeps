@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions;
 
+import mcjty.lib.varia.DimensionId;
 import mcjty.lib.varia.SoundTools;
 import mcjty.lib.varia.TeleportationTools;
 import mcjty.lib.worlddata.AbstractWorldData;
@@ -158,7 +159,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
             }
         }
         int actionId = newId();
-        ActionOptions opt = new ActionOptions(types, maybeTypes, pos, side, world.provider.getDimension(), player == null ? null : player.getUniqueID(), actionId);
+        ActionOptions opt = new ActionOptions(types, maybeTypes, pos, side, DimensionId.fromWorld(world), player == null ? null : player.getUniqueID(), actionId);
         options.add(opt);
         optionMap.put(actionId, opt);
         save();

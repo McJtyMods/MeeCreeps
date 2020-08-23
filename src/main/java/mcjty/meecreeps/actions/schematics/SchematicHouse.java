@@ -6,7 +6,7 @@ import mcjty.meecreeps.api.IDesiredBlock;
 import mcjty.meecreeps.api.IWorkerHelper;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockGlass;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemDoor;
@@ -71,7 +71,7 @@ public class SchematicHouse implements IBuildSchematic {
         }
 
         @Override
-        public Predicate<IBlockState> getStateMatcher() {
+        public Predicate<BlockState> getStateMatcher() {
             return blockState -> blockState.getBlock() == Blocks.COBBLESTONE;
         }
     };
@@ -93,7 +93,7 @@ public class SchematicHouse implements IBuildSchematic {
         }
 
         @Override
-        public Predicate<IBlockState> getStateMatcher() {
+        public Predicate<BlockState> getStateMatcher() {
             return blockState -> blockState.getBlock() instanceof BlockGlass;
         }
     };
@@ -125,7 +125,7 @@ public class SchematicHouse implements IBuildSchematic {
         }
 
         @Override
-        public Predicate<IBlockState> getStateMatcher() {
+        public Predicate<BlockState> getStateMatcher() {
             return blockState -> blockState.getBlock() instanceof BlockDoor;
         }
     };
@@ -157,7 +157,7 @@ public class SchematicHouse implements IBuildSchematic {
         }
 
         @Override
-        public Predicate<IBlockState> getStateMatcher() {
+        public Predicate<BlockState> getStateMatcher() {
             return blockState -> blockState.getBlock() instanceof BlockDoor;
         }
     };
@@ -189,7 +189,7 @@ public class SchematicHouse implements IBuildSchematic {
         }
 
         @Override
-        public Predicate<IBlockState> getStateMatcher() {
+        public Predicate<BlockState> getStateMatcher() {
             return blockState -> WorkerHelper.isTorch(blockState.getBlock());
         }
     };

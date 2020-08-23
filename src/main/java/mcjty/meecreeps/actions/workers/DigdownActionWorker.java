@@ -5,16 +5,16 @@ import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.item.*;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 import java.util.HashSet;
@@ -39,7 +39,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
     }
 
     private boolean isLadder(ItemStack stack) {
-        return stack.getItem() == Item.getItemFromBlock(Blocks.LADDER);
+        return stack.getItem() == Items.LADDER;
     }
 
     private void placeLadder(BlockPos pos) {
@@ -48,7 +48,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
         ItemStack ladder = entity.consumeItem(this::isLadder, 1);
         if (!ladder.isEmpty()) {
             world.setBlockState(pos, Blocks.LADDER.getDefaultState(), 3);
-            SoundTools.playSound(world, Blocks.LADDER.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+            SoundTools.playSound(world, Blocks.LADDER.getSoundType(Blocks.LADDER.getDefaultState()).getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
         }
     }
 
@@ -56,7 +56,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
         IMeeCreep entity = helper.getMeeCreep();
         BlockPos p = options.getTargetPos();
         World world = entity.getWorld();
-        IBlockState state = world.getBlockState(p);
+        BlockState state = world.getBlockState(p);
         while (p.getY() > 0 && (world.isAirBlock(p) || state.getBlock() == Blocks.LADDER)) {
             p = p.down();
             state = world.getBlockState(p);
@@ -68,7 +68,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
         IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
         BlockPos p = findTopSpotNotDiggedYet();
-        IBlockState state = world.getBlockState(p);
+        BlockState state = world.getBlockState(p);
         if (p.getY() < 1 || world.isAirBlock(p) || state.getBlock() == Blocks.LADDER) {
             helper.taskIsDone();
         } else if (helper.allowedToHarvest(state, world, p, GeneralTools.getHarvester(world))) {
@@ -101,17 +101,18 @@ public class DigdownActionWorker extends AbstractActionWorker {
         return false;
     }
 
-    private void buildSupportBlock(EntityItem entityItem) {
+    private void buildSupportBlock(ItemEntity entityItem) {
         ItemStack blockStack = entityItem.getItem();
-        ItemStack actual = blockStack.splitStack(1);
+        ItemStack actual = blockStack.split(1);
         if (blockStack.isEmpty()) {
-            entityItem.setDead();
+            entityItem.remove();
         }
         IMeeCreep entity = helper.getMeeCreep();
         World world = entity.getWorld();
 
-        Block block = ((ItemBlock) actual.getItem()).getBlock();
-        IBlockState stateForPlacement = block.getStateForPlacement(world, supportPosTodo.south(), EnumFacing.DOWN, 0, 0, 0, actual.getItem().getMetadata(actual), GeneralTools.getHarvester(world), EnumHand.MAIN_HAND);
+        Block block = ((BlockItem) actual.getItem()).getBlock();
+        // todo: this likely wont work
+        BlockState stateForPlacement = block.getStateForPlacement(new BlockItemUseContext(new ItemUseContext(GeneralTools.getHarvester(world), Hand.MAIN_HAND, new BlockRayTraceResult(Vec3d.ZERO, Direction.UP, BlockPos.ZERO, false)))); // todo: see if we a proper trace here
         world.setBlockState(supportPosTodo.south(), stateForPlacement, 3);
         placeLadder(supportPosTodo);
         supportPosTodo = null;
@@ -127,7 +128,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
             b.add(Blocks.DIRT);
             b.add(Blocks.SANDSTONE);
             b.add(Blocks.NETHERRACK);
-            b.add(Blocks.NETHER_BRICK);
+            b.add(Blocks.NETHER_BRICKS);
             b.add(Blocks.END_STONE);
             b.add(Blocks.RED_SANDSTONE);
             b.add(Blocks.PURPUR_BLOCK);
@@ -139,8 +140,8 @@ public class DigdownActionWorker extends AbstractActionWorker {
     private boolean isBuildingBlock(ItemStack stack) {
         if (!stack.isEmpty()) {
             Item item = stack.getItem();
-            if (item instanceof ItemBlock) {
-                ItemBlock itemBlock = (ItemBlock) item;
+            if (item instanceof BlockItem) {
+                BlockItem itemBlock = (BlockItem) item;
                 if (isBuildingBlock(itemBlock.getBlock())) {
                     return true;
                 }

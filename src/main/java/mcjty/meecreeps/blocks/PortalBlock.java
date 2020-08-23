@@ -5,7 +5,7 @@ import mcjty.meecreeps.MeeCreeps;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
@@ -31,44 +31,44 @@ public class PortalBlock extends Block implements ITileEntityProvider {
     }
 
     @Override
-    public RayTraceResult collisionRayTrace(IBlockState blockState, World worldIn, BlockPos pos, Vec3d start, Vec3d end) {
+    public RayTraceResult collisionRayTrace(BlockState blockState, World worldIn, BlockPos pos, Vec3d start, Vec3d end) {
         return null;
     }
 
     @SideOnly(Side.CLIENT)
     @Override
-    public boolean shouldSideBeRendered(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+    public boolean shouldSideBeRendered(BlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
         return false;
     }
 
     @Override
-    public boolean isBlockNormalCube(IBlockState state) {
+    public boolean isBlockNormalCube(BlockState state) {
         return false;
     }
 
     @Override
-    public boolean isOpaqueCube(IBlockState state) {
+    public boolean isOpaqueCube(BlockState state) {
         return false;
     }
 
     @Override
-    public boolean isFullBlock(IBlockState state) {
+    public boolean isFullBlock(BlockState state) {
         return false;
     }
 
     @Override
-    public boolean isFullCube(IBlockState state) {
+    public boolean isFullCube(BlockState state) {
         return false;
     }
 
 
     @Override
-    public EnumBlockRenderType getRenderType(IBlockState state) {
+    public EnumBlockRenderType getRenderType(BlockState state) {
         return EnumBlockRenderType.INVISIBLE;
     }
 
     @Override
-    public void addCollisionBoxToList(IBlockState state, World worldIn, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entityIn, boolean isActualState) {
+    public void addCollisionBoxToList(BlockState state, World worldIn, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entityIn, boolean isActualState) {
 
     }
 

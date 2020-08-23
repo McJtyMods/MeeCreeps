@@ -4,10 +4,11 @@ import mcjty.lib.varia.Counter;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.api.PreferedChest;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 
 import java.util.Map;
 
@@ -75,9 +76,9 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
         for (Map.Entry<BlockPos, Integer> entry : leavesToTick.entrySet()) {
             BlockPos pos = entry.getKey();
             if (!world.isAirBlock(pos)) {
-                IBlockState state = world.getBlockState(pos);
+                BlockState state = world.getBlockState(pos);
                 helper.registerHarvestableBlock(pos);
-                state.getBlock().updateTick(world, pos, state, entity.getRandom());
+                state.tick((ServerWorld) world, pos, entity.getRandom());
 
                 if (!world.isAirBlock(pos)) {
                     Integer counter = entry.getValue();

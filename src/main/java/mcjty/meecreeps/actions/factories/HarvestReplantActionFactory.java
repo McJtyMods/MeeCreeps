@@ -8,7 +8,7 @@ import mcjty.meecreeps.varia.InventoryTools;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockNetherWart;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -33,9 +33,9 @@ public class HarvestReplantActionFactory implements IActionFactory {
             for (double y = box.minY ; y <= box.maxY ; y++) {
                 for (double z = box.minZ ; z <= box.maxZ ; z++) {
                     BlockPos p = new BlockPos(x, y, z);
-                    IBlockState state = world.getBlockState(p);
+                    BlockState state = world.getBlockState(p);
                     if (state.getBlock() == Blocks.FARMLAND) {
-                        IBlockState cropState = world.getBlockState(p.up());
+                        BlockState cropState = world.getBlockState(p.up());
                         Block cropBlock = cropState.getBlock();
                         boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(p), world, p, EnumFacing.UP, (IPlantable) cropBlock);
                         if (hasCrops) {
@@ -76,9 +76,9 @@ public class HarvestReplantActionFactory implements IActionFactory {
             for (double y = box.minY ; y <= box.maxY ; y++) {
                 for (double z = box.minZ ; z <= box.maxZ ; z++) {
                     BlockPos p = new BlockPos(x, y, z);
-                    IBlockState state = world.getBlockState(p);
+                    BlockState state = world.getBlockState(p);
                     if (state.getBlock() == Blocks.FARMLAND) {
-                        IBlockState cropState = world.getBlockState(p.up());
+                        BlockState cropState = world.getBlockState(p.up());
                         Block cropBlock = cropState.getBlock();
                         boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(p), world, p, EnumFacing.UP, (IPlantable) cropBlock);
                         if (hasCrops) {

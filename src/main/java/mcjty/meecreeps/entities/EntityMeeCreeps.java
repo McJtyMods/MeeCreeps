@@ -426,16 +426,16 @@ public class EntityMeeCreeps extends CreatureEntity implements IMeeCreep {
             workerTask.readFromNBT(compound.getCompound("worker"));
         }
 
-        BlockState iblockstate = null;
+        BlockState BlockState = null;
         if (compound.contains("carried")) {
-            iblockstate = NBTUtil.readBlockState(compound.getCompound("carried"));
+            BlockState = NBTUtil.readBlockState(compound.getCompound("carried"));
         }
 
-        if (iblockstate == null || iblockstate.getMaterial() == Material.AIR) {
-            iblockstate = null;
+        if (BlockState == null || BlockState.getMaterial() == Material.AIR) {
+            BlockState = null;
         }
 
-        this.setHeldBlockState(iblockstate);
+        this.setHeldBlockState(BlockState);
         if (compound.contains("carriedNBT")) {
             carriedNBT = compound.getCompound("carriedNBT");
         }
@@ -458,9 +458,9 @@ public class EntityMeeCreeps extends CreatureEntity implements IMeeCreep {
             compound.put("worker", workerTag);
         }
 
-        BlockState iblockstate = this.getHeldBlockState();
-        if (iblockstate != null) {
-            compound.put("carried", NBTUtil.writeBlockState(iblockstate));
+        BlockState BlockState = this.getHeldBlockState();
+        if (BlockState != null) {
+            compound.put("carried", NBTUtil.writeBlockState(BlockState));
         }
 
         if (carriedNBT != null) {

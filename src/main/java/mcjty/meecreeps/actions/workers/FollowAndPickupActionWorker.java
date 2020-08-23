@@ -1,13 +1,12 @@
 package mcjty.meecreeps.actions.workers;
 
+import mcjty.lib.varia.DimensionId;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
-import mcjty.meecreeps.teleport.TeleportationTools;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BlockItem;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 
@@ -39,21 +38,21 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
     public void tick(boolean timeToWrapUp) {
         IMeeCreep entity = helper.getMeeCreep();
         EntityMeeCreeps meeCreep = (EntityMeeCreeps) entity;
-        EntityPlayer player = options.getPlayer();
+        PlayerEntity player = options.getPlayer();
 
         if (timeToWrapUp) {
             helper.done();
         } else if (player == null) {
             helper.taskIsDone();
-        } else if (player.getEntityWorld().provider.getDimension() != meeCreep.getEntityWorld().provider.getDimension()) {
+        } else if (!DimensionId.sameDimension(player.getEntityWorld(), meeCreep.getEntityWorld())) {
             // Wrong dimension, do nothing as this is handled by ServerActionManager
         } else {
             BlockPos position = player.getPosition();
             AxisAlignedBB box = new AxisAlignedBB(position.add(-6, -4, -6), position.add(6, 4, 6));
-            List<EntityItem> items = entity.getWorld().getEntitiesWithinAABB(EntityItem.class, box, input -> {
+            List<ItemEntity> items = entity.getWorld().getEntitiesWithinAABB(ItemEntity.class, box, input -> {
                 if (!input.getItem().isEmpty()) {
-                    if (input.getItem().getItem() instanceof ItemBlock) {
-                        if (DigTunnelActionWorker.isNotInterestedIn(((ItemBlock) input.getItem().getItem()).getBlock())) {
+                    if (input.getItem().getItem() instanceof BlockItem) {
+                        if (DigTunnelActionWorker.isNotInterestedIn(((BlockItem) input.getItem().getItem()).getBlock())) {
                             return false;
                         }
                     }
@@ -62,11 +61,11 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
             });
             if (!items.isEmpty()) {
                 items.sort((o1, o2) -> {
-                    double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
-                    double d2 = position.distanceSq(o2.posX, o2.posY, o2.posZ);
+                    double d1 = position.distanceSq(o1.getPosX(), o1.getPosY(), o1.getPosZ(), false);
+                    double d2 = position.distanceSq(o2.getPosX(), o2.getPosY(), o2.getPosZ(), false);
                     return Double.compare(d1, d2);
                 });
-                EntityItem entityItem = items.get(0);
+                ItemEntity entityItem = items.get(0);
                 helper.navigateTo(entityItem, (pos) -> helper.pickup(entityItem));
             } else if (entity.hasStuffInInventory()) {
                 helper.navigateTo(helper.findSuitablePositionNearPlayer(1.0), blockPos -> helper.giveToPlayerOrDrop());

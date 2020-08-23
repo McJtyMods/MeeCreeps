@@ -2,7 +2,7 @@ package mcjty.meecreeps.actions.workers;
 
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 
@@ -38,14 +38,14 @@ public class PickupActionWorker extends AbstractActionWorker {
     private void tryFindingItemsToPickup() {
         IMeeCreep entity = helper.getMeeCreep();
         BlockPos position = entity.getEntity().getPosition();
-        List<EntityItem> items = entity.getWorld().getEntitiesWithinAABB(EntityItem.class, getActionBox());
+        List<ItemEntity> items = entity.getWorld().getEntitiesWithinAABB(ItemEntity.class, getActionBox());
         if (!items.isEmpty()) {
             items.sort((o1, o2) -> {
-                double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
-                double d2 = position.distanceSq(o2.posX, o2.posY, o2.posZ);
+                double d1 = position.distanceSq(o1.getPosX(), o1.getPosY(), o1.getPosZ(), false);
+                double d2 = position.distanceSq(o2.getPosX(), o2.getPosY(), o2.getPosZ(), false);
                 return Double.compare(d1, d2);
             });
-            EntityItem entityItem = items.get(0);
+            ItemEntity entityItem = items.get(0);
             helper.navigateTo(entityItem, (pos) -> helper.pickup(entityItem));
         } else if (entity.hasStuffInInventory()) {
             helper.putStuffAway();

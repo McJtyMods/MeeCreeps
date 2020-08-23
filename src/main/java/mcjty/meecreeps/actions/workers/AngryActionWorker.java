@@ -45,8 +45,8 @@ public class AngryActionWorker extends AbstractActionWorker {
                 input -> input != entity.getEntity());
         if (!meeCreeps.isEmpty()) {
             meeCreeps.sort((o1, o2) -> {
-                double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
-                double d2 = position.distanceSq(o2.posX, o2.posY, o2.posZ);
+                double d1 = position.distanceSq(o1.getPosX(), o1.getPosY(), o1.getPosZ(), false);
+                double d2 = position.distanceSq(o2.getPosX(), o2.getPosY(), o2.getPosZ(), false);
                 return Double.compare(d1, d2);
             });
             EntityMeeCreeps enemy = meeCreeps.get(0);

@@ -4,6 +4,7 @@ import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.render.BalloonRenderer;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -12,7 +13,7 @@ public class ClientActionManager {
     public static ActionOptions lastOptions = null;
 
     public static void showActionOptions(ActionOptions options, int guiid) {
-        EntityPlayer player = MeeCreeps.proxy.getClientPlayer();
+        PlayerEntity player = MeeCreeps.proxy.getClientPlayer();
         World worldIn = MeeCreeps.proxy.getClientWorld();
         BlockPos pos = options.getTargetPos();
         lastOptions = options;
@@ -20,7 +21,7 @@ public class ClientActionManager {
     }
 
     public static void showProblem(String message, String... parameters) {
-        EntityPlayer player = MeeCreeps.proxy.getClientPlayer();
+        PlayerEntity player = MeeCreeps.proxy.getClientPlayer();
         World worldIn = MeeCreeps.proxy.getClientWorld();
         BlockPos pos = player.getPosition();
         String translated = I18n.format(message, parameters);

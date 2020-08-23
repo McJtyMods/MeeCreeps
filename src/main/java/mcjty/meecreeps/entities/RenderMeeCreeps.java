@@ -1,6 +1,6 @@
 package mcjty.meecreeps.entities;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.BlockState;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderLiving;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -25,9 +25,9 @@ public class RenderMeeCreeps extends RenderLiving<EntityMeeCreeps> {
 
     @Override
     public void doRender(EntityMeeCreeps entity, double x, double y, double z, float entityYaw, float partialTicks) {
-        IBlockState iblockstate = entity.getHeldBlockState();
+        BlockState BlockState = entity.getHeldBlockState();
         MeeCreepsModel model = (MeeCreepsModel) this.getMainModel();
-        model.isCarrying = iblockstate != null;
+        model.isCarrying = BlockState != null;
 
         super.doRender(entity, x, y, z, entityYaw, partialTicks);
     }
