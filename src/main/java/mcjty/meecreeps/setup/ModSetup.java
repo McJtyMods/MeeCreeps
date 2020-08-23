@@ -7,7 +7,7 @@ import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.ModEntities;
 import mcjty.meecreeps.items.ModItems;
-import mcjty.meecreeps.network.MeeCreepsMessages;
+import mcjty.meecreeps.network.PacketHandler;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -25,7 +25,7 @@ public class ModSetup extends DefaultModSetup {
 
         CommandHandler.registerCommands();
 
-        MeeCreepsMessages.registerMessages("meecreeps");
+        PacketHandler.registerMessages("meecreeps");
 
         ModEntities.init();
     }

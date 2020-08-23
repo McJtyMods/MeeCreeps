@@ -4,12 +4,12 @@ import mcjty.lib.network.PacketSendServerCommand;
 import mcjty.lib.typed.TypedMap;
 import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.MeeCreeps;
-import mcjty.meecreeps.actions.PacketShowBalloonToClient;
+import mcjty.meecreeps.network.PacketShowBalloonToClient;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityProjectile;
 import mcjty.meecreeps.gui.GuiWheel;
-import mcjty.meecreeps.network.MeeCreepsMessages;
+import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.setup.GuiProxy;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -17,6 +17,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -25,6 +26,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
@@ -47,10 +49,10 @@ public class PortalGunItem extends Item {
         setCreativeTab(MeeCreeps.setup.getTab());
     }
 
-    public static ItemStack getGun(EntityPlayer player) {
-        ItemStack heldItem = player.getHeldItem(EnumHand.MAIN_HAND);
+    public static ItemStack getGun(ServerPlayerEntity player) {
+        ItemStack heldItem = player.getHeldItem(Hand.MAIN_HAND);
         if (heldItem.getItem() != ModItems.portalGunItem) {
-            heldItem = player.getHeldItem(EnumHand.OFF_HAND);
+            heldItem = player.getHeldItem(Hand.OFF_HAND);
             if (heldItem.getItem() != ModItems.portalGunItem) {
                 // Something went wrong
                 return ItemStack.EMPTY;
@@ -73,11 +75,11 @@ public class PortalGunItem extends Item {
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
         if (world.isRemote) {
             if (world.getBlockState(pos.offset(side)).getBlock() == ModBlocks.portalBlock) {
-                MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL, TypedMap.builder().put(CommandHandler.PARAM_POS, pos.offset(side)).build()));
+                PacketHandler.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL, TypedMap.builder().put(CommandHandler.PARAM_POS, pos.offset(side)).build()));
                 return EnumActionResult.SUCCESS;
             }
             if (side != EnumFacing.UP && side != EnumFacing.DOWN && world.getBlockState(pos.offset(side).down()).getBlock() == ModBlocks.portalBlock) {
-                MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL, TypedMap.builder().put(CommandHandler.PARAM_POS, pos.offset(side).down()).build()));
+                PacketHandler.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL, TypedMap.builder().put(CommandHandler.PARAM_POS, pos.offset(side).down()).build()));
                 return EnumActionResult.SUCCESS;
             }
 
@@ -108,7 +110,7 @@ public class PortalGunItem extends Item {
 
         int charge = getCharge(heldItem);
         if (charge <= 0) {
-            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_no_charge"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_no_charge"), (EntityPlayerMP) player);
             return;
         }
         setCharge(heldItem, charge-1);
@@ -116,9 +118,9 @@ public class PortalGunItem extends Item {
         List<TeleportDestination> destinations = getDestinations(heldItem);
         int current = getCurrentDestination(heldItem);
         if (current == -1) {
-            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_no_destination"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_no_destination"), (EntityPlayerMP) player);
         } else if (destinations.get(current) == null) {
-            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_bad_destination"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_bad_destination"), (EntityPlayerMP) player);
         } else {
             EntityProjectile projectile = new EntityProjectile(world, player);
             projectile.setDestination(destinations.get(current));

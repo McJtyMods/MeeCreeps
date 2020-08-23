@@ -8,13 +8,15 @@ import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.actions.ClientActionManager;
 import mcjty.meecreeps.actions.MeeCreepActionType;
-import mcjty.meecreeps.actions.PacketPerformAction;
-import mcjty.meecreeps.network.MeeCreepsMessages;
+import mcjty.meecreeps.network.PacketPerformAction;
+import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.setup.GuiProxy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.StringTextComponent;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -22,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class GuiMeeCreeps extends GuiScreen {
+public class GuiMeeCreeps extends Screen {
 
     private static final int WIDTH = 256;
     private static final int HEIGHT = 200;
@@ -45,12 +47,13 @@ public class GuiMeeCreeps extends GuiScreen {
     private Runnable outsideWindowAction;
 
     public GuiMeeCreeps(int id) {
+        super(new StringTextComponent(""));
         this.id = id;
     }
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
         guiLeft = (this.width - WIDTH) / 2;
         guiTop = (this.height - HEIGHT) / 2;
 
@@ -61,7 +64,7 @@ public class GuiMeeCreeps extends GuiScreen {
     }
 
     @Override
-    public boolean doesGuiPauseGame() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -73,7 +76,7 @@ public class GuiMeeCreeps extends GuiScreen {
     private void resume() {
         confirmedAction = true;
         if (options != null) {
-            MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_RESUME_ACTION,
+            PacketHandler.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_RESUME_ACTION,
                     TypedMap.builder().put(CommandHandler.PARAM_ID, options.getActionId()).build()));
         }
     }
@@ -86,7 +89,7 @@ public class GuiMeeCreeps extends GuiScreen {
     private void dismiss() {
         confirmedAction = true;
         if (options != null) {
-            MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_ACTION,
+            PacketHandler.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_ACTION,
                     TypedMap.builder().put(CommandHandler.PARAM_ID, options.getActionId()).build()));
         }
     }
@@ -122,7 +125,7 @@ public class GuiMeeCreeps extends GuiScreen {
         String heading = factory.getFactory().getFurtherQuestionHeading(Minecraft.getMinecraft().world, options.getTargetPos(), options.getTargetSide());
         if (heading == null || furtherQuestionId != null) {
             confirmedAction = true;
-            MeeCreepsMessages.INSTANCE.sendToServer(new PacketPerformAction(options, type, furtherQuestionId));
+            PacketHandler.INSTANCE.sendToServer(new PacketPerformAction(options.getActionId(), type, furtherQuestionId));
             close();
         } else {
             furtherQuestionType = type;

@@ -3,12 +3,12 @@ package mcjty.meecreeps.entities;
 import com.google.common.base.Optional;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ActionOptions;
-import mcjty.meecreeps.actions.PacketActionOptionToClient;
+import mcjty.meecreeps.network.PacketActionOptionToClient;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.actions.workers.WorkerHelper;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.blocks.ModBlocks;
-import mcjty.meecreeps.network.MeeCreepsMessages;
+import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.setup.GuiProxy;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -169,7 +169,7 @@ public class EntityMeeCreeps extends EntityCreature implements IMeeCreep {
             if (actionId != 0) {
                 ActionOptions options = manager.getOptions(actionId);
                 if (options != null) {
-                    MeeCreepsMessages.INSTANCE.sendTo(new PacketActionOptionToClient(options, GuiProxy.GUI_MEECREEP_DISMISS), (EntityPlayerMP) player);
+                    PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(options, GuiProxy.GUI_MEECREEP_DISMISS), (EntityPlayerMP) player);
                     options.setPaused(true);
                 }
             }

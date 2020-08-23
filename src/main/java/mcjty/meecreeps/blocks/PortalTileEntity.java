@@ -5,16 +5,11 @@ import mcjty.lib.varia.TeleportationTools;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.teleport.TeleportDestination;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ITickable;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -25,19 +20,19 @@ import net.minecraftforge.common.util.Constants;
 import javax.annotation.Nullable;
 import java.util.*;
 
-public class PortalTileEntity extends TileEntity implements ITickable {
+public class PortalTileEntity extends TileEntity implements ITickableTileEntity {
 
     private int timeout;
     private boolean soundStart = false;
     private boolean soundEnd = false;
     private int start;  // Client side only
     private TeleportDestination other;
-    private EnumFacing portalSide;            // Side to render the portal on
+    private Direction portalSide;            // Side to render the portal on
     private AxisAlignedBB box = null;
     private Set<UUID> blackListed = new HashSet<>();        // Entities can only go through the portal one time
 
     @Override
-    public void update() {
+    public void tick() {
         if (!world.isRemote) {
             tickTime();
             if (timeout <= 0) {
@@ -70,7 +65,7 @@ public class PortalTileEntity extends TileEntity implements ITickable {
                     if (!blackListed.contains(entity.getUniqueID())) {
                         otherPortal.addBlackList(entity.getUniqueID());
                         double oy = otherY;
-                        if (otherPortal.getPortalSide() == EnumFacing.DOWN) {
+                        if (otherPortal.getPortalSide() == Direction.DOWN) {
                             oy -= entity.height + .7;
                         }
                         TeleportationTools.teleportEntity(entity, otherPortal.getWorld(), otherX, oy, otherZ, otherPortal.getPortalSide());
@@ -109,7 +104,7 @@ public class PortalTileEntity extends TileEntity implements ITickable {
         timeout = packet.getNbtCompound().getInteger("timeout");
         start = packet.getNbtCompound().getInteger("start");
         byte side = packet.getNbtCompound().getByte("portalSide");
-        this.portalSide = side == 127 ? null : EnumFacing.VALUES[side];
+        this.portalSide = side == 127 ? null : Direction.VALUES[side];
     }
 
     private AxisAlignedBB getTeleportBox() {
@@ -165,11 +160,11 @@ public class PortalTileEntity extends TileEntity implements ITickable {
         }
     }
 
-    public EnumFacing getPortalSide() {
+    public Direction getPortalSide() {
         return portalSide;
     }
 
-    public void setPortalSide(EnumFacing portalSide) {
+    public void setPortalSide(Direction portalSide) {
         this.portalSide = portalSide;
         box = null;
         markDirtyClient();
@@ -215,10 +210,10 @@ public class PortalTileEntity extends TileEntity implements ITickable {
         super.readFromNBT(compound);
         timeout = compound.getInteger("timeout");
         byte pside = compound.getByte("portalSide");
-        this.portalSide = pside == 127 ? null : EnumFacing.VALUES[pside];
+        this.portalSide = pside == 127 ? null : Direction.VALUES[pside];
         BlockPos pos = BlockPos.fromLong(compound.getLong("pos"));
         int dim = compound.getInteger("dim");
-        EnumFacing side = EnumFacing.VALUES[compound.getByte("side")];
+        Direction side = Direction.VALUES[compound.getByte("side")];
         other = new TeleportDestination("", dim, pos, side);
         NBTTagList list = compound.getTagList("bl", Constants.NBT.TAG_COMPOUND);
         blackListed.clear();

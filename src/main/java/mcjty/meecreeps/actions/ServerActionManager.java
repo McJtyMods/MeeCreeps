@@ -14,6 +14,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -164,7 +165,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
 
     private static Random random = new Random();
 
-    public void performAction(@Nullable EntityPlayerMP player, int id, MeeCreepActionType type, @Nullable String furtherQuestionId) {
+    public void performAction(@Nullable ServerPlayerEntity player, int id, MeeCreepActionType type, @Nullable String furtherQuestionId) {
         ActionOptions option = getOptions(id);
         if (option != null) {
             option.setStage(Stage.WORKING);

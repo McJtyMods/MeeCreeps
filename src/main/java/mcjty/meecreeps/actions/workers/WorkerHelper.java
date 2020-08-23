@@ -10,7 +10,8 @@ import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.items.CreepCubeItem;
-import mcjty.meecreeps.network.MeeCreepsMessages;
+import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.network.PacketShowBalloonToClient;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.InventoryTools;
 import net.minecraft.block.Block;
@@ -385,7 +386,7 @@ public class WorkerHelper implements IWorkerHelper {
         lastMessage = message;
         EntityPlayerMP player = getPlayer();
         if (player != null) {
-            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient(message, parameters), player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient(message, parameters), player);
         }
     }
 

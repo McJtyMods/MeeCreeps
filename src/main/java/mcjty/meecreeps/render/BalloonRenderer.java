@@ -1,10 +1,10 @@
 package mcjty.meecreeps.render;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.config.ConfigSetup;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
@@ -21,7 +21,7 @@ public class BalloonRenderer {
     private static String lastMessage = "";
 
     public static void addMessage(String message) {
-        Minecraft mc = Minecraft.getMinecraft();
+        Minecraft mc = Minecraft.getInstance();
         List<String> strings = mc.fontRenderer.listFormattedStringToWidth(message, 230);
         for (String s : strings) {
             BalloonRenderer.messages.add(Pair.of(ConfigSetup.messageTimeout.get()*2, s));
@@ -40,14 +40,13 @@ public class BalloonRenderer {
             return;
         }
 
-        GlStateManager.pushMatrix();
+        RenderSystem.pushMatrix();
 
-        Minecraft mc = Minecraft.getMinecraft();
+        Minecraft mc = Minecraft.getInstance();
         mc.getTextureManager().bindTexture(gui_top);
-
-        ScaledResolution scaledresolution = new ScaledResolution(mc);
-        int width = scaledresolution.getScaledWidth();
-        int height = scaledresolution.getScaledHeight();
+        
+        int width = mc.getMainWindow().getWidth();
+        int height = mc.getMainWindow().getScaledHeight();
 //        double sw = scaledresolution.getScaledWidth_double();
 //        double sh = scaledresolution.getScaledHeight_double();
 
@@ -93,7 +92,7 @@ public class BalloonRenderer {
         y = guiTop+7;
         for (Pair<Integer, String> pair : messages) {
             String msg = pair.getRight();
-            mcjty.lib.client.RenderHelper.renderText(mc, guiLeft+15, y, msg, 0);
+            mcjty.lib.client.RenderHelper.renderText(guiLeft+15, y, msg, 0);
             y += 14;
             if (pair.getLeft() > 0) {
                 newMessages.add(Pair.of(pair.getLeft()-1, msg));
@@ -105,13 +104,13 @@ public class BalloonRenderer {
     }
 
     public static void setupOverlayRendering(double sw, double sh) {
-        GlStateManager.clear(256);
-        GlStateManager.matrixMode(GL11.GL_PROJECTION);
-        GlStateManager.loadIdentity();
-        GlStateManager.ortho(0.0D, sw, sh, 0.0D, 1000.0D, 3000.0D);
-        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-        GlStateManager.loadIdentity();
-        GlStateManager.translate(0.0F, 0.0F, -2000.0F);
+        RenderSystem.clear(256, Minecraft.IS_RUNNING_ON_MAC);
+        RenderSystem.matrixMode(GL11.GL_PROJECTION);
+        RenderSystem.loadIdentity();
+        RenderSystem.ortho(0.0D, sw, sh, 0.0D, 1000.0D, 3000.0D);
+        RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+        RenderSystem.loadIdentity();
+        RenderSystem.translatef(0.0F, 0.0F, -2000.0F);
     }
 
 }

@@ -3,10 +3,10 @@ package mcjty.meecreeps.items;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.actions.MeeCreepActionType;
-import mcjty.meecreeps.actions.PacketShowBalloonToClient;
+import mcjty.meecreeps.network.PacketShowBalloonToClient;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.config.ConfigSetup;
-import mcjty.meecreeps.network.MeeCreepsMessages;
+import mcjty.meecreeps.network.PacketHandler;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
@@ -144,7 +144,7 @@ public class CreepCubeItem extends Item {
         if (isLimited()) {
             ItemStack heldItem = player.getHeldItem(hand);
             if (getUsages(heldItem) >= ConfigSetup.meeCreepBoxMaxUsage.get()) {
-                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.box_unusable"), (EntityPlayerMP) player);
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.box_unusable"), (EntityPlayerMP) player);
                 return EnumActionResult.SUCCESS;
             }
             setUsages(heldItem, getUsages(heldItem)+1);
@@ -153,7 +153,7 @@ public class CreepCubeItem extends Item {
         if (ConfigSetup.maxMeecreepsPerPlayer.get() >= 0) {
             int cnt = ServerActionManager.getManager().countMeeCreeps(player);
             if (cnt >= ConfigSetup.maxMeecreepsPerPlayer.get()) {
-                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.max_spawn_reached", Integer.toString(ConfigSetup.maxMeecreepsPerPlayer.get())), (EntityPlayerMP) player);
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.max_spawn_reached", Integer.toString(ConfigSetup.maxMeecreepsPerPlayer.get())), (EntityPlayerMP) player);
                 return EnumActionResult.SUCCESS;
             }
         }
@@ -162,13 +162,13 @@ public class CreepCubeItem extends Item {
             ItemStack heldItem = player.getHeldItem(hand);
             MeeCreepActionType lastAction = getLastAction(heldItem);
             if (lastAction == null) {
-                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.no_last_action"), (EntityPlayerMP) player);
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.no_last_action"), (EntityPlayerMP) player);
             } else {
                 MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(lastAction);
                 if (factory.getFactory().isPossible(world, pos, side) || factory.getFactory().isPossibleSecondary(world, pos, side)) {
                     MeeCreeps.api.spawnMeeCreep(lastAction.getId(), getLastQuestionId(heldItem), world, pos, side, (EntityPlayerMP) player, false);
                 } else {
-                    MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.last_action_not_possible"), (EntityPlayerMP) player);
+                    PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.last_action_not_possible"), (EntityPlayerMP) player);
                 }
             }
         } else {

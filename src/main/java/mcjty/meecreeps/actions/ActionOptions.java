@@ -7,10 +7,13 @@ import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.api.IActionContext;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
-import mcjty.meecreeps.network.MeeCreepsMessages;
+import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.network.PacketActionOptionToClient;
+import mcjty.meecreeps.network.PacketShowBalloonToClient;
 import mcjty.meecreeps.setup.GuiProxy;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -324,7 +327,7 @@ public class ActionOptions implements IActionContext {
                     } else {
                         EntityPlayer player = getPlayer();
                         if (player != null) {
-                            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_spawn_meecreep"), (EntityPlayerMP) player);
+                            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_spawn_meecreep"), (EntityPlayerMP) player);
                         }
                         return false;
                     }
@@ -380,9 +383,9 @@ public class ActionOptions implements IActionContext {
             return false;
         }
         MinecraftServer server = DimensionManager.getWorld(0).getMinecraftServer();
-        EntityPlayerMP player = server.getPlayerList().getPlayerByUUID(playerId);
+        ServerPlayerEntity player = server.getPlayerList().getPlayerByUUID(playerId);
         if (player != null) {
-            MeeCreepsMessages.INSTANCE.sendTo(new PacketActionOptionToClient(this, GuiProxy.GUI_MEECREEP_QUESTION), player);
+            PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(this, GuiProxy.GUI_MEECREEP_QUESTION), player);
         } else {
             return false;
         }
