@@ -1,21 +1,23 @@
 package mcjty.meecreeps.actions;
 
-import io.netty.buffer.ByteBuf;
 import mcjty.lib.network.NetworkTools;
 import mcjty.lib.varia.DimensionId;
 import mcjty.lib.varia.SoundTools;
+import mcjty.lib.varia.WorldTools;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.api.IActionContext;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
-import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.network.PacketActionOptionToClient;
+import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.network.PacketShowBalloonToClient;
 import mcjty.meecreeps.setup.GuiProxy;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.StringNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Direction;
@@ -23,8 +25,9 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fml.network.NetworkDirection;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
@@ -104,44 +107,44 @@ public class ActionOptions implements IActionContext {
     }
 
     public ActionOptions(CompoundNBT tagCompound) {
-        NBTTagList list = tagCompound.getTagList("options", Constants.NBT.TAG_STRING);
+        ListNBT list = tagCompound.getList("options", Constants.NBT.TAG_STRING);
         actionOptions = new ArrayList<>();
-        for (int i = 0 ; i < list.tagCount() ; i++) {
-            actionOptions.add(new MeeCreepActionType(list.getStringTagAt(i)));
+        for (int i = 0 ; i < list.size() ; i++) {
+            actionOptions.add(new MeeCreepActionType(list.getString(i)));
         }
 
-        list = tagCompound.getTagList("maybe", Constants.NBT.TAG_STRING);
+        list = tagCompound.getList("maybe", Constants.NBT.TAG_STRING);
         maybeActionOptions = new ArrayList<>();
-        for (int i = 0 ; i < list.tagCount() ; i++) {
-            maybeActionOptions.add(new MeeCreepActionType(list.getStringTagAt(i)));
+        for (int i = 0 ; i < list.size() ; i++) {
+            maybeActionOptions.add(new MeeCreepActionType(list.getString(i)));
         }
 
-        list = tagCompound.getTagList("drops", Constants.NBT.TAG_COMPOUND);
+        list = tagCompound.getList("drops", Constants.NBT.TAG_COMPOUND);
         drops = new ArrayList<>();
-        for (int i = 0 ; i < list.tagCount() ; i++) {
-            NBTTagCompound tc = list.getCompoundTagAt(i);
+        for (int i = 0 ; i < list.size() ; i++) {
+            CompoundNBT tc = list.getCompound(i);
             BlockPos p = BlockPos.fromLong(tc.getLong("p"));
-            NBTTagCompound itemTag = tc.getCompoundTag("i");
-            ItemStack stack = new ItemStack(itemTag);
+            CompoundNBT itemTag = tc.getCompound("i");
+            ItemStack stack = ItemStack.read(itemTag);
             drops.add(Pair.of(p, stack));
         }
 
-        dimension = tagCompound.getInteger("dim");
-        failureCount = tagCompound.getInteger("failure");
+        dimension = DimensionId.fromResourceLocation(new ResourceLocation(tagCompound.getString("dim")));
+        failureCount = tagCompound.getInt("failure");
         targetPos = BlockPos.fromLong(tagCompound.getLong("pos"));
-        targetSide = EnumFacing.VALUES[tagCompound.getByte("targetSide")];
+        targetSide = Direction.values()[tagCompound.getByte("targetSide")];
         if (tagCompound.hasUniqueId("player")) {
             playerId = tagCompound.getUniqueId("player");
         } else {
             playerId = null;
         }
-        actionId = tagCompound.getInteger("actionId");
-        timeout = tagCompound.getInteger("timeout");
+        actionId = tagCompound.getInt("actionId");
+        timeout = tagCompound.getInt("timeout");
         stage = Stage.getByCode(tagCompound.getString("stage"));
-        if (tagCompound.hasKey("task")) {
+        if (tagCompound.contains("task")) {
             task = new MeeCreepActionType(tagCompound.getString("task"));
         }
-        if (tagCompound.hasKey("fqid")) {
+        if (tagCompound.contains("fqid")) {
             furtherQuestionId = tagCompound.getString("fqid");
         } else {
             furtherQuestionId = null;
@@ -184,45 +187,45 @@ public class ActionOptions implements IActionContext {
         // Drops not needed on client so no persistance
     }
 
-    public void writeToNBT(NBTTagCompound tagCompound) {
-        NBTTagList list = new NBTTagList();
+    public void writeToNBT(CompoundNBT tagCompound) {
+        ListNBT list = new ListNBT();
         for (MeeCreepActionType option : actionOptions) {
-            list.appendTag(new NBTTagString(option.getId()));
+            list.add(StringNBT.valueOf(option.getId()));
         }
-        tagCompound.setTag("options", list);
+        tagCompound.put("options", list);
 
-        list = new NBTTagList();
+        list = new ListNBT();
         for (MeeCreepActionType option : maybeActionOptions) {
-            list.appendTag(new NBTTagString(option.getId()));
+            list.add(StringNBT.valueOf(option.getId()));
         }
-        tagCompound.setTag("maybe", list);
+        tagCompound.put("maybe", list);
 
-        list = new NBTTagList();
+        list = new ListNBT();
         for (Pair<BlockPos, ItemStack> pair : drops) {
-            NBTTagCompound tc = new NBTTagCompound();
-            tc.setLong("p", pair.getKey().toLong());
-            tc.setTag("i", pair.getValue().writeToNBT(new NBTTagCompound()));
-            list.appendTag(tc);
+            CompoundNBT tc = new CompoundNBT();
+            tc.putLong("p", pair.getKey().toLong());
+            tc.put("i", pair.getValue().write(new CompoundNBT()));
+            list.add(tc);
         }
-        tagCompound.setTag("drops", list);
+        tagCompound.put("drops", list);
 
-        tagCompound.setInteger("dim", dimension);
-        tagCompound.setInteger("failure", failureCount);
-        tagCompound.setLong("pos", targetPos.toLong());
-        tagCompound.setByte("targetSide", (byte) targetSide.ordinal());
+        tagCompound.putString("dim", dimension.getName());
+        tagCompound.putInt("failure", failureCount);
+        tagCompound.putLong("pos", targetPos.toLong());
+        tagCompound.putByte("targetSide", (byte) targetSide.ordinal());
         if (playerId != null) {
-            tagCompound.setUniqueId("player", playerId);
+            tagCompound.putUniqueId("player", playerId);
         }
-        tagCompound.setInteger("actionId", actionId);
-        tagCompound.setInteger("timeout", timeout);
-        tagCompound.setString("stage", stage.getCode());
+        tagCompound.putInt("actionId", actionId);
+        tagCompound.putInt("timeout", timeout);
+        tagCompound.putString("stage", stage.getCode());
         if (task != null) {
-            tagCompound.setString("task", task.getId());
+            tagCompound.putString("task", task.getId());
         }
         if (furtherQuestionId != null) {
-            tagCompound.setString("fqid", furtherQuestionId);
+            tagCompound.putString("fqid", furtherQuestionId);
         }
-        tagCompound.setBoolean("paused", paused);
+        tagCompound.putBoolean("paused", paused);
     }
 
     public void registerDrops(BlockPos pos, @Nonnull List<ItemStack> drops) {
@@ -256,7 +259,7 @@ public class ActionOptions implements IActionContext {
     }
 
     @Override
-    public EnumFacing getTargetSide() {
+    public Direction getTargetSide() {
         return targetSide;
     }
 
@@ -268,11 +271,11 @@ public class ActionOptions implements IActionContext {
         this.failureCount = failureCount;
     }
 
-    public int getDimension() {
+    public DimensionId getDimension() {
         return dimension;
     }
 
-    public void setDimension(int dimension) {
+    public void setDimension(DimensionId dimension) {
         this.dimension = dimension;
     }
 
@@ -324,9 +327,9 @@ public class ActionOptions implements IActionContext {
                     if (spawn(world, getTargetPos(), getTargetSide(), getActionId(), true)) {
                         setStage(Stage.OPENING_GUI);
                     } else {
-                        EntityPlayer player = getPlayer();
+                        PlayerEntity player = getPlayer();
                         if (player != null) {
-                            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_spawn_meecreep"), (EntityPlayerMP) player);
+                            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_spawn_meecreep"), ((ServerPlayerEntity) player).connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
                         }
                         return false;
                     }
@@ -339,8 +342,8 @@ public class ActionOptions implements IActionContext {
                     break;
                 case WAITING_FOR_PLAYER_INPUT:
                     // @todo some kind of timeout as well?
-                    MinecraftServer server = DimensionManager.getWorld(0).getMinecraftServer();
-                    EntityPlayerMP player = playerId == null ? null : server.getPlayerList().getPlayerByUUID(playerId);
+                    MinecraftServer server = WorldTools.getOverworld().getServer();
+                    ServerPlayerEntity player = playerId == null ? null : server.getPlayerList().getPlayerByUUID(playerId);
                     if (player == null) {
                         // If player is gone we stop
                         return false;
@@ -367,8 +370,8 @@ public class ActionOptions implements IActionContext {
         if (playerId == null) {
             return null;
         }
-        World world = DimensionManager.getWorld(0);
-        MinecraftServer server = world.getMinecraftServer();
+        World world = WorldTools.getOverworld();
+        MinecraftServer server = world.getServer();
         return server.getPlayerList().getPlayerByUUID(playerId);
     }
 
@@ -381,10 +384,10 @@ public class ActionOptions implements IActionContext {
         if (playerId == null) {
             return false;
         }
-        MinecraftServer server = DimensionManager.getWorld(0).getMinecraftServer();
+        MinecraftServer server = WorldTools.getOverworld().getServer();
         ServerPlayerEntity player = server.getPlayerList().getPlayerByUUID(playerId);
         if (player != null) {
-            PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(this, GuiProxy.GUI_MEECREEP_QUESTION), player);
+            PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(this, GuiProxy.GUI_MEECREEP_QUESTION), player.connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
         } else {
             return false;
         }
@@ -433,7 +436,7 @@ public class ActionOptions implements IActionContext {
                     snd = "intro4";
                     break;
             }
-            SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, snd));
+            SoundEvent sound = ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation(MeeCreeps.MODID, snd));
             SoundTools.playSound(world, sound, p.getX(), p.getY(), p.getZ(), ConfigSetup.meeCreepVolume.get(), 1);
         }
 

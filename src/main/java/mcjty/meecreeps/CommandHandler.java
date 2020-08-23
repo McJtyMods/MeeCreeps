@@ -6,7 +6,7 @@ import mcjty.lib.typed.Type;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.items.PortalGunItem;
 import mcjty.meecreeps.teleport.TeleportationTools;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 
@@ -40,11 +40,11 @@ public class CommandHandler {
             return true;
         });
         McJtyLib.registerCommand(MeeCreeps.MODID, CMD_RESUME_ACTION, (player, arguments) -> {
-            ServerActionManager.getManager().resumeAction((EntityPlayerMP) player, arguments.get(PARAM_ID));
+            ServerActionManager.getManager().resumeAction((ServerPlayerEntity) player, arguments.get(PARAM_ID));
             return true;
         });
         McJtyLib.registerCommand(MeeCreeps.MODID, CMD_CANCEL_ACTION, (player, arguments) -> {
-            ServerActionManager.getManager().cancelAction((EntityPlayerMP) player, arguments.get(PARAM_ID));
+            ServerActionManager.getManager().cancelAction((ServerPlayerEntity) player, arguments.get(PARAM_ID));
             return true;
         });
     }

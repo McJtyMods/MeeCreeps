@@ -11,25 +11,23 @@ import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.items.CreepCubeItem;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.command.CommandSource;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.Direction;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
@@ -98,14 +96,14 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
         }
     }
 
-    public void listOptions(ICommandSender sender) {
+    public void listOptions(CommandSource sender) {
         for (Map.Entry<Integer, ActionOptions> entry : optionMap.entrySet()) {
             ActionOptions options = entry.getValue();
             Stage stage = options.getStage();
             MeeCreepActionType task = options.getTask();
-            EntityMeeCreeps entity = findMeeCreep(sender.getEntityWorld(), entry.getKey(), options.getDimension());
+            EntityMeeCreeps entity = findMeeCreep(sender.getWorld(), entry.getKey(), options.getDimension());
             String name = entity == null ? "<none>" : entity.getUniqueID().toString();
-            sender.sendMessage(new TextComponentString("Action " + entry.getKey() + ", Task " + task.getId() + ", Stage " + stage + ", Entity " + name));
+            sender.getEntity().sendMessage(new StringTextComponent("Action " + entry.getKey() + ", Task " + task.getId() + ", Stage " + stage + ", Entity " + name));
         }
     }
 
@@ -131,7 +129,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
         return optionMap.get(id);
     }
 
-    public int countMeeCreeps(EntityPlayer player) {
+    public int countMeeCreeps(PlayerEntity player) {
         int cnt = 0;
         for (ActionOptions option : options) {
             if (Objects.equals(option.getPlayerId(), player.getGameProfile().getId())) {
@@ -192,14 +190,14 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
                             snd = "ok2";
                             break;
                     }
-                    SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, snd));
-                    SoundTools.playSound(player.getEntityWorld(), sound, player.posX, player.posY, player.posZ, ConfigSetup.meeCreepVolume.get(), 1);
+                    SoundEvent sound = ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation(MeeCreeps.MODID, snd));
+                    SoundTools.playSound(player.getEntityWorld(), sound, player.getPosX(), player.getPosY(), player.getPosZ(), ConfigSetup.meeCreepVolume.get(), 1);
                 }
             }
         }
     }
 
-    public void cancelAction(EntityPlayerMP player, int id) {
+    public void cancelAction(ServerPlayerEntity player, int id) {
         ActionOptions option = getOptions(id);
         if (option != null) {
             option.setStage(Stage.DONE);
@@ -207,7 +205,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
         }
     }
 
-    public void resumeAction(EntityPlayerMP player, int id) {
+    public void resumeAction(ServerPlayerEntity player, int id) {
         ActionOptions option = getOptions(id);
         if (option != null) {
             option.setPaused(false);
@@ -215,9 +213,9 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
     }
 
     // The dimension parameter is the dimension where the meecreep was last seen
-    private EntityMeeCreeps findMeeCreep(World world, int actionId, int dimension) {
+    private EntityMeeCreeps findMeeCreep(World world, int actionId, DimensionId dimension) {
         EntityMeeCreeps cachedEntity = getCachedEntity(actionId);
-        if (cachedEntity != null && !cachedEntity.isDead) {
+        if (cachedEntity != null && cachedEntity.isAlive()) {
             return cachedEntity;
         }
         List<EntityMeeCreeps> entities = world.getEntities(EntityMeeCreeps.class, input -> input != null && input.getActionId() == actionId && !input.isDead);
@@ -226,7 +224,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
             return entities.get(0);
         }
         // Lets try to find the entity in other dimensions that are still loaded
-        for (WorldServer w : DimensionManager.getWorlds()) {
+        for (ServerWorld w : DimensionManager.getWorlds()) {
             entities = w.getEntities(EntityMeeCreeps.class, input -> input != null && input.getActionId() == actionId && !input.isDead);
             if (!entities.isEmpty()) {
                 updateEntityCache(actionId, entities.get(0));
@@ -249,10 +247,10 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
         List<ActionOptions> newlist = new ArrayList<>();
         Map<Integer, ActionOptions> newmap = new HashMap<>();
         for (ActionOptions option : options) {
-            EntityMeeCreeps meeCreep = findMeeCreep(DimensionManager.getWorld(0), option.getActionId(), option.getDimension());
+            EntityMeeCreeps meeCreep = findMeeCreep(DimensionId.overworld().getWorld(), option.getActionId(), option.getDimension());
             boolean keep = true;
 
-            World world = meeCreep == null ? DimensionManager.getWorld(option.getDimension()) : meeCreep.getEntityWorld();
+            World world = meeCreep == null ? DimensionId.overworld().getWorld() : meeCreep.getEntityWorld();
             BlockPos meeCreepPos = meeCreep == null ? option.getTargetPos() : meeCreep.getPosition();
             if (world != null && world.isBlockLoaded(meeCreepPos)) {
                 if (!option.tick(world)) {
@@ -294,11 +292,11 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
         List<Pair<BlockPos, ItemStack>> drops = option.getDrops();
         if (!drops.isEmpty()) {
             for (Pair<BlockPos, ItemStack> pair : drops) {
-                EntityItem entityItem = new EntityItem(world);
+                ItemEntity entityItem = new ItemEntity(world, pair.getLeft().getX(), pair.getLeft().getY(), pair.getLeft().getZ());
                 entityItem.setItem(pair.getValue());
                 BlockPos pos = pair.getKey();
                 entityItem.setLocationAndAngles(pos.getX(), pos.getY(), pos.getZ(), 0, 0);
-                world.spawnEntity(entityItem);
+                world.addEntity(entityItem);
             }
         }
     }
@@ -306,7 +304,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
     private void stayWithPlayer(ActionOptions option, EntityMeeCreeps meeCreep) {
         // We check here if the MeeCreep wants to follow the player
         // and if so we do the teleport here
-        EntityPlayer player = option.getPlayer();
+        PlayerEntity player = option.getPlayer();
         if (player != null) {
             if (meeCreep.getHelper() != null) {
                 IActionWorker worker = meeCreep.getHelper().getWorker();
@@ -315,46 +313,46 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
                         // Wrong dimension. Teleport to the player
                         meeCreep.cancelJob();
                         BlockPos p = WorkerHelper.findSuitablePositionNearPlayer(meeCreep, player, 4.0);
-                        meeCreep = (EntityMeeCreeps) TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX() + .5, p.getY(), p.getZ() + .5, EnumFacing.NORTH);
+                        meeCreep = (EntityMeeCreeps) TeleportationTools.teleportEntity(meeCreep, player.getEntityWorld(), p.getX() + .5, p.getY(), p.getZ() + .5, Direction.NORTH);
                         updateEntityCache(option.getActionId(), meeCreep);
-                        option.setDimension(player.getEntityWorld().provider.getDimension());
+                        option.setDimension(DimensionId.fromWorld(player.getEntityWorld()));
                     }
                 }
             }
         }
     }
 
-    private boolean isDifferentDimension(EntityPlayer player, EntityMeeCreeps meeCreep) {
-        return player.getEntityWorld().provider.getDimension() != meeCreep.getEntityWorld().provider.getDimension();
+    private boolean isDifferentDimension(PlayerEntity player, EntityMeeCreeps meeCreep) {
+        return !DimensionId.sameDimension(player.getEntityWorld(), meeCreep.getEntityWorld());
     }
 
-    private boolean isTooFar(EntityPlayer player, EntityMeeCreeps meeCreep) {
+    private boolean isTooFar(PlayerEntity player, EntityMeeCreeps meeCreep) {
         return player.getPositionVector().squareDistanceTo(meeCreep.getPositionVector()) > 60*60;
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound nbt) {
-        NBTTagList list = nbt.getTagList("actions", Constants.NBT.TAG_COMPOUND);
+    public void read(CompoundNBT nbt) {
+        ListNBT list = nbt.getList("actions", Constants.NBT.TAG_COMPOUND);
         options = new ArrayList<>();
         optionMap = new HashMap<>();
-        for (int i = 0; i < list.tagCount(); i++) {
-            ActionOptions opt = new ActionOptions(list.getCompoundTagAt(i));
+        for (int i = 0; i < list.size(); i++) {
+            ActionOptions opt = new ActionOptions(list.getCompound(i));
             options.add(opt);
             optionMap.put(opt.getActionId(), opt);
         }
-        lastId = nbt.getInteger("lastId");
+        lastId = nbt.getInt("lastId");
     }
 
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-        NBTTagList list = new NBTTagList();
+    public CompoundNBT write(CompoundNBT compound) {
+        ListNBT list = new ListNBT();
         for (ActionOptions option : options) {
-            NBTTagCompound tc = new NBTTagCompound();
+            CompoundNBT tc = new CompoundNBT();
             option.writeToNBT(tc);
-            list.appendTag(tc);
+            list.add(tc);
         }
-        compound.setTag("actions", list);
-        compound.setInteger("lastId", lastId);
+        compound.put("actions", list);
+        compound.putInt("lastId", lastId);
         return compound;
     }
 }

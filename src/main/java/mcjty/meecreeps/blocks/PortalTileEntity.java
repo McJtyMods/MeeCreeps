@@ -5,6 +5,7 @@ import mcjty.lib.varia.TeleportationTools;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.teleport.TeleportDestination;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.NetworkManager;
@@ -17,6 +18,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -44,7 +46,7 @@ public class PortalTileEntity extends TileEntity implements ITickableTileEntity 
 
             if ((!soundStart) && timeout > ConfigSetup.portalTimeout.get()-10) {
                 soundStart = true;
-                SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "portal"));
+                SoundEvent sound = ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation(MeeCreeps.MODID, "portal"));
                 // @todo config
                 SoundTools.playSound(world, sound, pos.getX(), pos.getY(), pos.getZ(), 1, 1);
             }
@@ -52,7 +54,7 @@ public class PortalTileEntity extends TileEntity implements ITickableTileEntity 
             if ((!soundEnd) && timeout < 10) {
                 soundEnd = true;
                 if (ConfigSetup.teleportVolume.get() > 0.01f) {
-                    SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "portal"));
+                    SoundEvent sound = ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation(MeeCreeps.MODID, "portal"));
                     SoundTools.playSound(world, sound, pos.getX(), pos.getY(), pos.getZ(), ConfigSetup.teleportVolume.get(), 1);
                 }
             }
@@ -75,7 +77,7 @@ public class PortalTileEntity extends TileEntity implements ITickableTileEntity 
 
                         if (entity instanceof EntityPlayer) {
                             if (ConfigSetup.teleportVolume.get() > 0.01f) {
-                                SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "teleport"));
+                                SoundEvent sound = ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation(MeeCreeps.MODID, "teleport"));
                                 SoundTools.playSound(otherPortal.getWorld(), sound, otherX, otherY, otherZ, ConfigSetup.teleportVolume.get(), 1);
                             }
                         }
