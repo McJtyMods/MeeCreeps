@@ -1,18 +1,23 @@
 package mcjty.meecreeps.blocks;
 
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.registries.ObjectHolder;
+import net.minecraft.block.Block;
+import net.minecraft.tileentity.TileEntityType;
+import net.minecraftforge.fml.RegistryObject;
+
+import static mcjty.meecreeps.setup.Registration.BLOCKS;
+import static mcjty.meecreeps.setup.Registration.TILES;
 
 public class ModBlocks {
 
-    @ObjectHolder("meecreeps:portalblock")
-    public static PortalBlock portalBlock;
+    public static void register() {}
 
-    @ObjectHolder("meecreeps:creepcube")
-    public static HeldCubeBlock heldCubeBlock;
+    public static final RegistryObject<Block> PORTAL_BLOCK = BLOCKS.register("portalblock", PortalBlock::new);
+    public static final RegistryObject<TileEntityType<?>> PORTAL_TILE_ENTITY = TILES.register("portaltileentity", () -> TileEntityType.Builder.create(PortalTileEntity::new, PORTAL_BLOCK.get()).build(null));
 
-    public static void initModels() {
-        portalBlock.initModel();
-        heldCubeBlock.initModel();
-    }
+    public static final RegistryObject<Block> CREEP_CUBE = BLOCKS.register("creepcube", HeldCubeBlock::new);
+//
+//    public static void initModels() {
+//        portalBlock.initModel();
+//        heldCubeBlock.initModel();
+//    }
 }

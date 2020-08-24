@@ -1,5 +1,6 @@
 package mcjty.meecreeps.blocks;
 
+import mcjty.lib.varia.DimensionId;
 import mcjty.lib.varia.SoundTools;
 import mcjty.lib.varia.TeleportationTools;
 import mcjty.meecreeps.MeeCreeps;
@@ -8,10 +9,13 @@ import mcjty.meecreeps.teleport.TeleportDestination;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.NetworkManager;
+import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
@@ -35,8 +39,8 @@ public class PortalTileEntity extends TileEntity implements ITickableTileEntity 
     private AxisAlignedBB box = null;
     private Set<UUID> blackListed = new HashSet<>();        // Entities can only go through the portal one time
 
-    public PortalTileEntity(TileEntityType<?> tileEntityTypeIn) {
-        super(tileEntityTypeIn);
+    public PortalTileEntity() {
+        super(ModBlocks.PORTAL_TILE_ENTITY.get());
     }
 
     @Override
@@ -74,13 +78,13 @@ public class PortalTileEntity extends TileEntity implements ITickableTileEntity 
                         otherPortal.addBlackList(entity.getUniqueID());
                         double oy = otherY;
                         if (otherPortal.getPortalSide() == Direction.DOWN) {
-                            oy -= entity.height + .7;
+                            oy -= entity.getHeight() + .7;
                         }
                         TeleportationTools.teleportEntity(entity, otherPortal.getWorld(), otherX, oy, otherZ, otherPortal.getPortalSide());
                         setTimeout(ConfigSetup.portalTimeoutAfterEntry.get());
                         otherPortal.setTimeout(ConfigSetup.portalTimeoutAfterEntry.get());
 
-                        if (entity instanceof EntityPlayer) {
+                        if (entity instanceof PlayerEntity) {
                             if (ConfigSetup.teleportVolume.get() > 0.01f) {
                                 SoundEvent sound = ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation(MeeCreeps.MODID, "teleport"));
                                 SoundTools.playSound(otherPortal.getWorld(), sound, otherX, otherY, otherZ, ConfigSetup.teleportVolume.get(), 1);
@@ -93,26 +97,26 @@ public class PortalTileEntity extends TileEntity implements ITickableTileEntity 
     }
 
     @Override
-    public NBTTagCompound getUpdateTag() {
-        return writeToNBT(new NBTTagCompound());
+    public CompoundNBT getUpdateTag() {
+        return write(new CompoundNBT());
     }
 
     @Nullable
     @Override
-    public SPacketUpdateTileEntity getUpdatePacket() {
-        NBTTagCompound nbtTag = new NBTTagCompound();
-        nbtTag.setInteger("timeout", timeout);
-        nbtTag.setInteger("start", ConfigSetup.portalTimeout.get() - timeout);
-        nbtTag.setByte("portalSide", portalSide == null ? 127 : (byte) portalSide.ordinal());
-        return new SPacketUpdateTileEntity(getPos(), 1, nbtTag);
+    public SUpdateTileEntityPacket getUpdatePacket() {
+        CompoundNBT nbtTag = new CompoundNBT();
+        nbtTag.putInt("timeout", timeout);
+        nbtTag.putInt("start", ConfigSetup.portalTimeout.get() - timeout);
+        nbtTag.putByte("portalSide", portalSide == null ? 127 : (byte) portalSide.ordinal());
+        return new SUpdateTileEntityPacket(getPos(), 1, nbtTag);
     }
 
     @Override
-    public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity packet) {
-        timeout = packet.getNbtCompound().getInteger("timeout");
-        start = packet.getNbtCompound().getInteger("start");
+    public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket packet) {
+        timeout = packet.getNbtCompound().getInt("timeout");
+        start = packet.getNbtCompound().getInt("start");
         byte side = packet.getNbtCompound().getByte("portalSide");
-        this.portalSide = side == 127 ? null : Direction.VALUES[side];
+        this.portalSide = side == 127 ? null : Direction.values()[side];
     }
 
     private AxisAlignedBB getTeleportBox() {
@@ -204,7 +208,7 @@ public class PortalTileEntity extends TileEntity implements ITickableTileEntity 
     }
 
     private Optional<PortalTileEntity> getOther() {
-        World otherWorld = TeleportationTools.getWorldForDimension(other.getDimension());
+        World otherWorld = other.getDimension().getWorld();
         TileEntity te = otherWorld.getTileEntity(other.getPos());
         if (te instanceof PortalTileEntity) {
             return Optional.of((PortalTileEntity) te);
@@ -214,39 +218,39 @@ public class PortalTileEntity extends TileEntity implements ITickableTileEntity 
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound compound) {
-        super.readFromNBT(compound);
-        timeout = compound.getInteger("timeout");
+    public void read(CompoundNBT compound) {
+        super.read(compound);
+        timeout = compound.getInt("timeout");
         byte pside = compound.getByte("portalSide");
-        this.portalSide = pside == 127 ? null : Direction.VALUES[pside];
+        this.portalSide = pside == 127 ? null : Direction.values()[pside];
         BlockPos pos = BlockPos.fromLong(compound.getLong("pos"));
-        int dim = compound.getInteger("dim");
-        Direction side = Direction.VALUES[compound.getByte("side")];
+        DimensionId dim = DimensionId.fromResourceLocation(new ResourceLocation(compound.getString("dim")));
+        Direction side = Direction.values()[compound.getByte("side")];
         other = new TeleportDestination("", dim, pos, side);
-        NBTTagList list = compound.getTagList("bl", Constants.NBT.TAG_COMPOUND);
+        ListNBT list = compound.getList("bl", Constants.NBT.TAG_COMPOUND);
         blackListed.clear();
-        for (int i = 0 ; i < list.tagCount() ; i++) {
-            NBTTagCompound tc = list.getCompoundTagAt(i);
+        for (int i = 0 ; i < list.size() ; i++) {
+            CompoundNBT tc = list.getCompound(i);
             UUID uuid = new UUID(tc.getLong("m"), tc.getLong("l"));
             blackListed.add(uuid);
         }
     }
 
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-        compound.setInteger("timeout", timeout);
-        compound.setByte("portalSide", portalSide == null ? 127 : (byte) portalSide.ordinal());
-        compound.setLong("pos", other.getPos().toLong());
-        compound.setInteger("dim", other.getDimension());
-        compound.setByte("side", (byte) other.getSide().ordinal());
-        NBTTagList list = new NBTTagList();
+    public CompoundNBT write(CompoundNBT compound) {
+        compound.putInt("timeout", timeout);
+        compound.putByte("portalSide", portalSide == null ? 127 : (byte) portalSide.ordinal());
+        compound.putLong("pos", other.getPos().toLong());
+        compound.putString("dim", other.getDimension().getName());
+        compound.putByte("side", (byte) other.getSide().ordinal());
+        ListNBT list = new ListNBT();
         for (UUID uuid : blackListed) {
-            NBTTagCompound tc = new NBTTagCompound();
-            tc.setLong("m", uuid.getMostSignificantBits());
-            tc.setLong("l", uuid.getLeastSignificantBits());
-            list.appendTag(tc);
+            CompoundNBT tc = new CompoundNBT();
+            tc.putLong("m", uuid.getMostSignificantBits());
+            tc.putLong("l", uuid.getLeastSignificantBits());
+            list.add(tc);
         }
-        compound.setTag("bl", list);
-        return super.writeToNBT(compound);
+        compound.put("bl", list);
+        return super.write(compound);
     }
 }
