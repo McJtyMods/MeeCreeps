@@ -1,6 +1,5 @@
 package mcjty.meecreeps.render;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.config.ConfigSetup;
@@ -74,8 +73,8 @@ public class BalloonRenderer {
             guiTop = (height - HEIGHT) / 2;
         }
 
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        GlStateManager.disableLighting();
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.disableLighting();
 
         mc.getTextureManager().bindTexture(gui_top);
         mcjty.lib.client.RenderHelper.drawTexturedModalRect(guiLeft, guiTop, 0, 0, WIDTH, 10);
@@ -100,7 +99,7 @@ public class BalloonRenderer {
         }
         messages = newMessages;
 
-        GlStateManager.popMatrix();
+        RenderSystem.popMatrix();
     }
 
     public static void setupOverlayRendering(double sw, double sh) {

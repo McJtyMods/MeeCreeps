@@ -7,6 +7,7 @@ import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.network.PacketShowBalloonToClient;
+import mcjty.meecreeps.varia.GeneralTools;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
@@ -21,12 +22,9 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkDirection;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class CreepCubeItem extends Item {
 
@@ -46,7 +44,7 @@ public class CreepCubeItem extends Item {
 
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        tooltip.addAll(Arrays.stream(StringUtils.split(I18n.format("message.meecreeps.tooltip.cube_intro"), "\n")).map(StringTextComponent::new).collect(Collectors.toList()));
+        tooltip.addAll(GeneralTools.createListByNewLine("message.meecreeps.tooltip.cube_intro"));
 
         MeeCreepActionType lastAction = getLastAction(stack);
         if (lastAction != null) {
@@ -54,7 +52,7 @@ public class CreepCubeItem extends Item {
             tooltip.add(new StringTextComponent(TextFormatting.YELLOW + "    (" + I18n.format(factory.getMessage()) + ")"));
         }
         if (isLimited()) {
-            tooltip.addAll(Arrays.stream(StringUtils.split(I18n.format("message.meecreeps.tooltip.cube_uses", Integer.toString(ConfigSetup.meeCreepBoxMaxUsage.get() - getUsages(stack))), "\n")).map(StringTextComponent::new).collect(Collectors.toList()));
+            tooltip.addAll(GeneralTools.createListByNewLine("message.meecreeps.tooltip.cube_uses", Integer.toString(ConfigSetup.meeCreepBoxMaxUsage.get() - getUsages(stack))));
         }
     }
 

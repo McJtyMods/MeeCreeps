@@ -3,9 +3,9 @@ package mcjty.meecreeps;
 import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.actions.ServerActionManager;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.HashMap;
 import java.util.Map;

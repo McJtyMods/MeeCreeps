@@ -7,7 +7,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
-@SideOnly(Side.CLIENT)
 public class RenderProjectile<T extends Entity> extends Render<T> {
     private final RenderItem itemRenderer;
 

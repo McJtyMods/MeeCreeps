@@ -4,50 +4,42 @@ import mcjty.lib.network.PacketSendServerCommand;
 import mcjty.lib.typed.TypedMap;
 import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.MeeCreeps;
-import mcjty.meecreeps.network.PacketShowBalloonToClient;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityProjectile;
 import mcjty.meecreeps.gui.GuiWheel;
 import mcjty.meecreeps.network.PacketHandler;
-import mcjty.meecreeps.setup.GuiProxy;
+import mcjty.meecreeps.network.PacketShowBalloonToClient;
 import mcjty.meecreeps.teleport.TeleportDestination;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.resources.I18n;
+import mcjty.meecreeps.varia.GeneralTools;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.item.ItemUseContext;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
-import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import org.apache.commons.lang3.StringUtils;
+import net.minecraftforge.fml.network.NetworkDirection;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class PortalGunItem extends Item {
-
     public PortalGunItem() {
-        setRegistryName("portalgun");
-        setUnlocalizedName(MeeCreeps.MODID + ".portalgun");
-        setMaxStackSize(1);
-        setCreativeTab(MeeCreeps.setup.getTab());
+        super(new Properties().maxStackSize(1).group(MeeCreeps.setup.getTab()));
+//        setRegistryName("portalgun");
+//        setUnlocalizedName(MeeCreeps.MODID + ".portalgun");
+//        setMaxStackSize(1);
+//        setCreativeTab(MeeCreeps.setup.getTab());
     }
 
     public static ItemStack getGun(PlayerEntity player) {
@@ -63,55 +55,57 @@ public class PortalGunItem extends Item {
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-        Collections.addAll(tooltip, StringUtils.split(I18n.format("message.meecreeps.tooltip.portalgun", Integer.toString(getCharge(stack))), "\n"));
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        tooltip.addAll(GeneralTools.createListByNewLine("message.meecreeps.tooltip.portalgun", Integer.toString(getCharge(stack))));
     }
 
-    @SideOnly(Side.CLIENT)
-    public void initModel() {
-        ModelLoader.setCustomModelResourceLocation(this, 0, new ModelResourceLocation(getRegistryName(), "inventory"));
-    }
+//    @SideOnly(Side.CLIENT)
+//    public void initModel() {
+//        ModelLoader.setCustomModelResourceLocation(this, 0, new ModelResourceLocation(getRegistryName(), "inventory"));
+//    }
+
 
     @Override
-    public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
-        if (world.isRemote) {
-            if (world.getBlockState(pos.offset(side)).getBlock() == ModBlocks.portalBlock) {
-                PacketHandler.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL, TypedMap.builder().put(CommandHandler.PARAM_POS, pos.offset(side)).build()));
-                return EnumActionResult.SUCCESS;
+    public ActionResultType onItemUseFirst(ItemStack stack, ItemUseContext context) {
+        if (context.getWorld().isRemote) {
+            if (context.getWorld().getBlockState(context.getPos().offset(context.getFace())).getBlock() == ModBlocks.portalBlock) {
+                PacketHandler.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL, TypedMap.builder().put(CommandHandler.PARAM_POS, context.getPos().offset(context.getFace())).build()));
+                return ActionResultType.SUCCESS;
             }
-            if (side != EnumFacing.UP && side != EnumFacing.DOWN && world.getBlockState(pos.offset(side).down()).getBlock() == ModBlocks.portalBlock) {
-                PacketHandler.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL, TypedMap.builder().put(CommandHandler.PARAM_POS, pos.offset(side).down()).build()));
-                return EnumActionResult.SUCCESS;
+            if (context.getFace() != Direction.UP && context.getFace() != Direction.DOWN && context.getWorld().getBlockState(context.getPos().offset(context.getFace()).down()).getBlock() == ModBlocks.portalBlock) {
+                PacketHandler.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL, TypedMap.builder().put(CommandHandler.PARAM_POS, context.getPos().offset(context.getFace()).down()).build()));
+                return ActionResultType.SUCCESS;
             }
 
-            if (player.isSneaking()) {
-                GuiWheel.selectedBlock = pos;
-                GuiWheel.selectedSide = side;
-                player.openGui(MeeCreeps.instance, GuiProxy.GUI_WHEEL, world, pos.getX(), pos.getY(), pos.getZ());
+            if (context.getPlayer().isSneaking()) {
+                GuiWheel.selectedBlock = context.getPos();
+                GuiWheel.selectedSide = context.getFace();
+// todo: re-add
+//                context.getPlayer().openGui(MeeCreeps.instance, GuiProxy.GUI_WHEEL, context.getWorld(), context.getPos().getX(), context.getPos().getY(), context.getPos().getZ());
             }
-            return EnumActionResult.SUCCESS;
+            return ActionResultType.SUCCESS;
         } else {
-            if (world.getBlockState(pos.offset(side)).getBlock() == ModBlocks.portalBlock) {
-                return EnumActionResult.SUCCESS;
+            if (context.getWorld().getBlockState(context.getPos().offset(context.getFace())).getBlock() == ModBlocks.portalBlock) {
+                return ActionResultType.SUCCESS;
             }
-            if (side != EnumFacing.UP && side != EnumFacing.DOWN && world.getBlockState(pos.offset(side).down()).getBlock() == ModBlocks.portalBlock) {
-                return EnumActionResult.SUCCESS;
+            if (context.getFace() != Direction.UP && context.getFace() != Direction.DOWN && context.getWorld().getBlockState(context.getPos().offset(context.getFace()).down()).getBlock() == ModBlocks.portalBlock) {
+                return ActionResultType.SUCCESS;
             }
 
-            if (!player.isSneaking()) {
-                throwProjectile(player, hand, world);
+            if (!context.getPlayer().isSneaking()) {
+                throwProjectile(context.getPlayer(), context.getHand(), context.getWorld());
             }
         }
 
-        return EnumActionResult.SUCCESS;
+        return ActionResultType.SUCCESS;
     }
 
-    private void throwProjectile(EntityPlayer player, EnumHand hand, World world) {
+    private void throwProjectile(PlayerEntity player, Hand hand, World world) {
         ItemStack heldItem = player.getHeldItem(hand);
 
         int charge = getCharge(heldItem);
         if (charge <= 0) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_no_charge"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_no_charge"), ((ServerPlayerEntity) player).connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
             return;
         }
         setCharge(heldItem, charge-1);
@@ -119,22 +113,19 @@ public class PortalGunItem extends Item {
         List<TeleportDestination> destinations = getDestinations(heldItem);
         int current = getCurrentDestination(heldItem);
         if (current == -1) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_no_destination"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_no_destination"), ((ServerPlayerEntity) player).connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
         } else if (destinations.get(current) == null) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_bad_destination"), (EntityPlayerMP) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.gun_bad_destination"), ((ServerPlayerEntity) player).connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
         } else {
             EntityProjectile projectile = new EntityProjectile(world, player);
             projectile.setDestination(destinations.get(current));
             projectile.setPlayerId(player.getUniqueID());
             projectile.shoot(player, player.rotationPitch, player.rotationYaw, 0.0F, 1.5F, 1.0F);
-            world.spawnEntity(projectile);
+            world.addEntity(projectile);
         }
     }
 
     public static void addDestination(ItemStack stack, @Nullable TeleportDestination destination, int destinationIndex) {
-        if (stack.getTagCompound() == null) {
-            stack.setTagCompound(new NBTTagCompound());
-        }
         List<TeleportDestination> destinations = getDestinations(stack);
         destinations.set(destinationIndex, destination);
         setDestinations(stack, destinations);
@@ -144,44 +135,41 @@ public class PortalGunItem extends Item {
     }
 
     private static void setDestinations(ItemStack stack, List<TeleportDestination> destinations) {
-        NBTTagList dests = new NBTTagList();
+        ListNBT dests = new ListNBT();
         for (TeleportDestination destination : destinations) {
             if (destination != null) {
-                dests.appendTag(destination.getCompound());
+                dests.add(destination.getCompound());
             } else {
-                dests.appendTag(new NBTTagCompound());
+                dests.add(new CompoundNBT());
             }
         }
-        stack.getTagCompound().setTag("dests", dests);
+        stack.getOrCreateTag().put("dests", dests);
     }
 
     public static int getCurrentDestination(ItemStack stack) {
-        NBTTagCompound tag = stack.getTagCompound();
+        CompoundNBT tag = stack.getOrCreateTag();
         if (tag == null) {
             return -1;
         }
-        return tag.getInteger("destination");
+        return tag.getInt("destination");
     }
 
     public static void setCurrentDestination(ItemStack stack, int dest) {
-        if (!stack.hasTagCompound()) {
-            stack.setTagCompound(new NBTTagCompound());
-        }
-        stack.getTagCompound().setInteger("destination", dest);
+        stack.getOrCreateTag().putInt("destination", dest);
     }
 
     public static List<TeleportDestination> getDestinations(ItemStack stack) {
         List<TeleportDestination> destinations = new ArrayList<>();
-        if (!stack.hasTagCompound()) {
+        if (!stack.hasTag()) {
             for (int i = 0; i < 8; i++) {
                 destinations.add(null);
             }
         } else {
-            NBTTagCompound tag = stack.getTagCompound();
-            NBTTagList dests = tag.getTagList("dests", Constants.NBT.TAG_COMPOUND);
+            CompoundNBT tag = stack.getOrCreateTag();
+            ListNBT dests = tag.getList("dests", Constants.NBT.TAG_COMPOUND);
             for (int i = 0; i < 8; i++) {
-                NBTTagCompound tc = i < dests.tagCount() ? dests.getCompoundTagAt(i) : null;
-                if (tc != null && tc.hasKey("dim")) {
+                CompoundNBT tc = i < dests.size() ? dests.getCompound(i) : null;
+                if (tc != null && tc.contains("dim")) {
                     destinations.add(new TeleportDestination(tc));
                 } else {
                     destinations.add(null);
@@ -192,17 +180,15 @@ public class PortalGunItem extends Item {
     }
 
     public static void setCharge(ItemStack stack, int charge) {
-        if (stack.getTagCompound() == null) {
-            stack.setTagCompound(new NBTTagCompound());
-        }
-        stack.getTagCompound().setInteger("charge", charge);
+        stack.getOrCreateTag().putInt("charge", charge);
     }
 
     public static int getCharge(ItemStack stack) {
-        if (stack.getTagCompound() == null) {
+        if (!stack.getOrCreateTag().contains("charge")) {
             return 0;
         }
-        return stack.getTagCompound().getInteger("charge");
+
+        return stack.getOrCreateTag().getInt("charge");
     }
 
     @Override
@@ -217,37 +203,31 @@ public class PortalGunItem extends Item {
         return (max - stored) / (double) max;
     }
 
-
-
     @Override
     public boolean hasContainerItem(ItemStack stack) {
         return true;
     }
 
     @Override
-    public Item getContainerItem() {
-        return ModItems.emptyPortalGunItem;
-    }
-
-    @Override
     public ItemStack getContainerItem(ItemStack itemStack) {
         ItemStack stack = new ItemStack(ModItems.emptyPortalGunItem);
-        stack.setTagCompound(itemStack.getTagCompound());
+        stack.setTag(itemStack.getOrCreateTag());
         return stack;
     }
 
     @Override
-    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        return EnumActionResult.SUCCESS;
+    public ActionResultType onItemUse(ItemUseContext context) {
+        return ActionResultType.SUCCESS;
     }
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
-        if (!world.isRemote) {
-            if (!player.isSneaking()) {
-                throwProjectile(player, hand, world);
+    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
+        if (!worldIn.isRemote) {
+            if (!playerIn.isSneaking()) {
+                throwProjectile(playerIn, handIn, worldIn);
             }
         }
-        return new ActionResult<>(EnumActionResult.SUCCESS, player.getHeldItem(hand));
+        return ActionResult.resultSuccess(playerIn.getHeldItem(handIn));
     }
+
 }

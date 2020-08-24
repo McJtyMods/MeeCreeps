@@ -1,38 +1,45 @@
 package mcjty.meecreeps.blocks;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import mcjty.meecreeps.MeeCreeps;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.lwjgl.opengl.GL11;
 
-public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
+public class PortalTESR extends TileEntityRenderer<PortalTileEntity> {
 
     private static final ResourceLocation portal = new ResourceLocation(MeeCreeps.MODID, "textures/effects/portal.png");
 
     private static double angle = 0;
 
-    @Override
-    public void render(PortalTileEntity te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
-        super.render(te, x, y, z, partialTicks, destroyStage, alpha);
+    public PortalTESR(TileEntityRendererDispatcher rendererDispatcherIn) {
+        super(rendererDispatcherIn);
+    }
 
+    @Override
+    public void render(PortalTileEntity te, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
         if (te.getPortalSide() == null) {
             return;
         }
 
-        GlStateManager.pushMatrix();
+        // todo: migrate to matrix
+        RenderSystem.pushMatrix();
 
-        GlStateManager.depthMask(true);
-        GlStateManager.enableBlend();
-        GlStateManager.disableLighting();
-        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        RenderSystem.depthMask(true);
+        RenderSystem.enableBlend();
+        RenderSystem.disableLighting();
+        RenderSystem.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
-        this.bindTexture(portal);
+        Minecraft.getInstance().getTextureManager().bindTexture(portal);
 
         long time = System.currentTimeMillis();
         angle = (time / 400.0) % 360.0;
@@ -50,13 +57,14 @@ public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
         Face face = faces[te.getPortalSide().ordinal()];
         Face rface = revertedfaces[te.getPortalSide().ordinal()];
 
-        GlStateManager.translate((float) x + face.ox, (float) y + face.oy, (float) z + face.oz);
-        GlStateManager.scale(scale, scale, scale);
+        RenderSystem.translated((float) te.getPos().getX() + face.ox,
+                (float) te.getPos().getY() + face.oy,
+                (float) te.getPos().getZ() + face.oz);
+        RenderSystem.scalef(scale, scale, scale);
         renderQuadBright(angle, face, rface);
 
-        GlStateManager.popMatrix();
+        RenderSystem.popMatrix();
     }
-
 
     public static void renderQuadBright(double angle, Face face, Face rface) {
         int brightness = 240;
@@ -65,7 +73,7 @@ public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
         GlStateManager.pushMatrix();
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(7, DefaultVertexFormats.POSITION_TEX_LMAP_COLOR);
+        buffer.begin(7, DefaultVertexFormats.POSITION_TEX_LIGHTMAP_COLOR);
 
         double f = 1.75;
         renderFace(face, angle, b1, b2, buffer, f, 200);
@@ -83,13 +91,13 @@ public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
 
     static {
         double half = 1.0;
-        faces[EnumFacing.DOWN.ordinal()] =  new Face(0.5, 0.9, 0.5,    -1, 0, -1,       -1, 0, 1,      1, 0, 1,      1, 0, -1);
-        faces[EnumFacing.UP.ordinal()] =    new Face(0.5, 0.1, 0.5,    -1, 0, -1,       -1, 0, 1,      1, 0, 1,      1, 0, -1);
-        faces[EnumFacing.SOUTH.ordinal()] = new Face(0.5, 1, 0.1,      -half, -1, 0,    -half, 1, 0,   half, 1, 0,   half, -1, 0);
-        faces[EnumFacing.NORTH.ordinal()] = new Face(0.5, 1, 0.9,      -half, -1, 0,    -half, 1, 0,   half, 1, 0,   half, -1, 0);
-        faces[EnumFacing.EAST.ordinal()] =  new Face(0.1, 1, 0.5,       0, -1, -half,   0, 1, -half,   0, 1, half,   0, -1, half);
-        faces[EnumFacing.WEST.ordinal()] =  new Face(0.9, 1, 0.5,       0, -1, -half,   0, 1, -half,   0, 1, half,   0, -1, half);
-        for (EnumFacing facing : EnumFacing.VALUES) {
+        faces[Direction.DOWN.ordinal()] =  new Face(0.5, 0.9, 0.5,    -1, 0, -1,       -1, 0, 1,      1, 0, 1,      1, 0, -1);
+        faces[Direction.UP.ordinal()] =    new Face(0.5, 0.1, 0.5,    -1, 0, -1,       -1, 0, 1,      1, 0, 1,      1, 0, -1);
+        faces[Direction.SOUTH.ordinal()] = new Face(0.5, 1, 0.1,      -half, -1, 0,    -half, 1, 0,   half, 1, 0,   half, -1, 0);
+        faces[Direction.NORTH.ordinal()] = new Face(0.5, 1, 0.9,      -half, -1, 0,    -half, 1, 0,   half, 1, 0,   half, -1, 0);
+        faces[Direction.EAST.ordinal()] =  new Face(0.1, 1, 0.5,       0, -1, -half,   0, 1, -half,   0, 1, half,   0, -1, half);
+        faces[Direction.WEST.ordinal()] =  new Face(0.9, 1, 0.5,       0, -1, -half,   0, 1, -half,   0, 1, half,   0, -1, half);
+        for (Direction facing : Direction.values()) {
             revertedfaces[facing.ordinal()] = faces[facing.ordinal()].reverse();
         }
     }
@@ -141,25 +149,21 @@ public class PortalTESR extends TileEntitySpecialRenderer<PortalTileEntity> {
         double swap;
         u = (Math.cos(angle)) / f;
         v = (Math.sin(angle)) / f;
-        buffer.pos(face.x0, face.y0, face.z0).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
+        buffer.pos(face.x0, face.y0, face.z0).tex((float) (u+.5), (float) (v+.5)).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
 
         swap = u;
         u = -v;
         v = swap;
-        buffer.pos(face.x1, face.y1, face.z1).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
+        buffer.pos(face.x1, face.y1, face.z1).tex((float) (u+.5), (float) (v+.5)).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
 
         swap = u;
         u = -v;
         v = swap;
-        buffer.pos(face.x2, face.y2, face.z2).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
+        buffer.pos(face.x2, face.y2, face.z2).tex((float) (u+.5), (float) (v+.5)).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
 
         swap = u;
         u = -v;
         v = swap;
-        buffer.pos(face.x3, face.y3, face.z3).tex(u+.5, v+.5).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
-    }
-
-    public static void register() {
-        ClientRegistry.bindTileEntitySpecialRenderer(PortalTileEntity.class, new PortalTESR());
+        buffer.pos(face.x3, face.y3, face.z3).tex((float) (u+.5), (float) (v+.5)).lightmap(b1, b2).color(255, 255, 255, alpha).endVertex();
     }
 }

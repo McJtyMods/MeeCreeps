@@ -1,20 +1,26 @@
 package mcjty.meecreeps.varia;
 
 import com.mojang.authlib.GameProfile;
+import mcjty.lib.varia.DimensionId;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
-import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.FakePlayerFactory;
+import net.minecraftforge.fml.ForgeI18n;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.*;
+import java.util.stream.Collectors;
 
 public class GeneralTools {
 
@@ -22,12 +28,18 @@ public class GeneralTools {
 
     public static FakePlayer getHarvester(World world) {
         if (harvester == null) {
-            harvester = FakePlayerFactory.get(DimensionManager.getWorld(0), new GameProfile(UUID.nameUUIDFromBytes("meecreeps".getBytes()), "meecreeps"));
+            harvester = FakePlayerFactory.get(DimensionId.overworld().getWorld(), new GameProfile(UUID.nameUUIDFromBytes("meecreeps".getBytes()), "meecreeps"));
         }
         // @todo config, make it possible to specify lesser pickaxe in config
         harvester.setWorld(world);
         harvester.setHeldItem(Hand.MAIN_HAND, new ItemStack(Items.DIAMOND_PICKAXE));
         return harvester;
+    }
+
+    public static List<ITextComponent> createListByNewLine(String i18n, Object... args) {
+        return Arrays.stream(ForgeI18n.parseFormat(i18n, args).split("\n"))
+                .map(StringTextComponent::new)
+                .collect(Collectors.toList());
     }
 
     public static boolean traverseBoxTest(AxisAlignedBB box, Predicate<BlockPos> matcher) {

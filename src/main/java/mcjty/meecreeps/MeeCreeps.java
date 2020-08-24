@@ -3,29 +3,31 @@ package mcjty.meecreeps;
 import mcjty.lib.base.ModBase;
 import mcjty.lib.proxy.IProxy;
 import mcjty.meecreeps.api.IMeeCreepsApi;
+import mcjty.meecreeps.blocks.PortalTESR;
 import mcjty.meecreeps.commands.CommandClearActions;
 import mcjty.meecreeps.commands.CommandListActions;
 import mcjty.meecreeps.commands.CommandTestApi;
 import mcjty.meecreeps.setup.ModSetup;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.*;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 import java.util.Optional;
 import java.util.function.Function;
 
-@Mod(modid = MeeCreeps.MODID, name = "MeeCreeps",
-        dependencies =
-                "required-after:mcjtylib_ng@[" + MeeCreeps.MIN_MCJTYLIB_VER + ",);" +
-                "after:forge@[" + MeeCreeps.MIN_FORGE_VER + ",)",
-        version = MeeCreeps.VERSION,
-        acceptedMinecraftVersions = "[1.12,1.13)")
+@Mod(MeeCreeps.MODID)
 public class MeeCreeps implements ModBase {
     public static final String MODID = "meecreeps";
     public static final String VERSION = "1.3.1";
     public static final String MIN_MCJTYLIB_VER = "3.5.0";
     public static final String MIN_FORGE_VER = "14.22.0.2464";
+
+    public void clientSetup(FMLClientSetupEvent event) {
+        ClientRegistry.bindTileEntityRenderer(null, PortalTESR::new);
+    }
 
     @SidedProxy(clientSide = "mcjty.meecreeps.setup.ClientProxy", serverSide = "mcjty.meecreeps.setup.ServerProxy")
     public static IProxy proxy;

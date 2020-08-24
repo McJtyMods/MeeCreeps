@@ -11,6 +11,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
@@ -33,6 +34,10 @@ public class PortalTileEntity extends TileEntity implements ITickableTileEntity 
     private Direction portalSide;            // Side to render the portal on
     private AxisAlignedBB box = null;
     private Set<UUID> blackListed = new HashSet<>();        // Entities can only go through the portal one time
+
+    public PortalTileEntity(TileEntityType<?> tileEntityTypeIn) {
+        super(tileEntityTypeIn);
+    }
 
     @Override
     public void tick() {

@@ -1,21 +1,18 @@
 package mcjty.meecreeps.blocks;
 
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.registries.ObjectHolder;
 
 public class ModBlocks {
 
-    @GameRegistry.ObjectHolder("meecreeps:portalblock")
+    @ObjectHolder("meecreeps:portalblock")
     public static PortalBlock portalBlock;
 
-    @GameRegistry.ObjectHolder("meecreeps:creepcube")
+    @ObjectHolder("meecreeps:creepcube")
     public static HeldCubeBlock heldCubeBlock;
 
-    @SideOnly(Side.CLIENT)
     public static void initModels() {
         portalBlock.initModel();
         heldCubeBlock.initModel();
     }
-
 }

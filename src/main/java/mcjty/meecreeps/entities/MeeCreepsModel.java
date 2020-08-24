@@ -1,14 +1,19 @@
 package mcjty.meecreeps.entities;
 
-import net.minecraft.client.model.ModelBiped;
-import net.minecraft.client.model.ModelRenderer;
-import net.minecraft.entity.Entity;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.model.BipedModel;
+import net.minecraft.client.renderer.model.ModelRenderer;
+import net.minecraft.entity.LivingEntity;
 
 /**
  * meecreep - wiiv
  * Created using Tabula 7.0.0
  */
-public class MeeCreepsModel extends ModelBiped {
+public class MeeCreepsModel<T extends LivingEntity> extends BipedModel<T> {
 
     public boolean isCarrying;
 
@@ -61,7 +66,8 @@ public class MeeCreepsModel extends ModelBiped {
     private ModelRenderer faceVariation[] = new ModelRenderer[9];
     private ModelRenderer hairVariation[] = new ModelRenderer[9];
 
-    public MeeCreepsModel() {
+    public MeeCreepsModel(float modelSize) {
+        super(RenderType::getEntityTranslucent, modelSize, 0.0F, 64, 64);
 
         this.textureWidth = 64;
         this.textureHeight = 256;
@@ -348,16 +354,32 @@ public class MeeCreepsModel extends ModelBiped {
     }
 
     @Override
-    public void render(Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
-        EntityMeeCreeps meeCreeps = (EntityMeeCreeps) entity;
-        this.bipedLeftArm.render(f5);
-        this.bipedRightLeg.render(f5);
-        this.bipedRightArm.render(f5);
-        this.faceVariation[meeCreeps.getVariationFace()].render(f5);
-        this.hairVariation[meeCreeps.getVariationHair()].render(f5);
-        this.bipedLeftLeg.render(f5);
-        this.bipedBody.render(f5);
+    public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
+        super.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
     }
+
+    @Override
+    protected Iterable<ModelRenderer> getHeadParts() {
+        return super.getHeadParts();
+    }
+
+    @Override
+    protected Iterable<ModelRenderer> getBodyParts() {
+        return Iterables.concat(super.getBodyParts(), ImmutableList.of(this.bipedLeftArm, this.bipedRightLeg, this.bipedRightArm, this.bipedLeftLeg, this.bipedBody));
+    }
+
+    // todo: come back and fix this
+//    @Override
+//    public void render(Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
+//        EntityMeeCreeps meeCreeps = (EntityMeeCreeps) entity;
+//        this.bipedLeftArm.render(f5);
+//        this.bipedRightLeg.render(f5);
+//        this.bipedRightArm.render(f5);
+//        this.faceVariation[meeCreeps.getVariationFace()].render(f5);
+//        this.hairVariation[meeCreeps.getVariationHair()].render(f5);
+//        this.bipedLeftLeg.render(f5);
+//        this.bipedBody.render(f5);
+//    }
 
     /**
      * This is a helper function from Tabula to set the rotation of model parts
@@ -369,8 +391,8 @@ public class MeeCreepsModel extends ModelBiped {
     }
 
     @Override
-    public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netbipedHeadYaw, float bipedHeadPitch, float scaleFactor, Entity entity) {
-        super.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netbipedHeadYaw, bipedHeadPitch, scaleFactor, entity);
+    public void setRotationAngles(T entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        super.setRotationAngles(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 
         this.bipedHead.showModel = true;
         float f = -14.0F;
@@ -446,9 +468,9 @@ public class MeeCreepsModel extends ModelBiped {
         this.bipedHeadwear.rotateAngleY = this.bipedHead.rotateAngleY;
         this.bipedHeadwear.rotateAngleZ = this.bipedHead.rotateAngleZ;
 
-        EntityMeeCreeps meeCreeps = (EntityMeeCreeps) entity;
-        copyModelAngles(bipedHead, faceVariation[meeCreeps.getVariationFace()]);
-        copyModelAngles(bipedHead, hairVariation[meeCreeps.getVariationHair()]);
+        EntityMeeCreeps meeCreeps = (EntityMeeCreeps) entityIn;
+        faceVariation[meeCreeps.getVariationFace()].copyModelAngles(bipedHead);
+        hairVariation[meeCreeps.getVariationHair()].copyModelAngles(bipedHead);
     }
 }
 

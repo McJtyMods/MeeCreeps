@@ -1,51 +1,51 @@
 package mcjty.meecreeps.entities;
 
-import net.minecraft.block.state.BlockState;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderLiving;
-import net.minecraft.client.renderer.entity.RenderManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.client.renderer.entity.LivingRenderer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Random;
 
-public class RenderMeeCreeps extends RenderLiving<EntityMeeCreeps> {
+// todo: 100% broke this :D
+public class RenderMeeCreeps extends LivingRenderer<EntityMeeCreeps, MeeCreepsModel<EntityMeeCreeps>> {
 
     private ResourceLocation mobTexture = new ResourceLocation("meecreeps:textures/entity/meecreeps.png");
 
     private static Random rand = new Random();
 
-    public static final Factory FACTORY = new Factory();
-
-    public RenderMeeCreeps(RenderManager rendermanagerIn) {
-        super(rendermanagerIn, new MeeCreepsModel(), 0.5F);
+//    public static final Factory FACTORY = new Factory();
+    public RenderMeeCreeps(EntityRendererManager renderManager) {
+        super(renderManager, new MeeCreepsModel(1f), 0.5F);
         this.addLayer(new LayerRenderHeldBlock(this));
     }
 
     @Override
-    public void doRender(EntityMeeCreeps entity, double x, double y, double z, float entityYaw, float partialTicks) {
-        BlockState BlockState = entity.getHeldBlockState();
-        MeeCreepsModel model = (MeeCreepsModel) this.getMainModel();
+    public void render(EntityMeeCreeps entityIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn) {
+        BlockState BlockState = entityIn.getHeldBlockState();
+        MeeCreepsModel model = this.getEntityModel();
         model.isCarrying = BlockState != null;
 
-        super.doRender(entity, x, y, z, entityYaw, partialTicks);
+        super.render(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
     }
-
 
     @Override
     @Nonnull
-    protected ResourceLocation getEntityTexture(@Nonnull EntityMeeCreeps entity) {
+    public ResourceLocation getEntityTexture(@Nonnull EntityMeeCreeps entity) {
         return mobTexture;
     }
 
-    public static class Factory implements IRenderFactory<EntityMeeCreeps> {
-
-        @Override
-        public Render<? super EntityMeeCreeps> createRenderFor(RenderManager manager) {
-            return new RenderMeeCreeps(manager);
-        }
-
-    }
+    // todo: add back
+//    public static class Factory implements IRenderFactory<EntityMeeCreeps> {
+//
+//        @Override
+//        public Render<? super EntityMeeCreeps> createRenderFor(RenderManager manager) {
+//            return new RenderMeeCreeps(manager);
+//        }
+//
+//    }
 
 }

@@ -1,17 +1,20 @@
 package mcjty.meecreeps.teleport;
 
-import mcjty.meecreeps.network.PacketShowBalloonToClient;
+import mcjty.lib.varia.DimensionId;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.blocks.PortalTileEntity;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.network.PacketShowBalloonToClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.network.NetworkDirection;
 
 import javax.annotation.Nullable;
 
@@ -30,7 +33,7 @@ public class TeleportationTools {
         if (world.isAirBlock(pos)) {
             return true;
         }
-        if (world.getBlockState(pos).getBlock().isReplaceable(world, pos)) {
+        if (world.getBlockState(pos).getMaterial().isReplaceable()) {
             return true;
         }
         return false;
@@ -40,31 +43,31 @@ public class TeleportationTools {
         if (world.isAirBlock(pos)) {
             return false;
         }
-        AxisAlignedBB box = world.getBlockState(pos).getCollisionBoundingBox(world, pos);
-        return box != null;
+        VoxelShape box = world.getBlockState(pos).getCollisionShape(world, pos);
+        return box != VoxelShapes.empty();
     }
 
     public static void makePortalPair(ServerPlayerEntity player, BlockPos selectedBlock, Direction selectedSide, TeleportDestination dest) {
         World sourceWorld = player.getEntityWorld();
         BlockPos sourcePortalPos = findBestPosition(sourceWorld, selectedBlock, selectedSide);
         if (sourcePortalPos == null) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_find_portal_spot"), (ServerPlayerEntity) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_find_portal_spot"), player.connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
             return;
         }
 
-        World destWorld = mcjty.lib.varia.TeleportationTools.getWorldForDimension(dest.getDimension());
+        World destWorld = dest.getDimension().getWorld();
         if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.portalBlock) {
-            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.portal_already_there"), (ServerPlayerEntity) player);
+            PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.portal_already_there"), player.connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
             return;
         }
         if (dest.getSide() == Direction.DOWN) {
             if (!canPlacePortal(destWorld, dest.getPos()) || canCollideWith(destWorld, dest.getPos().down())) {
-                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), (ServerPlayerEntity) player);
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), player.connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
                 return;
             }
         } else {
             if (!canPlacePortal(destWorld, dest.getPos()) || canCollideWith(destWorld, dest.getPos().up())) {
-                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), (ServerPlayerEntity) player);
+                PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), player.connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
                 return;
             }
         }
@@ -80,7 +83,7 @@ public class TeleportationTools {
         source.setPortalSide(selectedSide);
 
         destination.setTimeout(ConfigSetup.portalTimeout.get());
-        destination.setOther(new TeleportDestination("", sourceWorld.provider.getDimension(), sourcePortalPos, selectedSide));
+        destination.setOther(new TeleportDestination("", DimensionId.fromWorld(sourceWorld), sourcePortalPos, selectedSide));
         destination.setPortalSide(dest.getSide());
     }
 
@@ -90,7 +93,7 @@ public class TeleportationTools {
             return;
         }
 
-        World destWorld = mcjty.lib.varia.TeleportationTools.getWorldForDimension(dest.getDimension());
+        World destWorld = dest.getDimension().getWorld();
         if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.portalBlock) {
             return;
         }
@@ -115,7 +118,7 @@ public class TeleportationTools {
         source.setPortalSide(selectedSide);
 
         destination.setTimeout(ConfigSetup.portalTimeout.get());
-        destination.setOther(new TeleportDestination("", sourceWorld.provider.getDimension(), sourcePortalPos, selectedSide));
+        destination.setOther(new TeleportDestination("", DimensionId.fromWorld(sourceWorld), sourcePortalPos, selectedSide));
         destination.setPortalSide(dest.getSide());
     }
 
