@@ -9,7 +9,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.entity.projectile.ProjectileItemEntity;
-import net.minecraft.entity.projectile.SnowballEntity;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.server.MinecraftServer;
@@ -24,17 +23,12 @@ public class EntityProjectile extends ProjectileItemEntity {
     private TeleportDestination destination;
     private UUID playerId;
 
-    // todo: this needs fixing
-    public EntityProjectile(EntityType<? extends SnowballEntity> p_i50159_1_, World p_i50159_2_) {
-        super(p_i50159_1_, p_i50159_2_);
+    public EntityProjectile(EntityType<EntityProjectile> type, World world) {
+        super(type, world);
     }
 
-    public EntityProjectile(World worldIn, LivingEntity throwerIn) {
-        super(EntityType.SNOWBALL, throwerIn, worldIn);
-    }
-
-    public EntityProjectile(World worldIn, double x, double y, double z) {
-        super(EntityType.SNOWBALL, x, y, z, worldIn);
+    public EntityProjectile(World world, LivingEntity thrower) {
+        super(ModEntities.PROJECTILE_ENTITY.get(), thrower, world);
     }
 
     public void setDestination(TeleportDestination destination) {

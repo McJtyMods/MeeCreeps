@@ -1,59 +1,27 @@
 package mcjty.meecreeps.commands;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import mcjty.meecreeps.actions.ServerActionManager;
-import net.minecraft.command.CommandException;
-import net.minecraft.command.ICommand;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.Commands;
+import net.minecraft.entity.player.ServerPlayerEntity;
 
-import java.util.Collections;
-import java.util.List;
+public class CommandListActions implements Command<CommandSource> {
 
-public class CommandListActions implements ICommand {
+    private static final CommandListActions COMMAND = new CommandListActions();
 
-
-    @Override
-    public String getName() {
-        return "creep_list";
+    public static LiteralArgumentBuilder<CommandSource> register() {
+        return Commands.literal("creepList")
+                .executes(COMMAND);
     }
 
     @Override
-    public String getUsage(ICommandSender sender) {
-        return "creep_list";
+    public int run(CommandContext<CommandSource> context) throws CommandSyntaxException {
+        ServerPlayerEntity playerEntity = context.getSource().asPlayer();
+        ServerActionManager.getManager(playerEntity.world).listOptions(context.getSource());
+        return 0;
     }
-
-    @Override
-    public List<String> getAliases() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        ServerActionManager.getManager().listOptions(sender);
-    }
-
-    @Override
-    public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
-        return true;
-    }
-
-
-    @Override
-    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos) {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public boolean isUsernameIndex(String[] args, int index) {
-        return false;
-    }
-
-    @Override
-    public int compareTo(ICommand o) {
-        return getName().compareTo(o.getName());
-    }
-
-
 }

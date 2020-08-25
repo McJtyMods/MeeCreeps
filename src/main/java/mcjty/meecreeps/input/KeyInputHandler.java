@@ -1,8 +1,8 @@
 package mcjty.meecreeps.input;
 
 import mcjty.meecreeps.render.BalloonRenderer;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class KeyInputHandler {
 

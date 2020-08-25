@@ -1,5 +1,6 @@
 package mcjty.meecreeps.actions;
 
+import com.google.common.collect.ImmutableList;
 import mcjty.lib.varia.DimensionId;
 import mcjty.lib.varia.SoundTools;
 import mcjty.lib.varia.TeleportationTools;
@@ -10,8 +11,10 @@ import mcjty.meecreeps.actions.workers.WorkerHelper;
 import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
+import mcjty.meecreeps.entities.ModEntities;
 import mcjty.meecreeps.items.CreepCubeItem;
 import net.minecraft.command.CommandSource;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -25,7 +28,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
@@ -48,23 +50,25 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
         super(name);
     }
 
-    @Override
-    public void clear() {
-        options.clear();
-        optionMap.clear();
-        lastId = 0;
-        entityCache.clear();
-    }
+    // todo: find replacement
+//    @Override
+//    public void clear() {
+//        options.clear();
+//        optionMap.clear();
+//        lastId = 0;
+//        entityCache.clear();
+//    }
 
     /**
      * If player == null then we're doing this as an OP and in that case we clear all options
      * and additionally kill all remaining MeeCreeps
-     * @param sender
+     * @param source
      * @param player
      */
-    public void clearOptions(ICommandSender sender, @Nullable EntityPlayer player) {
+    // todo: note issues may exist
+    public void clearOptions(CommandSource source, @Nullable PlayerEntity player) {
         if (player == null) {
-            sender.sendMessage(new TextComponentString("Cleared " + options.size() + " active operations"));
+            source.sendFeedback(new StringTextComponent("Cleared " + options.size() + " active operations"), false);
             options.clear();
         } else {
             int cnt = 0;
@@ -77,22 +81,20 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
                 }
             }
             options = toKeep;
-            sender.sendMessage(new TextComponentString("Cleared " + cnt + " active operations"));
+            source.sendFeedback(new StringTextComponent("Cleared " + cnt + " active operations"), false);
         }
         save();
 
         if (player == null) {
-            Integer[] iDs = DimensionManager.getStaticDimensionIDs();
-            int cnt = 0;
-            for (Integer id : iDs) {
-                World w = TeleportationTools.getWorldForDimension(id);
-                List<EntityMeeCreeps> entities = w.getEntities(EntityMeeCreeps.class, input -> true);
-                for (EntityMeeCreeps entity : entities) {
-                    entity.setDead();
-                    cnt++;
+            int entitiesRemoved = 0;
+            for (ServerWorld world : source.getServer().getWorlds()) {
+                for (Entity entity : world.getEntities(ModEntities.MEECREEPS_ENTITY.get(), i -> true)) {
+                    entity.remove();
+                    entitiesRemoved ++;
                 }
             }
-            sender.sendMessage(new TextComponentString("Additionally killed " + cnt + " MeeCreeps"));
+
+            source.sendFeedback(new StringTextComponent("Additionally killed " + entitiesRemoved + " MeeCreeps"), false);
         }
     }
 
@@ -103,7 +105,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
             MeeCreepActionType task = options.getTask();
             EntityMeeCreeps entity = findMeeCreep(sender.getWorld(), entry.getKey(), options.getDimension());
             String name = entity == null ? "<none>" : entity.getUniqueID().toString();
-            sender.getEntity().sendMessage(new StringTextComponent("Action " + entry.getKey() + ", Task " + task.getId() + ", Stage " + stage + ", Entity " + name));
+            sender.sendFeedback(new StringTextComponent("Action " + entry.getKey() + ", Task " + task.getId() + ", Stage " + stage + ", Entity " + name), false);
         }
     }
 
@@ -140,8 +142,8 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
     }
 
     @Nonnull
-    public static ServerActionManager getManager() {
-        return getData(ServerActionManager.class, NAME);
+    public static ServerActionManager getManager(World world) {
+        return getData(world, () -> new ServerActionManager(NAME), NAME);
     }
 
     public int createActionOptions(World world, BlockPos pos, Direction side, @Nullable PlayerEntity player) {
@@ -213,30 +215,38 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
     }
 
     // The dimension parameter is the dimension where the meecreep was last seen
-    private EntityMeeCreeps findMeeCreep(World world, int actionId, DimensionId dimension) {
+    private EntityMeeCreeps findMeeCreep(ServerWorld world, int actionId, DimensionId dimension) {
         EntityMeeCreeps cachedEntity = getCachedEntity(actionId);
         if (cachedEntity != null && cachedEntity.isAlive()) {
             return cachedEntity;
         }
-        List<EntityMeeCreeps> entities = world.getEntities(EntityMeeCreeps.class, input -> input != null && input.getActionId() == actionId && !input.isDead);
-        if (!entities.isEmpty()) {
-            updateEntityCache(actionId, entities.get(0));
-            return entities.get(0);
-        }
-        // Lets try to find the entity in other dimensions that are still loaded
-        for (ServerWorld w : DimensionManager.getWorlds()) {
-            entities = w.getEntities(EntityMeeCreeps.class, input -> input != null && input.getActionId() == actionId && !input.isDead);
-            if (!entities.isEmpty()) {
-                updateEntityCache(actionId, entities.get(0));
-                return entities.get(0);
+
+        // Worlds to search
+        LinkedHashSet<ServerWorld> worlds = new LinkedHashSet<>();
+
+        worlds.add(world);
+        worlds.addAll(ImmutableList.copyOf(world.getServer().getWorlds()));
+        worlds.add(dimension.getWorld());
+
+        for (ServerWorld serverWorld : worlds) {
+            EntityMeeCreeps entity = this.fetchFirstCreep(serverWorld, actionId);
+
+            if (entity != null) {
+                updateEntityCache(actionId, entity);
+                return entity;
             }
         }
-        // Last attempt. Also check the last dimension from the meecreep
-        World w = TeleportationTools.getWorldForDimension(dimension);
-        entities = w.getEntities(EntityMeeCreeps.class, input -> input != null && input.getActionId() == actionId && !input.isDead);
+
+        return null;
+    }
+
+    @Nullable
+    private EntityMeeCreeps fetchFirstCreep(ServerWorld world, int actionId) {
+        // So we have to assume that the entity is a meeCreep as the getEntities does do an active filter
+        // Casting from here on out should be assumed to be safe...
+        List<Entity> entities = world.getEntities(ModEntities.MEECREEPS_ENTITY.get(), input -> input != null && ((EntityMeeCreeps) input).getActionId() == actionId && input.isAlive());
         if (!entities.isEmpty()) {
-            updateEntityCache(actionId, entities.get(0));
-            return entities.get(0);
+            return (EntityMeeCreeps) entities.get(0);
         }
 
         return null;

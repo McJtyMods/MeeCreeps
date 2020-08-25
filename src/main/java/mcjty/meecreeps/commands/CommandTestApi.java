@@ -1,66 +1,31 @@
 package mcjty.meecreeps.commands;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import mcjty.meecreeps.MeeCreeps;
-import net.minecraft.command.CommandException;
-import net.minecraft.command.ICommand;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.Commands;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.Direction;
 
-import java.util.Collections;
-import java.util.List;
+public class CommandTestApi implements Command<CommandSource> {
+    private static final CommandListActions COMMAND = new CommandListActions();
 
-public class CommandTestApi implements ICommand {
-
-
-    @Override
-    public String getName() {
-        return "creep_test";
+    public static LiteralArgumentBuilder<CommandSource> register() {
+        return Commands.literal("creepTest")
+                .requires(commandSource -> commandSource.hasPermissionLevel(2))
+                .executes(COMMAND);
     }
 
     @Override
-    public String getUsage(ICommandSender sender) {
-        return "creep_test";
-    }
+    public int run(CommandContext<CommandSource> context) throws CommandSyntaxException {
+        ServerPlayerEntity player = context.getSource().asPlayer();
 
-    @Override
-    public List<String> getAliases() {
-        return Collections.emptyList();
-    }
+        MeeCreeps.api.spawnMeeCreep("meecreeps.dig_down", null, player.getEntityWorld(), player.getPosition().down(),
+                Direction.UP, null, true);
 
-    @Override
-    public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        if (sender instanceof EntityPlayerMP) {
-            EntityPlayerMP player = (EntityPlayerMP) sender;
-            MeeCreeps.api.spawnMeeCreep("meecreeps.dig_down", null, player.getEntityWorld(), player.getPosition().down(),
-                    EnumFacing.UP, null, true);
-        }
-    }
-
-    @Override
-    public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
-        if (sender instanceof EntityPlayerMP) {
-            return ((EntityPlayerMP) sender).capabilities.isCreativeMode && sender.canUseCommand(2, "");
-        } else {
-            return sender.canUseCommand(2, "creep_test");
-        }
-    }
-
-
-    @Override
-    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos) {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public boolean isUsernameIndex(String[] args, int index) {
-        return false;
-    }
-
-    @Override
-    public int compareTo(ICommand o) {
-        return getName().compareTo(o.getName());
+        return 0;
     }
 }

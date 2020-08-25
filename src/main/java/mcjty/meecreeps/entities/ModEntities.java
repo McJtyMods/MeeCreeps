@@ -1,38 +1,43 @@
 package mcjty.meecreeps.entities;
 
-import mcjty.meecreeps.MeeCreeps;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.storage.loot.LootTableList;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
+import net.minecraft.entity.EntityClassification;
+import net.minecraft.entity.EntityType;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import net.minecraftforge.fml.common.registry.EntityRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+
+import static mcjty.meecreeps.setup.Registration.ENTITIES;
 
 public class ModEntities {
 
-    public static void init() {
-        // Every entity in our mod has an ID (local to this mod)
-        int id = 1;
-        EntityRegistry.registerModEntity(new ResourceLocation(MeeCreeps.MODID, "meecreeps"), EntityMeeCreeps.class, "MeeCreeps", id++, MeeCreeps.instance, 64, 3, true, 0x0CD5F2, 0xFF7300);
-        EntityRegistry.registerModEntity(new ResourceLocation(MeeCreeps.MODID, "meecreeps_projectile"), EntityProjectile.class, "meecreeps_projectile", id++, MeeCreeps.instance, 100, 5, true);
-
-        // This is the loot table for our mob
-        LootTableList.register(EntityMeeCreeps.LOOT);
+    public static void register() {
+        // todo: set this up with data gens
+//        LootTableList.register(EntityMeeCreeps.LOOT);
     }
 
-    @SideOnly(Side.CLIENT)
-    public static void initModels() {
-        RenderingRegistry.registerEntityRenderingHandler(EntityMeeCreeps.class, RenderMeeCreeps.FACTORY);
+    public static final RegistryObject<EntityType<EntityMeeCreeps>> MEECREEPS_ENTITY = ENTITIES.register(
+            "meecreeps",
+            () -> EntityType.Builder.<EntityMeeCreeps>create(EntityMeeCreeps::new, EntityClassification.CREATURE)
+                .size(0.6F, 1.95F)
+                .setTrackingRange(64)
+                .setUpdateInterval(3)
+                .setShouldReceiveVelocityUpdates(true)
+                .build("meecreeps")
+    );
 
-        RenderingRegistry.registerEntityRenderingHandler(EntityProjectile.class, new IRenderFactory<EntityProjectile>() {
-            @Override
-            public Render<? super EntityProjectile> createRenderFor(RenderManager manager) {
-                return new RenderProjectile<EntityProjectile>(manager, Minecraft.getMinecraft().getRenderItem());
-            }
-        });
+    public static final RegistryObject<EntityType<EntityProjectile>> PROJECTILE_ENTITY = ENTITIES.register(
+            "meecreeps_projectile",
+            () -> EntityType.Builder.<EntityProjectile>create(EntityProjectile::new, EntityClassification.MISC)
+                    .size(0.6F, 1.95F)
+                    .setTrackingRange(100)
+                    .setUpdateInterval(5)
+                    .setShouldReceiveVelocityUpdates(true)
+                    .build("meecreeps_projectile")
+    );
+
+    // I'm not sure on the side for this yet so I'm going to put it here for now
+    @SubscribeEvent
+    public static void registerOther() {
+        RenderingRegistry.registerEntityRenderingHandler(PROJECTILE_ENTITY.get(), RenderProjectile::new);
     }
 }

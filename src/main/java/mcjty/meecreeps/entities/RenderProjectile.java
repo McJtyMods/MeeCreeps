@@ -1,54 +1,58 @@
 package mcjty.meecreeps.entities;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import mcjty.meecreeps.items.ModItems;
-import net.minecraft.client.renderer.model.ItemCameraTransforms;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
+import net.minecraft.entity.projectile.ProjectileItemEntity;
+import net.minecraft.inventory.container.PlayerContainer;
 import net.minecraft.util.ResourceLocation;
 
-public class RenderProjectile<T extends Entity> extends Render<T> {
-    private final RenderItem itemRenderer;
+public class RenderProjectile extends EntityRenderer<ProjectileItemEntity> {
 
-    public RenderProjectile(RenderManager renderManagerIn,  RenderItem itemRendererIn) {
-        super(renderManagerIn);
-        this.itemRenderer = itemRendererIn;
+    public RenderProjectile(EntityRendererManager renderManager) {
+        super(renderManager);
     }
 
+    // todo: move to matric system
     @Override
-    public void doRender(T entity, double x, double y, double z, float entityYaw, float partialTicks) {
-        GlStateManager.pushMatrix();
-        GlStateManager.translate((float) x, (float) y, (float) z);
-        GlStateManager.enableRescaleNormal();
-        GlStateManager.rotate(-this.renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
-        GlStateManager.rotate((this.renderManager.options.thirdPersonView == 2 ? -1 : 1) * this.renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
-        GlStateManager.rotate(180.0F, 0.0F, 1.0F, 0.0F);
-        GlStateManager.disableLighting();
-        this.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+    public void render(ProjectileItemEntity entityIn, float entityYaw, float partialTicks, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn) {
+// todo come back to this one
 
-        if (this.renderOutlines) {
-            GlStateManager.enableColorMaterial();
-            GlStateManager.enableOutlineMode(this.getTeamColor(entity));
-        }
-
-        this.itemRenderer.renderItem(new ItemStack(ModItems.PROJECTILE_ITEM.get()), ItemCameraTransforms.TransformType.GROUND);
-
-        if (this.renderOutlines) {
-            GlStateManager.disableOutlineMode();
-            GlStateManager.disableColorMaterial();
-        }
-
-        GlStateManager.enableLighting();
-        GlStateManager.disableRescaleNormal();
-        GlStateManager.popMatrix();
-        super.doRender(entity, x, y, z, entityYaw, partialTicks);
+//        RenderSystem.pushMatrix();
+//        RenderSystem.translatef((float) x, (float) y, (float) z);
+//        RenderSystem.enableRescaleNormal();
+//        RenderSystem.rotatef(-this.renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
+//        RenderSystem.rotatef((this.renderManager.options.thirdPersonView == 2 ? -1 : 1) * this.renderManager., 1.0F, 0.0F, 0.0F);
+//        RenderSystem.rotatef(180.0F, 0.0F, 1.0F, 0.0F);
+//        RenderSystem.disableLighting();
+//
+//        Minecraft.getInstance().getTextureManager().bindTexture(PlayerContainer.LOCATION_BLOCKS_TEXTURE);
+//        this.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+//
+//        if (this.renderOutlines) {
+//            RenderSystem.enableColorMaterial();
+//            RenderSystem.enableOutlineMode(this.getTeamColor(entity));
+//        }
+//
+//        this.itemRenderer.renderItem(new ItemStack(ModItems.PROJECTILE_ITEM.get()), ItemCameraTransforms.TransformType.GROUND);
+//
+//        if (this.renderOutlines) {
+//            RenderSystem.disableOutlineMode();
+//            RenderSystem.disableColorMaterial();
+//        }
+//
+//        RenderSystem.enableLighting();
+//        RenderSystem.disableRescaleNormal();
+//        RenderSystem.popMatrix();
+        super.render(entityIn, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
     }
 
     /**
      * Returns the location of an entity's texture. Doesn't seem to be called unless you call Render.bindEntityTexture.
      */
     @Override
-    protected ResourceLocation getEntityTexture(Entity entity) {
-        return TextureMap.LOCATION_BLOCKS_TEXTURE;
+    public ResourceLocation getEntityTexture(ProjectileItemEntity entity) {
+        return PlayerContainer.LOCATION_BLOCKS_TEXTURE;
     }
 }

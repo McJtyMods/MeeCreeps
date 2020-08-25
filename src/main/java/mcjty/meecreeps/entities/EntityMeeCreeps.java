@@ -2,23 +2,24 @@ package mcjty.meecreeps.entities;
 
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ActionOptions;
-import mcjty.meecreeps.network.PacketActionOptionToClient;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.actions.workers.WorkerHelper;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.blocks.ModBlocks;
+import mcjty.meecreeps.network.PacketActionOptionToClient;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.setup.GuiProxy;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.CreatureEntity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.goal.RandomSwimmingGoal;
+import net.minecraft.entity.ai.goal.LookAtGoal;
+import net.minecraft.entity.ai.goal.LookRandomlyGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.monster.CreeperEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -32,6 +33,7 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fml.network.NetworkDirection;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -54,10 +56,20 @@ public class EntityMeeCreeps extends CreatureEntity implements IMeeCreep {
     // If we are carrying a TE then this contains the NBT data
     private CompoundNBT carriedNBT = null;
 
+//    public EntityMeeCreeps(EntityType<? extends CreatureEntity> type, World worldIn) {
+//        super(type, worldIn);
+//        variationHair = worldIn.rand.nextInt(9);
+//        enablePersistence();
+//    }
+
     public EntityMeeCreeps(World worldIn) {
-        super(worldIn);
-        setSize(0.6F, 1.95F);
-        variationHair = worldIn.rand.nextInt(9);
+        this(ModEntities.MEECREEPS_ENTITY.get(), worldIn);
+    }
+
+    public EntityMeeCreeps(EntityType<? extends CreatureEntity> type, World world) {
+        super(type, world);
+
+        variationHair = world.rand.nextInt(9);
         enablePersistence();
     }
 
@@ -112,15 +124,17 @@ public class EntityMeeCreeps extends CreatureEntity implements IMeeCreep {
     }
 
     @Override
-    protected void init() {
-        super.init();
+    protected void registerData() {
+        super.registerData();
         int variationFace = world.rand.nextInt(9);
+
         // Avoid the engry face
         while (variationFace == 1) {
             variationFace = world.rand.nextInt(9);
         }
-        this.dataManager.register(CARRIED_BLOCK, Optional.empty());
-        this.dataManager.register(FACE_VARIATION, variationFace);
+
+        this.getDataManager().register(CARRIED_BLOCK, Optional.empty());
+        this.getDataManager().register(FACE_VARIATION, variationFace);
     }
 
     public int getVariationFace() {
@@ -150,25 +164,9 @@ public class EntityMeeCreeps extends CreatureEntity implements IMeeCreep {
 
         this.goalSelector.addGoal(0, new SwimGoal(this));
         this.goalSelector.addGoal(3, workerTask);
-        this.goalSelector.addGoal(0, new Watrch(this, 1D, 10));
-        this.goalSelector.addGoal(0, new RandomSwimmingGoal(this, 1D, 10));
+        this.goalSelector.addGoal(8, new LookAtGoal(this, PlayerEntity.class, 8.0f));
+        this.goalSelector.addGoal(8, new LookRandomlyGoal(this));
     }
-
-    @Override
-    protected void initEntityAI() {
-        this.tasks.addTask(0, new EntityAISwimming(this));
-//        this.tasks.addTask(5, new EntityAIMoveTowardsRestriction(this, 1.0D));
-//        this.tasks.addTask(7, new EntityAIWander(this, 1.0D));
-//        this.tasks.addTask(2, new EntityAIAttackMelee(this, 1.0D, true));
-
-        CreeperEntity
-        workerTask = new MeeCreepWorkerTask(this);
-        this.tasks.addTask(3, workerTask);
-        this.tasks.addTask(8, new EntityAIWatchClosest(this, EntityPlayer.class, 8.0F));
-        this.tasks.addTask(8, new EntityAILookIdle(this));
-//        this.targetTasks.addTask(2, new EntityAINearestAttackableTarget(this, EntityMeeCreeps.class, false));
-    }
-
 
     @Override
     protected boolean processInteract(PlayerEntity player, Hand hand) {
@@ -176,11 +174,11 @@ public class EntityMeeCreeps extends CreatureEntity implements IMeeCreep {
 //            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_DISMISS, player.getEntityWorld(), (int) player.posX, (int) player.posY, (int) player.posZ);
             return true;
         } else {
-            ServerActionManager manager = ServerActionManager.getManager();
+            ServerActionManager manager = ServerActionManager.getManager(this.world);
             if (actionId != 0) {
                 ActionOptions options = manager.getOptions(actionId);
                 if (options != null) {
-                    PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(options, GuiProxy.GUI_MEECREEP_DISMISS), (EntityPlayerMP) player);
+                    PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(options, GuiProxy.GUI_MEECREEP_DISMISS), ((ServerPlayerEntity) player).connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
                     options.setPaused(true);
                 }
             }
@@ -192,7 +190,7 @@ public class EntityMeeCreeps extends CreatureEntity implements IMeeCreep {
     public void tick() {
         super.tick();
         if (!world.isRemote) {
-            ServerActionManager manager = ServerActionManager.getManager();
+            ServerActionManager manager = ServerActionManager.getManager(this.world);
             if (actionId != 0) {
                 ActionOptions options = manager.getOptions(actionId);
                 if (options == null) {
@@ -235,7 +233,7 @@ public class EntityMeeCreeps extends CreatureEntity implements IMeeCreep {
         if (state == null) {
             return;
         }
-        if (state.getBlock() == ModBlocks.heldCubeBlock) {
+        if (state.getBlock() == ModBlocks.CREEP_CUBE.get()) {
             return;
         }
 
