@@ -1,6 +1,7 @@
 package mcjty.meecreeps.setup;
 
 import mcjty.meecreeps.blocks.ModBlocks;
+import mcjty.meecreeps.items.ModItems;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityType;
 import net.minecraft.inventory.container.ContainerType;
@@ -30,5 +31,6 @@ public class Registration {
         ENTITIES.register(bus);
 
         ModBlocks.register();
+        ModItems.register();
     }
 }

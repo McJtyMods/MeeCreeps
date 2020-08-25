@@ -31,7 +31,7 @@ public class RenderProjectile<T extends Entity> extends Render<T> {
             GlStateManager.enableOutlineMode(this.getTeamColor(entity));
         }
 
-        this.itemRenderer.renderItem(new ItemStack(ModItems.projectileItem), ItemCameraTransforms.TransformType.GROUND);
+        this.itemRenderer.renderItem(new ItemStack(ModItems.PROJECTILE_ITEM.get()), ItemCameraTransforms.TransformType.GROUND);
 
         if (this.renderOutlines) {
             GlStateManager.disableOutlineMode();

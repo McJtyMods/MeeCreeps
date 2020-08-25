@@ -109,7 +109,7 @@ public class CreepCubeItem extends Item {
         ItemStack heldItem = player.getHeldItem(Hand.MAIN_HAND);
         if (heldItem.getItem() != ModItems.creepCubeItem) {
             heldItem = player.getHeldItem(Hand.OFF_HAND);
-            if (heldItem.getItem() != ModItems.creepCubeItem) {
+            if (heldItem.getItem() != ModItems.CREEP_CUBE_ITEM.get()) {
                 // Something went wrong
                 return ItemStack.EMPTY;
             }

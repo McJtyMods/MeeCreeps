@@ -98,7 +98,7 @@ public class EntityProjectile extends ProjectileItemEntity {
 
     @Override
     protected Item getDefaultItem() {
-        return ModItems.projectileItem;
+        return ModItems.PROJECTILE_ITEM.get();
     }
 
     @Override

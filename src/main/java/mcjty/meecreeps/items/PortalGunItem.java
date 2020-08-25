@@ -44,9 +44,9 @@ public class PortalGunItem extends Item {
 
     public static ItemStack getGun(PlayerEntity player) {
         ItemStack heldItem = player.getHeldItem(Hand.MAIN_HAND);
-        if (heldItem.getItem() != ModItems.portalGunItem) {
+        if (heldItem.getItem() != ModItems.PORTAL_GUN_ITEM.get()) {
             heldItem = player.getHeldItem(Hand.OFF_HAND);
-            if (heldItem.getItem() != ModItems.portalGunItem) {
+            if (heldItem.getItem() != ModItems.PORTAL_GUN_ITEM.get()) {
                 // Something went wrong
                 return ItemStack.EMPTY;
             }
@@ -210,7 +210,7 @@ public class PortalGunItem extends Item {
 
     @Override
     public ItemStack getContainerItem(ItemStack itemStack) {
-        ItemStack stack = new ItemStack(ModItems.emptyPortalGunItem);
+        ItemStack stack = new ItemStack(ModItems.EMPTY_PORTAL_GUN_ITEM.get());
         stack.setTag(itemStack.getOrCreateTag());
         return stack;
     }

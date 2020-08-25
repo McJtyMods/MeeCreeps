@@ -1,34 +1,26 @@
 package mcjty.meecreeps.items;
 
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.item.Item;
+import net.minecraftforge.fml.RegistryObject;
+
+import static mcjty.meecreeps.setup.Registration.ITEMS;
 
 public class ModItems {
 
-    @GameRegistry.ObjectHolder("meecreeps:creepcube")
-    public static CreepCubeItem creepCubeItem;
+    public static void register() {}
 
-    @GameRegistry.ObjectHolder("meecreeps:portalgun")
-    public static PortalGunItem portalGunItem;
+    public static final RegistryObject<Item> CREEP_CUBE_ITEM = ITEMS.register("creepcube", CreepCubeItem::new);
+    public static final RegistryObject<Item> PORTAL_GUN_ITEM = ITEMS.register("portalgun", PortalGunItem::new);
+    public static final RegistryObject<Item> EMPTY_PORTAL_GUN_ITEM = ITEMS.register("emptyportalgun", EmptyPortalGunItem::new);
+    public static final RegistryObject<Item> PROJECTILE_ITEM = ITEMS.register("projectile", CreepCubeItem::new);
+    public static final RegistryObject<Item> CARTRIDGE_ITEM = ITEMS.register("cartridge", CreepCubeItem::new);
 
-    @GameRegistry.ObjectHolder("meecreeps:emptyportalgun")
-    public static EmptyPortalGunItem emptyPortalGunItem;
-
-    @GameRegistry.ObjectHolder("meecreeps:projectile")
-    public static ProjectileItem projectileItem;
-
-    @GameRegistry.ObjectHolder("meecreeps:cartridge")
-    public static CartridgeItem cartridgeItem;
-
-
-    @SideOnly(Side.CLIENT)
-    public static void initModels() {
-        creepCubeItem.initModel();
-        portalGunItem.initModel();
-        emptyPortalGunItem.initModel();
-        projectileItem.initModel();
-        cartridgeItem.initModel();
-    }
-
+//    @SideOnly(Side.CLIENT)
+//    public static void initModels() {
+//        creepCubeItem.initModel();
+//        portalGunItem.initModel();
+//        emptyPortalGunItem.initModel();
+//        projectileItem.initModel();
+//        cartridgeItem.initModel();
+//    }
 }
