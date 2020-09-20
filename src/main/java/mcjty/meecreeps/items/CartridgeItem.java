@@ -26,7 +26,7 @@ import java.util.List;
 public class CartridgeItem extends Item {
 
     public CartridgeItem() {
-        super(new Properties().maxStackSize(1).group(MeeCreeps.setup.getTab()));
+        super(new Properties().maxStackSize(1).group(MeeCreeps.TAB));
 //        setRegistryName("cartridge");
 //        setUnlocalizedName(MeeCreeps.MODID + ".cartridge");
 //        setMaxStackSize(1);

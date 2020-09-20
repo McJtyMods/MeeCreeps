@@ -40,11 +40,11 @@ public class CommandHandler {
             return true;
         });
         McJtyLib.registerCommand(MeeCreeps.MODID, CMD_RESUME_ACTION, (player, arguments) -> {
-            ServerActionManager.getManager().resumeAction((ServerPlayerEntity) player, arguments.get(PARAM_ID));
+            ServerActionManager.getManager(player.world).resumeAction((ServerPlayerEntity) player, arguments.get(PARAM_ID));
             return true;
         });
         McJtyLib.registerCommand(MeeCreeps.MODID, CMD_CANCEL_ACTION, (player, arguments) -> {
-            ServerActionManager.getManager().cancelAction((ServerPlayerEntity) player, arguments.get(PARAM_ID));
+            ServerActionManager.getManager(player.world).cancelAction((ServerPlayerEntity) player, arguments.get(PARAM_ID));
             return true;
         });
     }

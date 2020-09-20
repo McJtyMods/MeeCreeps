@@ -35,7 +35,7 @@ public class PacketPerformAction {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            ServerActionManager.getManager().performAction(context.get().getSender(), id, type, furtherQuestionId);
+            ServerActionManager.getManager(context.get().getSender().world).performAction(context.get().getSender(), id, type, furtherQuestionId);
         });
         context.get().setPacketHandled(true);
     }

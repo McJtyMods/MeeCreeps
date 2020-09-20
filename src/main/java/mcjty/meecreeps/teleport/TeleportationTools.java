@@ -56,7 +56,7 @@ public class TeleportationTools {
         }
 
         World destWorld = dest.getDimension().getWorld();
-        if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.portalBlock) {
+        if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.PORTAL_BLOCK.get()) {
             PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.portal_already_there"), player.connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
             return;
         }
@@ -72,10 +72,10 @@ public class TeleportationTools {
             }
         }
 
-        sourceWorld.setBlockState(sourcePortalPos, ModBlocks.portalBlock.getDefaultState(), 3);
+        sourceWorld.setBlockState(sourcePortalPos, ModBlocks.PORTAL_BLOCK.get().getDefaultState(), 3);
         PortalTileEntity source = (PortalTileEntity) sourceWorld.getTileEntity(sourcePortalPos);
 
-        destWorld.setBlockState(dest.getPos(), ModBlocks.portalBlock.getDefaultState(), 3);
+        destWorld.setBlockState(dest.getPos(), ModBlocks.PORTAL_BLOCK.get().getDefaultState(), 3);
         PortalTileEntity destination = (PortalTileEntity) destWorld.getTileEntity(dest.getPos());
 
         source.setTimeout(ConfigSetup.portalTimeout.get());
@@ -94,7 +94,7 @@ public class TeleportationTools {
         }
 
         World destWorld = dest.getDimension().getWorld();
-        if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.portalBlock) {
+        if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.PORTAL_BLOCK.get()) {
             return;
         }
         if (dest.getSide() == Direction.DOWN) {
@@ -107,10 +107,10 @@ public class TeleportationTools {
             }
         }
 
-        sourceWorld.setBlockState(sourcePortalPos, ModBlocks.portalBlock.getDefaultState(), 3);
+        sourceWorld.setBlockState(sourcePortalPos, ModBlocks.PORTAL_BLOCK.get().getDefaultState(), 3);
         PortalTileEntity source = (PortalTileEntity) sourceWorld.getTileEntity(sourcePortalPos);
 
-        destWorld.setBlockState(dest.getPos(), ModBlocks.portalBlock.getDefaultState(), 3);
+        destWorld.setBlockState(dest.getPos(), ModBlocks.PORTAL_BLOCK.get().getDefaultState(), 3);
         PortalTileEntity destination = (PortalTileEntity) destWorld.getTileEntity(dest.getPos());
 
         source.setTimeout(ConfigSetup.portalTimeout.get());

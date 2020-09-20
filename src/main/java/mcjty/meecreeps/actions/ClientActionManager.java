@@ -3,7 +3,6 @@ package mcjty.meecreeps.actions;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.render.BalloonRenderer;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;

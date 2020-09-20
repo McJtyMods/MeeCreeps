@@ -1,11 +1,7 @@
 package mcjty.meecreeps.config;
 
-import mcjty.meecreeps.MeeCreeps;
-import mcjty.meecreeps.MeeCreepsApi;
 import net.minecraftforge.common.ForgeConfigSpec;
-import org.apache.logging.log4j.Level;
 
-import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,21 +10,21 @@ public class ConfigSetup {
     private static final String CATEGORY_GENERAL = "general";
     private static final String CATEGORY_PERMISSON = "permission";
 
-    public static Configuration mainConfig;
-
-    public static void init() {
-        mainConfig = new Configuration(new File(MeeCreeps.setup.getModConfigDir().getPath(), "meecreeps.cfg"));
-        try {
-            mainConfig.load();
-            initConfig(mainConfig);
-        } catch (Exception e1) {
-            MeeCreeps.setup.getLogger().log(Level.ERROR, "Problem loading config file!", e1);
-        } finally {
-            if (mainConfig.hasChanged()) {
-                mainConfig.save();
-            }
-        }
-    }
+//    public static Configuration mainConfig;
+//
+//    public static void init() {
+//        mainConfig = new Configuration(new File(MeeCreeps.setup.getModConfigDir().getPath(), "meecreeps.cfg"));
+//        try {
+//            mainConfig.load();
+//            initConfig(mainConfig);
+//        } catch (Exception e1) {
+//            MeeCreeps.setup.getLogger().log(Level.ERROR, "Problem loading config file!", e1);
+//        } finally {
+//            if (mainConfig.hasChanged()) {
+//                mainConfig.save();
+//            }
+//        }
+//    }
 
     public static ForgeConfigSpec.IntValue portalTimeout;
     public static ForgeConfigSpec.IntValue portalTimeoutAfterEntry;
@@ -117,30 +113,30 @@ public class ConfigSetup {
     public static ForgeConfigSpec SERVER_CONFIG;
     public static ForgeConfigSpec CLIENT_CONFIG;
 
-
-    private static void initConfig(Configuration cfg) {
-        SERVER_CONFIG = SERVER_BUILDER.build(cfg);
-        CLIENT_CONFIG = CLIENT_BUILDER.build(cfg);
-
-        initPermissionConfig(cfg);
-    }
-
-    // @todo
-    // config for type of pickaxe
-
-    private static void initPermissionConfig(Configuration cfg) {
-        cfg.addCustomCategoryComment(CATEGORY_PERMISSON, "Permission configuration");
-        for (MeeCreepsApi.Factory factory : MeeCreeps.api.getFactories()) {
-            boolean allowed = cfg.getBoolean("allowed_" + factory.getId(), CATEGORY_PERMISSON, true, "");
-            if (allowed) {
-                allowedActions.add(factory.getId());
-            }
-        }
-    }
-
-    public static void postInit() {
-        if (mainConfig.hasChanged()) {
-            mainConfig.save();
-        }
-    }
+//
+//    private static void initConfig(Configuration cfg) {
+//        SERVER_CONFIG = SERVER_BUILDER.build(cfg);
+//        CLIENT_CONFIG = CLIENT_BUILDER.build(cfg);
+//
+//        initPermissionConfig(cfg);
+//    }
+//
+//    // @todo
+//    // config for type of pickaxe
+//
+//    private static void initPermissionConfig(Configuration cfg) {
+//        cfg.addCustomCategoryComment(CATEGORY_PERMISSON, "Permission configuration");
+//        for (MeeCreepsApi.Factory factory : MeeCreeps.api.getFactories()) {
+//            boolean allowed = cfg.getBoolean("allowed_" + factory.getId(), CATEGORY_PERMISSON, true, "");
+//            if (allowed) {
+//                allowedActions.add(factory.getId());
+//            }
+//        }
+//    }
+//
+//    public static void postInit() {
+//        if (mainConfig.hasChanged()) {
+//            mainConfig.save();
+//        }
+//    }
 }

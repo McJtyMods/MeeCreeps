@@ -29,7 +29,7 @@ import java.util.List;
 public class CreepCubeItem extends Item {
 
     public CreepCubeItem() {
-        super(new Properties().maxStackSize(1).group(MeeCreeps.setup.getTab()));
+        super(new Properties().maxStackSize(1).group(MeeCreeps.TAB));
 //        setRegistryName("creepcube");
 //        setUnlocalizedName(MeeCreeps.MODID + ".creepcube");
 //        setMaxStackSize(1);
@@ -107,7 +107,7 @@ public class CreepCubeItem extends Item {
 
     public static ItemStack getCube(PlayerEntity player) {
         ItemStack heldItem = player.getHeldItem(Hand.MAIN_HAND);
-        if (heldItem.getItem() != ModItems.creepCubeItem) {
+        if (heldItem.getItem() != ModItems.CREEP_CUBE_ITEM.get()) {
             heldItem = player.getHeldItem(Hand.OFF_HAND);
             if (heldItem.getItem() != ModItems.CREEP_CUBE_ITEM.get()) {
                 // Something went wrong
@@ -133,7 +133,7 @@ public class CreepCubeItem extends Item {
         }
 
         if (ConfigSetup.maxMeecreepsPerPlayer.get() >= 0) {
-            int cnt = ServerActionManager.getManager().countMeeCreeps(context.getPlayer());
+            int cnt = ServerActionManager.getManager(context.getWorld()).countMeeCreeps(context.getPlayer());
             if (cnt >= ConfigSetup.maxMeecreepsPerPlayer.get()) {
                 PacketHandler.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.max_spawn_reached", Integer.toString(ConfigSetup.maxMeecreepsPerPlayer.get())), ((ServerPlayerEntity) context.getPlayer()).connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
                 return ActionResultType.SUCCESS;
@@ -154,7 +154,7 @@ public class CreepCubeItem extends Item {
                 }
             }
         } else {
-            ServerActionManager.getManager().createActionOptions(context.getWorld(), context.getPos(), context.getFace(), context.getPlayer());
+            ServerActionManager.getManager(context.getWorld()).createActionOptions(context.getWorld(), context.getPos(), context.getFace(), context.getPlayer());
         }
         return ActionResultType.SUCCESS;
     }

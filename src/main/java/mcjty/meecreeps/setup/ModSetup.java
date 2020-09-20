@@ -13,8 +13,16 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 
 public class ModSetup extends DefaultModSetup {
+
+    @Override
+    public void init(FMLCommonSetupEvent e) {
+        super.init(e);
+
+        MinecraftForge.EVENT_BUS.register(new ForgeEventHandlers());
+    }
 
     @Override
     public void preInit(FMLPreInitializationEvent e) {

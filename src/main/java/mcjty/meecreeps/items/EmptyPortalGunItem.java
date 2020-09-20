@@ -20,7 +20,7 @@ import java.util.List;
 public class EmptyPortalGunItem extends Item {
 
     public EmptyPortalGunItem() {
-        super(new Properties().group(MeeCreeps.setup.getTab()).maxStackSize(1));
+        super(new Properties().group(MeeCreeps.TAB).maxStackSize(1));
 //        setRegistryName("emptyportalgun");
 //        setUnlocalizedName(MeeCreeps.MODID + ".emptyportalgun");
 //        setMaxStackSize(1);

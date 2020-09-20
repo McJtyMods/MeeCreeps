@@ -2,6 +2,7 @@ package mcjty.meecreeps;
 
 import mcjty.lib.base.ModBase;
 import mcjty.lib.proxy.IProxy;
+import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.blocks.PortalTESR;
 import mcjty.meecreeps.commands.CommandClearActions;
 import mcjty.meecreeps.commands.CommandListActions;
@@ -10,6 +11,8 @@ import mcjty.meecreeps.entities.ModEntities;
 import mcjty.meecreeps.setup.ModSetup;
 import net.minecraft.command.Commands;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -30,7 +33,14 @@ public class MeeCreeps implements ModBase {
     public static final String MIN_MCJTYLIB_VER = "3.5.0";
     public static final String MIN_FORGE_VER = "14.22.0.2464";
 
-    public static ModSetup setup = new ModSetup();
+    public static final ItemGroup TAB = new ItemGroup(MODID) {
+        @Override
+        public ItemStack createIcon() {
+            return new ItemStack(ModBlocks.CREEP_CUBE.get());
+        }
+    };
+
+//    public static ModSetup setup = new ModSetup();
     public static MeeCreepsApi api = new MeeCreepsApi();
     private static MeeCreeps instance;
 

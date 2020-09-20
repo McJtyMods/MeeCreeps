@@ -35,7 +35,7 @@ import java.util.List;
 
 public class PortalGunItem extends Item {
     public PortalGunItem() {
-        super(new Properties().maxStackSize(1).group(MeeCreeps.setup.getTab()));
+        super(new Properties().maxStackSize(1).group(MeeCreeps.TAB));
 //        setRegistryName("portalgun");
 //        setUnlocalizedName(MeeCreeps.MODID + ".portalgun");
 //        setMaxStackSize(1);
@@ -68,11 +68,11 @@ public class PortalGunItem extends Item {
     @Override
     public ActionResultType onItemUseFirst(ItemStack stack, ItemUseContext context) {
         if (context.getWorld().isRemote) {
-            if (context.getWorld().getBlockState(context.getPos().offset(context.getFace())).getBlock() == ModBlocks.portalBlock) {
+            if (context.getWorld().getBlockState(context.getPos().offset(context.getFace())).getBlock() == ModBlocks.PORTAL_BLOCK.get()) {
                 PacketHandler.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL, TypedMap.builder().put(CommandHandler.PARAM_POS, context.getPos().offset(context.getFace())).build()));
                 return ActionResultType.SUCCESS;
             }
-            if (context.getFace() != Direction.UP && context.getFace() != Direction.DOWN && context.getWorld().getBlockState(context.getPos().offset(context.getFace()).down()).getBlock() == ModBlocks.portalBlock) {
+            if (context.getFace() != Direction.UP && context.getFace() != Direction.DOWN && context.getWorld().getBlockState(context.getPos().offset(context.getFace()).down()).getBlock() == ModBlocks.PORTAL_BLOCK.get()) {
                 PacketHandler.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL, TypedMap.builder().put(CommandHandler.PARAM_POS, context.getPos().offset(context.getFace()).down()).build()));
                 return ActionResultType.SUCCESS;
             }
@@ -85,10 +85,10 @@ public class PortalGunItem extends Item {
             }
             return ActionResultType.SUCCESS;
         } else {
-            if (context.getWorld().getBlockState(context.getPos().offset(context.getFace())).getBlock() == ModBlocks.portalBlock) {
+            if (context.getWorld().getBlockState(context.getPos().offset(context.getFace())).getBlock() == ModBlocks.PORTAL_BLOCK.get()) {
                 return ActionResultType.SUCCESS;
             }
-            if (context.getFace() != Direction.UP && context.getFace() != Direction.DOWN && context.getWorld().getBlockState(context.getPos().offset(context.getFace()).down()).getBlock() == ModBlocks.portalBlock) {
+            if (context.getFace() != Direction.UP && context.getFace() != Direction.DOWN && context.getWorld().getBlockState(context.getPos().offset(context.getFace()).down()).getBlock() == ModBlocks.PORTAL_BLOCK.get()) {
                 return ActionResultType.SUCCESS;
             }
 

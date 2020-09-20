@@ -1,6 +1,7 @@
 package mcjty.meecreeps.network;
 
 import mcjty.lib.network.NetworkTools;
+import mcjty.lib.varia.DimensionId;
 import mcjty.meecreeps.items.PortalGunItem;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -19,7 +20,7 @@ public class PacketSetDestination {
     public void encode(PacketBuffer buffer) {
         NetworkTools.writeStringUTF8(buffer, destination.getName());
 
-        buffer.writeInt(destination.getDimension());
+        buffer.writeResourceLocation(destination.getDimension().getRegistryName());
         buffer.writeLong(destination.getPos().toLong());
         buffer.writeByte(destination.getSide().ordinal());
         buffer.writeInt(destinationIndex);
@@ -27,7 +28,7 @@ public class PacketSetDestination {
 
     public PacketSetDestination(PacketBuffer buf) {
         destination = new TeleportDestination(
-                NetworkTools.readStringUTF8(buf), buf.readInt(),
+                NetworkTools.readStringUTF8(buf), DimensionId.fromResourceLocation(buf.readResourceLocation()),
                 BlockPos.fromLong(buf.readLong()),
                 Direction.values()[buf.readByte()]
         );

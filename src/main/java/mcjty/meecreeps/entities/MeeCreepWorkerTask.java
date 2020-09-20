@@ -21,7 +21,7 @@ public class MeeCreepWorkerTask extends Goal {
 
     @Override
     public boolean shouldExecute() {
-        ServerActionManager manager = ServerActionManager.getManager();
+        ServerActionManager manager = ServerActionManager.getManager(this.meeCreep.world);
         int actionId = meeCreep.getActionId();
         if (actionId != 0) {
             ActionOptions options = manager.getOptions(actionId);
@@ -55,7 +55,7 @@ public class MeeCreepWorkerTask extends Goal {
 
     @Override
     public void tick() {
-        ServerActionManager manager = ServerActionManager.getManager();
+        ServerActionManager manager = ServerActionManager.getManager(this.meeCreep.world);
         int actionId = meeCreep.getActionId();
         if (actionId != 0) {
             ActionOptions options = manager.getOptions(actionId);
@@ -84,7 +84,7 @@ public class MeeCreepWorkerTask extends Goal {
 
     public void readFromNBT(CompoundNBT tag) {
         if (!meeCreep.getWorld().isRemote) {
-            ServerActionManager manager = ServerActionManager.getManager();
+            ServerActionManager manager = ServerActionManager.getManager(this.meeCreep.world);
             int actionId = meeCreep.getActionId();
             if (actionId != 0) {
                 ActionOptions options = manager.getOptions(actionId);

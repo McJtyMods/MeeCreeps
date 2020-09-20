@@ -5,7 +5,7 @@ import net.minecraft.item.Item;
 
 public class ProjectileItem extends Item {
     public ProjectileItem() {
-        super(new Properties().group(MeeCreeps.setup.getTab()).maxStackSize(1));
+        super(new Properties().group(MeeCreeps.TAB).maxStackSize(1));
 //        setRegistryName("projectile");
 //        setUnlocalizedName(MeeCreeps.MODID + ".projectile");
 //        setMaxStackSize(1);
