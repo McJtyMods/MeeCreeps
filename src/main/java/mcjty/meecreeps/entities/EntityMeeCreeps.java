@@ -6,12 +6,13 @@ import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.actions.workers.WorkerHelper;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.blocks.ModBlocks;
+import mcjty.meecreeps.gui.GuiMeeCreeps;
 import mcjty.meecreeps.network.PacketActionOptionToClient;
 import mcjty.meecreeps.network.PacketHandler;
-import mcjty.meecreeps.setup.GuiProxy;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.CreatureEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -171,6 +172,7 @@ public class EntityMeeCreeps extends CreatureEntity implements IMeeCreep {
     @Override
     protected boolean processInteract(PlayerEntity player, Hand hand) {
         if (player.getEntityWorld().isRemote) {
+            Minecraft.getInstance().displayGuiScreen(new GuiMeeCreeps(2));
 //            player.openGui(MeeCreeps.instance, GuiProxy.GUI_MEECREEP_DISMISS, player.getEntityWorld(), (int) player.posX, (int) player.posY, (int) player.posZ);
             return true;
         } else {
@@ -178,7 +180,8 @@ public class EntityMeeCreeps extends CreatureEntity implements IMeeCreep {
             if (actionId != 0) {
                 ActionOptions options = manager.getOptions(actionId);
                 if (options != null) {
-                    PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(options, GuiProxy.GUI_MEECREEP_DISMISS), ((ServerPlayerEntity) player).connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
+                    // 2 = GUI_MEECREEP_DISMISS todo: fix this
+                    PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(options, 2), ((ServerPlayerEntity) player).connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
                     options.setPaused(true);
                 }
             }

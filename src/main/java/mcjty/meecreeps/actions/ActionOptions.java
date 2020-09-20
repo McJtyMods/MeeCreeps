@@ -8,15 +8,11 @@ import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.api.IActionContext;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
-import mcjty.meecreeps.gui.GuiMeeCreeps;
 import mcjty.meecreeps.network.PacketActionOptionToClient;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.network.PacketShowBalloonToClient;
-import mcjty.meecreeps.setup.GuiProxy;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.container.SimpleNamedContainerProvider;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -27,11 +23,9 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.network.NetworkDirection;
-import net.minecraftforge.fml.network.NetworkHooks;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -392,12 +386,8 @@ public class ActionOptions implements IActionContext {
         MinecraftServer server = WorldTools.getOverworld().getServer();
         ServerPlayerEntity player = server.getPlayerList().getPlayerByUUID(playerId);
         if (player != null) {
-            NetworkHooks.openGui(player, new SimpleNamedContainerProvider(
-                    (int id, PlayerInventory playerInventory, PlayerEntity playerEntity) -> new GuiMeeCreeps(1),
-                    new StringTextComponent(""))
-            );
-
-            PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(this, GuiProxy.GUI_MEECREEP_QUESTION), player.connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
+            // 1 = GUI_MEECREEP_QUESTION
+            PacketHandler.INSTANCE.sendTo(new PacketActionOptionToClient(this, 1), player.connection.netManager, NetworkDirection.PLAY_TO_CLIENT);
         } else {
             return false;
         }

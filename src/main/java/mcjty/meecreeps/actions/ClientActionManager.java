@@ -1,28 +1,21 @@
 package mcjty.meecreeps.actions;
 
-import mcjty.meecreeps.MeeCreeps;
+import mcjty.meecreeps.gui.GuiMeeCreeps;
 import mcjty.meecreeps.render.BalloonRenderer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 public class ClientActionManager {
 
     public static ActionOptions lastOptions = null;
 
     public static void showActionOptions(ActionOptions options, int guiid) {
-        PlayerEntity player = MeeCreeps.proxy.getClientPlayer();
-        World worldIn = MeeCreeps.proxy.getClientWorld();
-        BlockPos pos = options.getTargetPos();
+        // todo: this can't be right...
         lastOptions = options;
-        player.openGui(MeeCreeps.instance, guiid, worldIn, pos.getX(), pos.getY(), pos.getZ());
+        Minecraft.getInstance().displayGuiScreen(new GuiMeeCreeps(guiid));
     }
 
     public static void showProblem(String message, String... parameters) {
-        PlayerEntity player = MeeCreeps.proxy.getClientPlayer();
-        World worldIn = MeeCreeps.proxy.getClientWorld();
-        BlockPos pos = player.getPosition();
         String translated = I18n.format(message, parameters);
         BalloonRenderer.addMessage(translated);
     }

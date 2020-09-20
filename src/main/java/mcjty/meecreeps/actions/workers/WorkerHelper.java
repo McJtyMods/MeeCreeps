@@ -4,7 +4,10 @@ import mcjty.lib.varia.BlockTools;
 import mcjty.lib.varia.SoundTools;
 import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.MeeCreeps;
-import mcjty.meecreeps.actions.*;
+import mcjty.meecreeps.actions.ActionOptions;
+import mcjty.meecreeps.actions.MeeCreepActionType;
+import mcjty.meecreeps.actions.ServerActionManager;
+import mcjty.meecreeps.actions.Stage;
 import mcjty.meecreeps.api.*;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.config.ConfigSetup;
@@ -31,7 +34,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.*;
-import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -519,9 +521,9 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     private void spawnAngryCreep() {
-        entity.setHeldBlockState(ModBlocks.heldCubeBlock.getDefaultState());
+        entity.setHeldBlockState(ModBlocks.CREEP_CUBE.get().getDefaultState());
         entity.setVariationFace(1);
-        ServerActionManager manager = ServerActionManager.getManager();
+        ServerActionManager manager = ServerActionManager.getManager(entity.world);
         World world = entity.getWorld();
 
         // todo: come back to this and fix
@@ -560,7 +562,7 @@ public class WorkerHelper implements IWorkerHelper {
             }
         }
         options.clearDrops();
-        ServerActionManager.getManager().save();
+        ServerActionManager.getManager(this.entity.world).save();
         waitABit = 1;   // Process faster
     }
 
@@ -737,14 +739,14 @@ public class WorkerHelper implements IWorkerHelper {
     @Override
     public void done() {
         options.setStage(Stage.DONE);
-        ServerActionManager.getManager().save();
+        ServerActionManager.getManager(entity.world).save();
     }
 
     // Indicate the task is done and that it is time to do the last task (putting back stuff etc)
     @Override
     public void taskIsDone() {
         options.setStage(Stage.TASK_IS_DONE);
-        ServerActionManager.getManager().save();
+        ServerActionManager.getManager(entity.world).save();
     }
 
     @Override
@@ -1041,7 +1043,7 @@ public class WorkerHelper implements IWorkerHelper {
                 if (stack == null) {
                     // There are still bad mods!
                     String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
-                    MeeCreeps.setup.getLogger().warn("Block " + badBlock + " is returning null for e.getStackInSlot()! That's a bug!");
+                    MeeCreeps.LOGGER.warn("Block " + badBlock + " is returning null for e.getStackInSlot()! That's a bug!");
                 } else if (!stack.isEmpty() && matcher.test(stack)) {
                     ItemStack extracted = e.extractItem(i, Math.min(maxAmount, stack.getCount()), false);
                     ItemStack remaining = entity.addStack(extracted);
@@ -1074,7 +1076,7 @@ public class WorkerHelper implements IWorkerHelper {
                     if (stack == null) {
                         // There are still bad mods!
                         String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
-                        MeeCreeps.setup.getLogger().warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
+                        MeeCreeps.LOGGER.warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
                     } else if (!stack.isEmpty()) {
                         if (matcher.test(stack)) {
                             cnt += stack.getCount();
@@ -1116,7 +1118,7 @@ public class WorkerHelper implements IWorkerHelper {
                             if (stack == null) {
                                 // There are still bad mods!
                                 String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
-                                MeeCreeps.setup.getLogger().warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
+                                MeeCreeps.LOGGER.warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
                             } else if (!stack.isEmpty()) {
                                 if (matcher.test(stack)) {
                                     cnt += stack.getCount();
@@ -1211,7 +1213,7 @@ public class WorkerHelper implements IWorkerHelper {
                                 if (stack == null) {
                                     // There are still bad mods!
                                     String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
-                                    MeeCreeps.setup.getLogger().warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
+                                    MeeCreeps.LOGGER.warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
                                 } else if (!stack.isEmpty()) {
                                     if (matcher.test(stack)) {
                                         cnt += stack.getCount();

@@ -1,37 +1,37 @@
 package mcjty.meecreeps;
 
 import mcjty.lib.base.ModBase;
-import mcjty.lib.proxy.IProxy;
 import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.blocks.PortalTESR;
 import mcjty.meecreeps.commands.CommandClearActions;
 import mcjty.meecreeps.commands.CommandListActions;
 import mcjty.meecreeps.commands.CommandTestApi;
 import mcjty.meecreeps.entities.ModEntities;
-import mcjty.meecreeps.setup.ModSetup;
+import mcjty.meecreeps.input.KeyBindings;
+import mcjty.meecreeps.input.KeyInputHandler;
+import mcjty.meecreeps.network.PacketHandler;
+import mcjty.meecreeps.render.BalloonRenderer;
+import mcjty.meecreeps.setup.ClientSetup;
+import mcjty.meecreeps.setup.Registration;
 import net.minecraft.command.Commands;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.*;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Mod(MeeCreeps.MODID)
 public class MeeCreeps implements ModBase {
     public static final String MODID = "meecreeps";
-    public static final String VERSION = "1.3.1";
-    public static final String MIN_MCJTYLIB_VER = "3.5.0";
-    public static final String MIN_FORGE_VER = "14.22.0.2464";
 
     public static final ItemGroup TAB = new ItemGroup(MODID) {
         @Override
@@ -42,22 +42,45 @@ public class MeeCreeps implements ModBase {
 
 //    public static ModSetup setup = new ModSetup();
     public static MeeCreepsApi api = new MeeCreepsApi();
-    private static MeeCreeps instance;
+    public static MeeCreeps instance;
+
+    public static final Logger LOGGER = LogManager.getLogger();
 
     public MeeCreeps() {
         instance = this;
 
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        Registration.register(modEventBus);
 
+        modEventBus.addListener(this::setup);
+        modEventBus.addListener(this::clientSetup);
+        modEventBus.addListener(this::serverSetup);
+        modEventBus.addListener(this::enqueueIMC);
+        modEventBus.addListener(this::processIMC);
+
+        MinecraftForge.EVENT_BUS.register(new ForgeEventHandlers());
+        MinecraftForge.EVENT_BUS.register(new ForgeEventHandlers());
         MinecraftForge.EVENT_BUS.register(ModEntities.class);
     }
 
-    private void setup(final FMLCommonSetupEvent event)
-    {
+    private void setup(final FMLCommonSetupEvent event) {
+//        NetworkRegistry.INSTANCE.registerGuiHandler(MeeCreeps.instance, new GuiProxy());
+        CommandHandler.registerCommands();
+        PacketHandler.registerMessages("meecreeps");
+        MeeCreeps.api.registerFactories();
+        // todo: load config
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
         ClientRegistry.bindTileEntityRenderer(null, PortalTESR::new);
+
+//        OBJLoader.INSTANCE.addDomain(MeeCreeps.MODID);
+//        ModelLoaderRegistry.registerLoader(new BakedModelLoader());
+
+        MinecraftForge.EVENT_BUS.register(ClientSetup.class);
+        MinecraftForge.EVENT_BUS.register(new KeyInputHandler());
+        KeyBindings.init();
+        BalloonRenderer.renderBalloon();
     }
 
     private void serverSetup(final FMLServerStartingEvent event) {
@@ -80,19 +103,6 @@ public class MeeCreeps implements ModBase {
         // some example code to receive and process InterModComms from other mods
     }
 
-    @SidedProxy(clientSide = "mcjty.meecreeps.setup.ClientProxy", serverSide = "mcjty.meecreeps.setup.ServerProxy")
-    public static IProxy proxy;
-
-    /**
-     * Run before anything else. Read your config, create blocks, items, etc, and
-     * register them with the GameRegistry.
-     */
-    @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent e) {
-        setup.preInit(e);
-        proxy.preInit(e);
-    }
-
 // todo: add back
 
 //    @Mod.EventHandler
@@ -109,38 +119,8 @@ public class MeeCreeps implements ModBase {
 //        }
 //    }
 
-    /**
-     * Do your mod setup. Build whatever data structures you care about. Register recipes.
-     */
-    @Mod.EventHandler
-    public void init(FMLInitializationEvent e) {
-        setup.init(e);
-        proxy.init(e);
-    }
-
-    /**
-     * Handle interaction with other mods, complete your setup based on this.
-     */
-    @Mod.EventHandler
-    public void postInit(FMLPostInitializationEvent e) {
-        setup.postInit(e);
-        proxy.postInit(e);
-    }
-
-    @Mod.EventHandler
-    public void serverLoad(FMLServerStartingEvent event) {
-        event.registerServerCommand(new CommandTestApi());
-        event.registerServerCommand(new CommandClearActions());
-        event.registerServerCommand(new CommandListActions());
-    }
-
     @Override
     public String getModId() {
         return MODID;
-    }
-
-    @Override
-    public void openManual(EntityPlayer entityPlayer, int i, String s) {
-        // @todo
     }
 }

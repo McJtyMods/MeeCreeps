@@ -11,7 +11,6 @@ import mcjty.meecreeps.actions.ClientActionManager;
 import mcjty.meecreeps.actions.MeeCreepActionType;
 import mcjty.meecreeps.network.PacketHandler;
 import mcjty.meecreeps.network.PacketPerformAction;
-import mcjty.meecreeps.setup.GuiProxy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resources.I18n;
@@ -155,7 +154,7 @@ public class GuiMeeCreeps extends Screen {
 
     private List<Question> getQuestions() {
         questions = new ArrayList<>();
-        if (id == GuiProxy.GUI_MEECREEP_DISMISS) {
+        if (id == 2) { // 2 == GUI_MEECREEP_DISMISS todo: fix this
             questions.add(new Question("message.meecreeps.gui.please_stop_now", this::dismissAndClose));
             questions.add(new Question("message.meecreeps.gui.carry_on", this::resumeAndClose));
             outsideWindowAction = this::resume;
@@ -206,7 +205,7 @@ public class GuiMeeCreeps extends Screen {
         RenderHelper.drawTexturedModalRect(guiLeft, y, 0, 25, WIDTH, 15);
         String msg;
 
-        if (id == GuiProxy.GUI_MEECREEP_DISMISS) {
+        if (id == 2) { // 2 = GUI_MEECREEP_DISMISS todo: fix this
             msg = "message.meecreeps.gui.problem";
         } else if (furtherQuestionsHeading != null) {
             msg = furtherQuestionsHeading;
