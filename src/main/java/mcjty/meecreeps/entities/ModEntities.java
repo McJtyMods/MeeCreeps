@@ -2,9 +2,7 @@ package mcjty.meecreeps.entities;
 
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.RegistryObject;
-import net.minecraftforge.fml.client.registry.RenderingRegistry;
 
 import static mcjty.meecreeps.setup.Registration.ENTITIES;
 
@@ -36,8 +34,8 @@ public class ModEntities {
     );
 
     // I'm not sure on the side for this yet so I'm going to put it here for now
-    @SubscribeEvent
-    public static void registerOther() {
-        RenderingRegistry.registerEntityRenderingHandler(PROJECTILE_ENTITY.get(), RenderProjectile::new);
-    }
+//    @SubscribeEvent
+//    public static void registerOther() {
+//        RenderingRegistry.registerEntityRenderingHandler(PROJECTILE_ENTITY.get(), RenderProjectile::new);
+//    }
 }

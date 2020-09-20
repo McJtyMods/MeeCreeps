@@ -6,7 +6,10 @@ import mcjty.meecreeps.blocks.PortalTESR;
 import mcjty.meecreeps.commands.CommandClearActions;
 import mcjty.meecreeps.commands.CommandListActions;
 import mcjty.meecreeps.commands.CommandTestApi;
+import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.ModEntities;
+import mcjty.meecreeps.entities.RenderMeeCreeps;
+import mcjty.meecreeps.entities.RenderProjectile;
 import mcjty.meecreeps.input.KeyBindings;
 import mcjty.meecreeps.input.KeyInputHandler;
 import mcjty.meecreeps.network.PacketHandler;
@@ -18,8 +21,11 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
@@ -49,6 +55,9 @@ public class MeeCreeps implements ModBase {
     public MeeCreeps() {
         instance = this;
 
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, ConfigSetup.SERVER_CONFIG);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigSetup.CLIENT_CONFIG);
+
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         Registration.register(modEventBus);
 
@@ -76,6 +85,8 @@ public class MeeCreeps implements ModBase {
 
 //        OBJLoader.INSTANCE.addDomain(MeeCreeps.MODID);
 //        ModelLoaderRegistry.registerLoader(new BakedModelLoader());
+        RenderingRegistry.registerEntityRenderingHandler(ModEntities.PROJECTILE_ENTITY.get(), RenderProjectile::new);
+        RenderingRegistry.registerEntityRenderingHandler(ModEntities.MEECREEPS_ENTITY.get(), new RenderMeeCreeps.Factory());
 
         MinecraftForge.EVENT_BUS.register(ClientSetup.class);
         MinecraftForge.EVENT_BUS.register(new KeyInputHandler());

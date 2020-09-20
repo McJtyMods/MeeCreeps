@@ -1,0 +1,30 @@
+modLoader="javafml"
+loaderVersion="[31,)"
+issueTrackerURL="https://github.com/McJtyMods/MeeCreeps/issues"
+displayURL="https://github.com/McJtyMods/MeeCreeps/"
+authors="McJty"
+#logoFile="examplemod.png" #optional
+credits="ErrorMikey for porting" #optional
+
+[[mods]] #mandatory
+modId="meecreeps"
+version="${file.jarVersion}"
+displayName="MeeCreeps"
+#updateJSONURL="http://myurl.me/" #optional
+description='''
+Meecreeps because, why not...?
+'''
+
+[[dependencies.meecreeps]]
+    modId="forge"
+    mandatory=true
+    versionRange="[31,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.meecreeps]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.15,)"
+    ordering="NONE"
+    side="BOTH"

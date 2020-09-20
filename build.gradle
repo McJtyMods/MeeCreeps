@@ -33,7 +33,7 @@ repositories {
     }
 }
 
-group= "com.github.mcjty" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group= "mcjty.meecreeps" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "meecreeps"
 
 if (System.getenv('BUILD_NUMBER') != null) {

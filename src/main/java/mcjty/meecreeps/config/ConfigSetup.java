@@ -110,8 +110,8 @@ public class ConfigSetup {
         CLIENT_BUILDER.pop();
     }
 
-    public static ForgeConfigSpec SERVER_CONFIG;
-    public static ForgeConfigSpec CLIENT_CONFIG;
+    public static final ForgeConfigSpec SERVER_CONFIG = SERVER_BUILDER.build();
+    public static final ForgeConfigSpec CLIENT_CONFIG = CLIENT_BUILDER.build();
 
 //
 //    private static void initConfig(Configuration cfg) {

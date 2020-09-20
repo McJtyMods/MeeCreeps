@@ -3,9 +3,11 @@ package mcjty.meecreeps.entities;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.entity.LivingRenderer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.client.registry.IRenderFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Random;
@@ -38,14 +40,12 @@ public class RenderMeeCreeps extends LivingRenderer<EntityMeeCreeps, MeeCreepsMo
         return mobTexture;
     }
 
-    // todo: add back
-//    public static class Factory implements IRenderFactory<EntityMeeCreeps> {
-//
-//        @Override
-//        public Render<? super EntityMeeCreeps> createRenderFor(RenderManager manager) {
-//            return new RenderMeeCreeps(manager);
-//        }
-//
-//    }
+    public static class Factory implements IRenderFactory<EntityMeeCreeps> {
+
+        @Override
+        public EntityRenderer<? super EntityMeeCreeps> createRenderFor(EntityRendererManager manager) {
+            return new RenderMeeCreeps(manager);
+        }
+    }
 
 }

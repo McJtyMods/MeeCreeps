@@ -4,7 +4,6 @@ import mcjty.meecreeps.actions.ActionOptions;
 import mcjty.meecreeps.actions.ServerActionManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -13,11 +12,11 @@ import java.util.Map;
 
 public class ForgeEventHandlers {
 
-    @SubscribeEvent
-    public void onWorldTick(TickEvent.WorldTickEvent event) {
-        // todo: make sure this is right
-        ServerActionManager.getManager(event.world).tick();
-    }
+//    @SubscribeEvent
+//    public void onWorldTick(TickEvent.WorldTickEvent event) {
+//        // todo: make sure this is right
+//        ServerActionManager.getManager(event.world).tick();
+//    }
 
     public static final Map<BlockPos, Integer> harvestableBlocksToCollect = new HashMap<>();
 
