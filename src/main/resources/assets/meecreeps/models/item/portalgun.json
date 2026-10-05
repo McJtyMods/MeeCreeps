@@ -1,9 +1,9 @@
 {
 	"__comment": "Designed by Wiiv with Cubik Studio - https://cubik.studio",
 	"textures": {
-		"texture": "meecreeps:items/portal_gun_top_bottom",
-		"texture1": "meecreeps:items/portal_gun_side",
-		"texture2": "meecreeps:items/portal_gun_glass"
+		"texture": "meecreeps:item/portal_gun_top_bottom",
+		"texture1": "meecreeps:item/portal_gun_side",
+		"texture2": "meecreeps:item/portal_gun_glass"
 	},
 	"elements": [
 		{

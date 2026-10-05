@@ -1,49 +1,47 @@
 package mcjty.meecreeps.teleport;
 
-import io.netty.buffer.ByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
 import mcjty.lib.network.NetworkTools;
-import mcjty.lib.thirteen.Context;
+import net.minecraftforge.network.NetworkEvent.Context;
 import mcjty.meecreeps.items.PortalGunItem;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+
 
 import java.util.function.Supplier;
 
-public class PacketMakePortals implements IMessage {
+public class PacketMakePortals {
 
     private BlockPos selectedBlock;
     private TeleportDestination destination;
-    private EnumFacing selectedSide;
+    private Direction selectedSide;
 
-    @Override
-    public void fromBytes(ByteBuf buf) {
-        selectedBlock = BlockPos.fromLong(buf.readLong());
-        selectedSide = EnumFacing.VALUES[buf.readByte()];
-        destination = new TeleportDestination(NetworkTools.readStringUTF8(buf), buf.readInt(), BlockPos.fromLong(buf.readLong()),
-                EnumFacing.VALUES[buf.readByte()]);
+    public void fromBytes(FriendlyByteBuf buf) {
+        selectedBlock = BlockPos.of(buf.readLong());
+        selectedSide = Direction.values()[buf.readByte()];
+        destination = new TeleportDestination(NetworkTools.readStringUTF8(buf), buf.readResourceKey(net.minecraft.core.registries.Registries.DIMENSION), BlockPos.of(buf.readLong()),
+                Direction.values()[buf.readByte()]);
     }
 
-    @Override
-    public void toBytes(ByteBuf buf) {
-        buf.writeLong(selectedBlock.toLong());
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeLong(selectedBlock.asLong());
         buf.writeByte(selectedSide.ordinal());
         NetworkTools.writeStringUTF8(buf, destination.getName());
-        buf.writeInt(destination.getDimension());
-        buf.writeLong(destination.getPos().toLong());
+        buf.writeResourceKey(destination.getDimension());
+        buf.writeLong(destination.getPos().asLong());
         buf.writeByte(destination.getSide().ordinal());
     }
 
     public PacketMakePortals() {
     }
 
-    public PacketMakePortals(ByteBuf buf) {
+    public PacketMakePortals(FriendlyByteBuf buf) {
         fromBytes(buf);
     }
 
-    public PacketMakePortals(BlockPos selectedBlock, EnumFacing selectedSide, TeleportDestination destination) {
+    public PacketMakePortals(BlockPos selectedBlock, Direction selectedSide, TeleportDestination destination) {
         this.selectedBlock = selectedBlock;
         this.selectedSide = selectedSide;
         this.destination = destination;
@@ -52,10 +50,19 @@ public class PacketMakePortals implements IMessage {
     public void handle(Supplier<Context> supplier) {
         Context ctx = supplier.get();
         ctx.enqueueWork(() -> {
-            EntityPlayerMP player = ctx.getSender();
+            ServerPlayer player = ctx.getSender();
+            if (player == null || player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(selectedBlock)) > 100)
+                return;
             ItemStack heldItem = PortalGunItem.getGun(player);
-            if (heldItem.isEmpty()) return; // Something went wrong
+            if (heldItem.isEmpty())
+                return; // Something went wrong
 
+            if (PortalGunItem.getCharge(heldItem) <= 0)
+                return;
+            boolean known = PortalGunItem.getDestinations(heldItem).stream().anyMatch(d -> d != null && d.getDimension() == destination.getDimension() && d.getPos().equals(destination.getPos()) && d.getSide() == destination.getSide());
+            if (!known)
+                return;
+            PortalGunItem.setCharge(heldItem, PortalGunItem.getCharge(heldItem) - 1);
             TeleportationTools.makePortalPair(player, selectedBlock, selectedSide, destination);
         });
         ctx.setPacketHandled(true);

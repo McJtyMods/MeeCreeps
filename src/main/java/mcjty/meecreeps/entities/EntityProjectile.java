@@ -2,33 +2,39 @@ package mcjty.meecreeps.entities;
 
 import mcjty.meecreeps.teleport.TeleportDestination;
 import mcjty.meecreeps.teleport.TeleportationTools;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.entity.projectile.EntityThrowable;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.world.World;
-import net.minecraftforge.common.DimensionManager;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.level.Level;
+import mcjty.meecreeps.setup.Registration;
 
 import java.util.UUID;
 
-public class EntityProjectile extends EntityThrowable {
+public class EntityProjectile extends ThrowableItemProjectile {
 
     private TeleportDestination destination;
     private UUID playerId;
 
-    public EntityProjectile(World worldIn) {
-        super(worldIn);
+    public EntityProjectile(net.minecraft.world.entity.EntityType<? extends EntityProjectile> type, Level world) {
+        super(type, world);
     }
 
-    public EntityProjectile(World worldIn, EntityLivingBase throwerIn) {
-        super(worldIn, throwerIn);
+    public EntityProjectile(Level world, LivingEntity thrower) {
+        super(Registration.PROJECTILE.get(), thrower, world);
     }
 
-    public EntityProjectile(World worldIn, double x, double y, double z) {
-        super(worldIn, x, y, z);
+    @Override
+    protected net.minecraft.world.item.Item getDefaultItem() {
+        return Registration.PROJECTILE_ITEM.get();
+    }
+
+    @Override
+    public net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.game.ClientGamePacketListener> getAddEntityPacket() {
+        return net.minecraftforge.network.NetworkHooks.getEntitySpawningPacket(this);
     }
 
     public void setDestination(TeleportDestination destination) {
@@ -40,50 +46,46 @@ public class EntityProjectile extends EntityThrowable {
     }
 
     @Override
-    public void writeEntityToNBT(NBTTagCompound compound) {
-        super.writeEntityToNBT(compound);
+    public void addAdditionalSaveData(CompoundTag compound) {
+        super.addAdditionalSaveData(compound);
         if (destination != null) {
-            compound.setTag("destination", destination.getCompound());
+            compound.put("destination", destination.getCompound());
         }
         if (playerId != null) {
-            compound.setUniqueId("playerId", playerId);
+            compound.putUUID("playerId", playerId);
         }
     }
 
     @Override
-    public void readEntityFromNBT(NBTTagCompound compound) {
-        super.readEntityFromNBT(compound);
-        if (compound.hasKey("destination")) {
-            destination = new TeleportDestination(compound.getCompoundTag("destination"));
+    public void readAdditionalSaveData(CompoundTag compound) {
+        super.readAdditionalSaveData(compound);
+        if (compound.contains("destination")) {
+            destination = new TeleportDestination(compound.getCompound("destination"));
         } else {
             destination = null;
         }
-        if (compound.hasUniqueId("playerId")) {
-            playerId = compound.getUniqueId("playerId");
+        if (compound.hasUUID("playerId")) {
+            playerId = compound.getUUID("playerId");
         } else {
             playerId = null;
         }
     }
 
     /**
-     * Called when this EntityThrowable hits a block or entity.
+     * Called when this ThrowableItemProjectile hits a block or entity.
      */
     @Override
-    protected void onImpact(RayTraceResult result) {
-        if (!world.isRemote) {
-            if (result.typeOfHit == RayTraceResult.Type.BLOCK) {
-                EntityPlayer player = null;
-                if (playerId != null) {
-                    MinecraftServer server = DimensionManager.getWorld(0).getMinecraftServer();
-                    player = playerId == null ? null : server.getPlayerList().getPlayerByUUID(playerId);
-                }
-                if (player != null) {
-                    TeleportationTools.makePortalPair(player, result.getBlockPos(), result.sideHit, destination);
-                } else {
-                    TeleportationTools.makePortalPair(world, result.getBlockPos(), result.sideHit, destination);
-                }
+    protected void onHit(net.minecraft.world.phys.HitResult hit) {
+        super.onHit(hit);
+        if (!level().isClientSide) {
+            if (hit instanceof BlockHitResult result && destination != null) {
+                Player player = playerId == null ? null : level().getServer().getPlayerList().getPlayer(playerId);
+                if (player != null)
+                    TeleportationTools.makePortalPair(player, result.getBlockPos(), result.getDirection(), destination);
+                else
+                    TeleportationTools.makePortalPair(level(), result.getBlockPos(), result.getDirection(), destination);
             }
-            this.setDead();
+            discard();
         }
     }
 }

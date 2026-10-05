@@ -1,70 +1,57 @@
 package mcjty.meecreeps.items;
 
-import com.google.gson.JsonObject;
-import mcjty.meecreeps.MeeCreeps;
-import net.minecraft.inventory.InventoryCrafting;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.util.JsonUtils;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.crafting.CraftingHelper.ShapedPrimer;
-import net.minecraftforge.common.crafting.IRecipeFactory;
-import net.minecraftforge.common.crafting.JsonContext;
-import net.minecraftforge.oredict.ShapedOreRecipe;
+import mcjty.meecreeps.setup.Registration;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceLocation;
 
-import javax.annotation.Nonnull;
-
-public class InsertCartridgeFactory implements IRecipeFactory {
-    @Override
-    public IRecipe parse(JsonContext context, JsonObject json) {
-        ShapedOreRecipe recipe = ShapedOreRecipe.factory(context, json);
-
-        ShapedPrimer primer = new ShapedPrimer();
-        primer.width = recipe.getWidth();
-        primer.height = recipe.getHeight();
-        primer.mirrored = JsonUtils.getBoolean(json, "mirrored", true);
-        primer.input = recipe.getIngredients();
-
-        return new InsertCartridgeRecipe(new ResourceLocation(MeeCreeps.MODID, "insert_cartridge_factory"), recipe.getRecipeOutput(), primer);
+public class InsertCartridgeFactory extends CustomRecipe {
+    public InsertCartridgeFactory(ResourceLocation id, CraftingBookCategory category) {
+        super(id, category);
     }
 
-    public static class InsertCartridgeRecipe extends ShapedOreRecipe {
-        public InsertCartridgeRecipe(ResourceLocation group, ItemStack result, ShapedPrimer primer) {
-            super(group, result, primer);
+    public boolean matches(CraftingContainer inv, Level world) {
+        int guns = 0, cartridges = 0;
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            var s = inv.getItem(i);
+            if (s.isEmpty())
+                continue;
+            if (s.is(Registration.EMPTY_GUN.get()))
+                guns++;
+            else if (s.is(Registration.CARTRIDGE.get()))
+                cartridges++;
+            else
+                return false;
         }
+        return guns == 1 && cartridges == 1;
+    }
 
-        /**
-         * Returns an Item that is the result of this recipe
-         */
-        @Override
-        @Nonnull
-        public ItemStack getCraftingResult(@Nonnull InventoryCrafting var1) {
-            ItemStack newOutput = this.output.copy();
-
-            ItemStack cartridge = ItemStack.EMPTY;
-            ItemStack portalgun = ItemStack.EMPTY;
-
-            for (int i = 0; i < var1.getSizeInventory(); ++i) {
-                ItemStack stack = var1.getStackInSlot(i);
-
-                if (!stack.isEmpty()) {
-                    if (stack.getItem() instanceof CartridgeItem) {
-                        cartridge = stack;
-                    } else if (stack.getItem() instanceof EmptyPortalGunItem) {
-                        portalgun = stack;
-                    }
-                }
-            }
-
-            if (portalgun.hasTagCompound()) {
-                newOutput.setTagCompound(portalgun.getTagCompound().copy());
-            }
-            if (!cartridge.isEmpty()) {
-                int charge = CartridgeItem.getCharge(cartridge);
-                PortalGunItem.setCharge(newOutput, charge);
-            }
-
-            return newOutput;
+    public ItemStack assemble(CraftingContainer inv, RegistryAccess registries) {
+        ItemStack output = new ItemStack(Registration.GUN.get());
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            var s = inv.getItem(i);
+            if (s.is(Registration.EMPTY_GUN.get()) && s.hasTag())
+                output.setTag(s.getTag().copy());
         }
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            var s = inv.getItem(i);
+            if (s.is(Registration.CARTRIDGE.get())) {
+                PortalGunItem.setCharge(output, CartridgeItem.getCharge(s));
+                if (s.hasTag())
+                    output.getOrCreateTag().putInt("energyRemainder", s.getTag().getInt("energyRemainder"));
+            }
+        }
+        return output;
+    }
+
+    public boolean canCraftInDimensions(int w, int h) {
+        return w * h >= 2;
+    }
+
+    public RecipeSerializer<?> getSerializer() {
+        return Registration.INSERT.get();
     }
 }

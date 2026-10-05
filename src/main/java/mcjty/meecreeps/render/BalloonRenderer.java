@@ -2,116 +2,62 @@ package mcjty.meecreeps.render;
 
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.config.ConfigSetup;
+import mcjty.meecreeps.gui.MeeCreepsDialogBackground;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.ResourceLocation;
-import org.apache.commons.lang3.tuple.Pair;
-import org.lwjgl.opengl.GL11;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-public class BalloonRenderer {
+@Mod.EventBusSubscriber(modid = MeeCreeps.MODID, value = Dist.CLIENT)
+public final class BalloonRenderer {
+    private record Message(int expires, FormattedCharSequence text) {
+    }
 
-    private static final ResourceLocation gui_top = new ResourceLocation(MeeCreeps.MODID, "textures/gui/gui_meecreeps_top.png");
-
-    private static List<Pair<Integer, String>> messages = new ArrayList<>();
-
+    private static final List<Message> messages = new ArrayList<>();
+    private static int ticks;
     private static String lastMessage = "";
 
-    public static void addMessage(String message) {
-        Minecraft mc = Minecraft.getMinecraft();
-        List<String> strings = mc.fontRenderer.listFormattedStringToWidth(message, 230);
-        for (String s : strings) {
-            BalloonRenderer.messages.add(Pair.of(ConfigSetup.messageTimeout.get()*2, s));
-        }
-        lastMessage = message;
+    public static void addMessage(String text) {
+        lastMessage = text;
+        var mc = Minecraft.getInstance();
+        for (var line : mc.font.split(Component.literal(text), 230))
+            messages.add(new Message(ticks + ConfigSetup.messageTimeout.get(), line));
     }
 
     public static void repeatLast() {
-        if (!lastMessage.isEmpty()) {
+        if (!lastMessage.isEmpty())
             addMessage(lastMessage);
+    }
+
+    @SubscribeEvent
+    public static void tick(TickEvent.ClientTickEvent e) {
+        if (e.phase == TickEvent.Phase.END) {
+            ticks++;
+            messages.removeIf(m -> m.expires <= ticks);
         }
     }
 
-    public static void renderBalloon() {
-        if (messages.isEmpty()) {
+    @SubscribeEvent
+    public static void render(RenderGuiEvent.Post e) {
+        if (messages.isEmpty())
             return;
+        GuiGraphics g = e.getGuiGraphics();
+        int w = g.guiWidth(), h = g.guiHeight(), boxW = MeeCreepsDialogBackground.WIDTH;
+        int bodyRows = messages.size() - 1, boxH = MeeCreepsDialogBackground.height(bodyRows);
+        int px = ConfigSetup.messageX.get(), py = ConfigSetup.messageY.get();
+        int x = px == 0 ? (w - boxW) / 2 : px > 0 ? w * px / 100 : w + w * px / 100 - boxW;
+        int y = py == 0 ? (h - boxH) / 2 : py > 0 ? h * py / 100 : h + h * py / 100 - boxH;
+        MeeCreepsDialogBackground.render(g, x, y, bodyRows);
+        for (var m : messages) {
+            g.drawString(Minecraft.getInstance().font, m.text, x + 15, y + 7, 0xff000000, false);
+            y += MeeCreepsDialogBackground.ROW_HEIGHT;
         }
-
-        GlStateManager.pushMatrix();
-
-        Minecraft mc = Minecraft.getMinecraft();
-        mc.getTextureManager().bindTexture(gui_top);
-
-        ScaledResolution scaledresolution = new ScaledResolution(mc);
-        int width = scaledresolution.getScaledWidth();
-        int height = scaledresolution.getScaledHeight();
-//        double sw = scaledresolution.getScaledWidth_double();
-//        double sh = scaledresolution.getScaledHeight_double();
-
-//        double scale = 1.0;
-//        setupOverlayRendering(sw * scale, sh * scale);
-
-        int WIDTH = 256;
-        int HEIGHT = (messages.size() * 14) + 10 + 15;
-        int guiLeft;
-        int guiTop;
-
-        if (ConfigSetup.messageX.get() > 0) {
-            guiLeft = width * ConfigSetup.messageX.get() / 100;
-        } else if (ConfigSetup.messageX.get() < 0) {
-            guiLeft = (width + width * ConfigSetup.messageX.get() / 100) - WIDTH;
-        } else {
-            guiLeft = (width - WIDTH) / 2;
-        }
-
-        if (ConfigSetup.messageY.get() > 0) {
-            guiTop = height * ConfigSetup.messageY.get() / 100;
-        } else if (ConfigSetup.messageY.get() < 0) {
-            guiTop = (height + height * ConfigSetup.messageY.get() / 100) - HEIGHT;
-        } else {
-            guiTop = (height - HEIGHT) / 2;
-        }
-
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        GlStateManager.disableLighting();
-
-        mc.getTextureManager().bindTexture(gui_top);
-        mcjty.lib.client.RenderHelper.drawTexturedModalRect(guiLeft, guiTop, 0, 0, WIDTH, 10);
-        int y = guiTop+10;
-
-        for (int i = 0; i < messages.size()-1 ; i++) {
-            mcjty.lib.client.RenderHelper.drawTexturedModalRect(guiLeft, y, 0, 10, WIDTH, 15);
-            y += 14;
-        }
-        mcjty.lib.client.RenderHelper.drawTexturedModalRect(guiLeft, y, 0, 25, WIDTH, 15);
-
-        List<Pair<Integer, String>> newMessages = new ArrayList<>();
-
-        y = guiTop+7;
-        for (Pair<Integer, String> pair : messages) {
-            String msg = pair.getRight();
-            mcjty.lib.client.RenderHelper.renderText(mc, guiLeft+15, y, msg, 0);
-            y += 14;
-            if (pair.getLeft() > 0) {
-                newMessages.add(Pair.of(pair.getLeft()-1, msg));
-            }
-        }
-        messages = newMessages;
-
-        GlStateManager.popMatrix();
     }
-
-    public static void setupOverlayRendering(double sw, double sh) {
-        GlStateManager.clear(256);
-        GlStateManager.matrixMode(GL11.GL_PROJECTION);
-        GlStateManager.loadIdentity();
-        GlStateManager.ortho(0.0D, sw, sh, 0.0D, 1000.0D, 3000.0D);
-        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-        GlStateManager.loadIdentity();
-        GlStateManager.translate(0.0F, 0.0F, -2000.0F);
-    }
-
 }

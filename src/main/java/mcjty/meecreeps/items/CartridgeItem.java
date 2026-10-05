@@ -4,24 +4,20 @@ import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.network.MeeCreepsMessages;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
@@ -31,44 +27,43 @@ import java.util.List;
 public class CartridgeItem extends Item {
 
     public CartridgeItem() {
-        setRegistryName("cartridge");
-        setUnlocalizedName(MeeCreeps.MODID + ".cartridge");
-        setMaxStackSize(1);
-        setCreativeTab(MeeCreeps.setup.getTab());
+        super(new Item.Properties().stacksTo(1));
     }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-        Collections.addAll(tooltip, StringUtils.split(I18n.format("message.meecreeps.tooltip.cartridge_item", Integer.toString(getCharge(stack))), "\n"));
+    public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
+        for (String line : StringUtils.split(I18n.get("message.meecreeps.tooltip.cartridge_item", Integer.toString(getCharge(stack))), "\n"))
+            tooltip.add(net.minecraft.network.chat.Component.literal(line));
     }
 
 
-    @SideOnly(Side.CLIENT)
-    public void initModel() {
-        ModelLoader.setCustomModelResourceLocation(this, 0, new ModelResourceLocation(getRegistryName(), "inventory"));
+    @Override
+    public net.minecraftforge.common.capabilities.ICapabilityProvider initCapabilities(ItemStack stack, CompoundTag nbt) {
+        return new ItemEnergy(stack);
     }
 
     public static void setCharge(ItemStack stack, int charge) {
-        if (stack.getTagCompound() == null) {
-            stack.setTagCompound(new NBTTagCompound());
-        }
-        stack.getTagCompound().setInteger("charge", charge);
+        ItemEnergy.setCharge(stack, charge);
     }
 
     public static int getCharge(ItemStack stack) {
-        if (stack.getTagCompound() == null) {
+        if (stack.getTag() == null) {
             return 0;
         }
-        return stack.getTagCompound().getInteger("charge");
+        return stack.getTag().getInt("charge");
     }
 
 
     @Override
-    public boolean showDurabilityBar(ItemStack stack) {
+    public boolean isBarVisible(ItemStack stack) {
         return true;
     }
 
     @Override
+    public int getBarWidth(ItemStack stack) {
+        return Math.round(13 * (1 - (float) getDurabilityForDisplay(stack)));
+    }
+
     public double getDurabilityForDisplay(ItemStack stack) {
         int max = ConfigSetup.maxCharge.get();
         int stored = getCharge(stack);
@@ -76,37 +71,44 @@ public class CartridgeItem extends Item {
     }
 
     @Override
-    public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
-        if (!world.isRemote) {
+    public InteractionResult onItemUseFirst(ItemStack usedStack, net.minecraft.world.item.context.UseOnContext context) {
+        Player player = context.getPlayer();
+        Level world = context.getLevel();
+        BlockPos pos = context.getClickedPos();
+        Direction side = context.getClickedFace();
+        InteractionHand hand = context.getHand();
+        if (player == null)
+            return InteractionResult.PASS;
+        if (!world.isClientSide) {
             chargeCartridge(player, world, pos, hand);
         }
-        return EnumActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
-        if (!world.isRemote) {
-            chargeCartridge(player, world, player.getPosition(), hand);
+    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
+        if (!world.isClientSide) {
+            chargeCartridge(player, world, player.blockPosition(), hand);
         }
-        return new ActionResult<>(EnumActionResult.SUCCESS, player.getHeldItem(hand));
+        return new InteractionResultHolder<>(InteractionResult.SUCCESS, player.getItemInHand(hand));
     }
 
-    private void chargeCartridge(EntityPlayer player, World world, BlockPos pos, EnumHand hand) {
-        ItemStack heldItem = player.getHeldItem(hand);
+    private void chargeCartridge(Player player, Level world, BlockPos pos, InteractionHand hand) {
+        ItemStack heldItem = player.getItemInHand(hand);
         int charge = getCharge(heldItem);
-        if (charge >= (ConfigSetup.maxCharge.get()- ConfigSetup.chargesPerEnderpearl.get()+1)) {
-            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cartridge_full"), (EntityPlayerMP) player);
+        if (charge >= (ConfigSetup.maxCharge.get() - ConfigSetup.chargesPerEnderpearl.get() + 1)) {
+            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cartridge_full"), (ServerPlayer) player);
         } else {
-            for (int i = 0 ; i < player.inventory.getSizeInventory() ; i++) {
-                ItemStack stack = player.inventory.getStackInSlot(i);
+            for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+                ItemStack stack = player.getInventory().getItem(i);
                 if (stack.getItem() == Items.ENDER_PEARL) {
-                    ItemStack splitted = stack.splitStack(1);
+                    ItemStack splitted = stack.split(1);
                     charge += ConfigSetup.chargesPerEnderpearl.get();
                     setCharge(heldItem, charge);
                     return;
                 }
             }
-            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.missing_enderpearls"), (EntityPlayerMP) player);
+            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.missing_enderpearls"), (ServerPlayer) player);
         }
     }
 

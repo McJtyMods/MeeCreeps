@@ -1,11 +1,12 @@
 package mcjty.meecreeps.api;
 
-import net.minecraft.entity.EntityCreature;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.level.Level;
 
-import java.util.Random;
+import net.minecraft.util.RandomSource;
+
 import java.util.function.Predicate;
 
 /**
@@ -13,11 +14,11 @@ import java.util.function.Predicate;
  */
 public interface IMeeCreep {
 
-    EntityCreature getEntity();
+    PathfinderMob getEntity();
 
-    World getWorld();
+    Level getWorld();
 
-    Random getRandom();
+    RandomSource getRandom();
 
     /**
      * Add an itemstack to the internal inventory and return what could not be added

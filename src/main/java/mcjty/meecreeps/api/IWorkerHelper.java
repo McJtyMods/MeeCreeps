@@ -1,13 +1,13 @@
 package mcjty.meecreeps.api;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -50,7 +50,7 @@ public interface IWorkerHelper {
     /**
      * Return true if it is legal to harvest this block
      */
-    boolean allowedToHarvest(IBlockState state, World world, BlockPos pos, EntityPlayer entityPlayer);
+    boolean allowedToHarvest(BlockState state, Level world, BlockPos pos, Player entityPlayer);
 
     /**
      * Place a building block at the specified location. If there is already a block there it will
@@ -103,7 +103,7 @@ public interface IWorkerHelper {
      * Place an itemstack at the specific location. This does not test that the stack is valid for
      * placement or that the location can be modified.
      */
-    void placeStackAt(ItemStack blockStack, World world, BlockPos pos);
+    void placeStackAt(ItemStack blockStack, Level world, BlockPos pos);
 
     /**
      * Harvest the given block and give the drops to the MeeCreep. If there is no room the
@@ -122,7 +122,7 @@ public interface IWorkerHelper {
      * Pick up as much of the entity item as possible. If everything was picked up the entity item
      * will be marked dead. Otherwise the MeeCreep will try to get the rest later
      */
-    void pickup(EntityItem item);
+    void pickup(ItemEntity item);
 
     /**
      * It is time to stop. This will completely stop the MeeCreep from working. He will not be given
@@ -231,7 +231,7 @@ public interface IWorkerHelper {
      * Find an item that matches the predicate. If there is such an item then navigate to it and
      * finally execute the job. Otherwise return false.
      */
-    boolean findItemOnGround(AxisAlignedBB box, Predicate<ItemStack> matcher, Consumer<EntityItem> job);
+    boolean findItemOnGround(AABB box, Predicate<ItemStack> matcher, Consumer<ItemEntity> job);
 
     /**
      * Put the entire inventory in a given chest and drop everything else that didn't fit. Note that
@@ -243,7 +243,7 @@ public interface IWorkerHelper {
      * Find an inventory in the given box that contains items matching the predicate. Navigate to that
      * inventory and execute the job. If no such inventory could be found return false
      */
-    boolean findSuitableInventory(AxisAlignedBB box, Predicate<ItemStack> matcher, Consumer<BlockPos> job);
+    boolean findSuitableInventory(AABB box, Predicate<ItemStack> matcher, Consumer<BlockPos> job);
 
     /**
      * Calculate the best spot to move too for reaching the given position. This routine will prefer

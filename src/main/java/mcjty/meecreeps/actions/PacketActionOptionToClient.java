@@ -1,23 +1,21 @@
 package mcjty.meecreeps.actions;
 
-import io.netty.buffer.ByteBuf;
-import mcjty.lib.thirteen.Context;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent.Context;
+
 
 import java.util.function.Supplier;
 
-public class PacketActionOptionToClient implements IMessage {
+public class PacketActionOptionToClient {
     private ActionOptions options;
     private int guiid;
 
-    @Override
-    public void fromBytes(ByteBuf buf) {
+    public void fromBytes(FriendlyByteBuf buf) {
         options = new ActionOptions(buf);
         guiid = buf.readInt();
     }
 
-    @Override
-    public void toBytes(ByteBuf buf) {
+    public void toBytes(FriendlyByteBuf buf) {
         options.writeToBuf(buf);
         buf.writeInt(guiid);
     }
@@ -25,7 +23,7 @@ public class PacketActionOptionToClient implements IMessage {
     public PacketActionOptionToClient() {
     }
 
-    public PacketActionOptionToClient(ByteBuf buf) {
+    public PacketActionOptionToClient(FriendlyByteBuf buf) {
         fromBytes(buf);
     }
 

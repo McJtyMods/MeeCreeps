@@ -1,39 +1,40 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.lib.varia.BlockTools;
+import mcjty.meecreeps.setup.Registration;
+import mcjty.meecreeps.varia.BlockTools;
 import mcjty.lib.varia.SoundTools;
 import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.*;
 import mcjty.meecreeps.api.*;
-import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.items.CreepCubeItem;
 import mcjty.meecreeps.network.MeeCreepsMessages;
 import mcjty.meecreeps.varia.GeneralTools;
 import mcjty.meecreeps.varia.InventoryTools;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockLiquid;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.item.EntityItemFrame;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import mcjty.meecreeps.varia.ChestAnimation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import org.apache.commons.lang3.tuple.Pair;
@@ -69,7 +70,7 @@ public class WorkerHelper implements IWorkerHelper {
     private Consumer<BlockPos> job;
     private Runnable delayedJob;
     private int delayedTicks;
-    private List<EntityItem> itemsToPickup = new ArrayList<>();
+    private List<ItemEntity> itemsToPickup = new ArrayList<>();
     private BlockPos materialChest;
 
     // While building or flattening this will contain positions that we want to skip because they are too hard or unbreakable
@@ -91,11 +92,13 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     public static boolean isTorch(ItemStack stack) {
-        return TORCHES.contains(stack.getItem().getRegistryName().toString());
+        return TORCHES.contains(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
     }
 
     public static boolean isTorch(Block block) {
-        return TORCHES.contains(block.getRegistryName().toString());
+        // Standing and wall variants share an item, but have different block IDs.
+        return TORCHES.contains(net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(block).toString())
+                || TORCHES.contains(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(block.asItem()).toString());
     }
 
     public void setWorker(IActionWorker worker) {
@@ -148,7 +151,7 @@ public class WorkerHelper implements IWorkerHelper {
         }
 
         @Override
-        public Predicate<IBlockState> getStateMatcher() {
+        public Predicate<BlockState> getStateMatcher() {
             return blockState -> blockState.getBlock() == Blocks.AIR;
         }
     };
@@ -181,7 +184,7 @@ public class WorkerHelper implements IWorkerHelper {
         }
 
         @Override
-        public Predicate<IBlockState> getStateMatcher() {
+        public Predicate<BlockState> getStateMatcher() {
             return blockState -> false;
         }
     };
@@ -210,12 +213,12 @@ public class WorkerHelper implements IWorkerHelper {
         for (int x = minPos.getX(); x <= maxPos.getX(); x++) {
             for (int y = minPos.getY(); y <= maxPos.getY(); y++) {
                 for (int z = minPos.getZ(); z <= maxPos.getZ(); z++) {
-                    BlockPos relativePos = new BlockPos(x, y, z);
-                    BlockPos p = tpos.add(relativePos);
-                    IBlockState state = entity.getWorld().getBlockState(p);
+                    BlockPos relativePos = BlockPos.containing(x, y, z);
+                    BlockPos p = tpos.offset(relativePos);
+                    BlockState state = entity.getWorld().getBlockState(p);
                     IDesiredBlock desired = schematic.getDesiredBlock(relativePos);
                     if (desired != IGNORE) {
-                        if (!desired.getStateMatcher().test(state) && !entity.getWorld().isAirBlock(p) && !positionsToSkip.contains(p)) {
+                        if (!desired.getStateMatcher().test(state) && !entity.getWorld().isEmptyBlock(p) && !positionsToSkip.contains(p)) {
                             todo.add(p);
                         }
                     }
@@ -226,10 +229,10 @@ public class WorkerHelper implements IWorkerHelper {
             return null;
         }
 
-        BlockPos position = entity.getEntity().getPosition();
+        BlockPos position = entity.getEntity().blockPosition();
         todo.sort((o1, o2) -> {
-            double d1 = position.distanceSq(o1);
-            double d2 = position.distanceSq(o2);
+            double d1 = position.distSqr(o1);
+            double d2 = position.distSqr(o2);
             return Double.compare(d1, d2);
         });
         return todo.get(0);
@@ -249,8 +252,8 @@ public class WorkerHelper implements IWorkerHelper {
             for (int z = minPos.getZ(); z <= maxPos.getZ(); z++) {
                 BlockPos relativePos = new BlockPos(x, progress.getHeight(), z);
                 if (!toSkip.contains(relativePos)) {
-                    BlockPos p = tpos.add(relativePos);
-                    IBlockState state = entity.getWorld().getBlockState(p);
+                    BlockPos p = tpos.offset(relativePos);
+                    BlockState state = entity.getWorld().getBlockState(p);
                     IDesiredBlock desired = schematic.getDesiredBlock(relativePos);
                     if (desired.getPass() == progress.getPass() && !desired.getStateMatcher().test(state) && !positionsToSkip.contains(p)) {
                         todo.add(relativePos);
@@ -264,10 +267,10 @@ public class WorkerHelper implements IWorkerHelper {
             }
             return findSpotToBuild(schematic, progress, toSkip);
         }
-        BlockPos position = entity.getEntity().getPosition().subtract(tpos);        // Make entity position relative for distance calculation
+        BlockPos position = entity.getEntity().blockPosition().subtract(tpos);        // Make entity position relative for distance calculation
         todo.sort((o1, o2) -> {
-            double d1 = position.distanceSq(o1);
-            double d2 = position.distanceSq(o2);
+            double d1 = position.distSqr(o1);
+            double d2 = position.distSqr(o2);
             return Double.compare(d1, d2);
         });
         return todo.get(0);
@@ -276,19 +279,19 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void delayForHardBlocks(BlockPos pos, Consumer<BlockPos> nextJob) {
-        World world = entity.getEntityWorld();
-        if (world.isAirBlock(pos)) {
+        Level world = entity.level();
+        if (world.isEmptyBlock(pos)) {
             return;
         }
-        IBlockState state = world.getBlockState(pos);
+        BlockState state = world.getBlockState(pos);
         if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester(world))) {
             return;
         }
         Block block = state.getBlock();
-        if (block instanceof BlockLiquid) {
+        if (block instanceof LiquidBlock) {
             nextJob.accept(pos);
         } else {
-            float hardness = state.getBlockHardness(world, pos);
+            float hardness = state.getDestroySpeed(world, pos);
             if (hardness < ConfigSetup.delayAtHardness.get()) {
                 nextJob.accept(pos);
             } else {
@@ -345,7 +348,7 @@ public class WorkerHelper implements IWorkerHelper {
                     putStuffAway();
                 }
             } else {
-                BlockPos buildPos = relativePos.add(options.getTargetPos());
+                BlockPos buildPos = relativePos.offset(options.getTargetPos());
                 BlockPos navigate = findBestNavigationSpot(buildPos);
                 if (navigate != null) {
                     navigateTo(navigate, p -> {
@@ -371,7 +374,7 @@ public class WorkerHelper implements IWorkerHelper {
         for (ItemStack stack : drops) {
             ItemStack remaining = entity.addStack(stack);
             if (!remaining.isEmpty()) {
-                itemsToPickup.add(entity.entityDropItem(remaining, 0.0f));
+                itemsToPickup.add(entity.spawnAtLocation(remaining, 0.0f));
                 needsToPutAway = true;
             }
         }
@@ -383,7 +386,7 @@ public class WorkerHelper implements IWorkerHelper {
             return;
         }
         lastMessage = message;
-        EntityPlayerMP player = getPlayer();
+        ServerPlayer player = getPlayer();
         if (player != null) {
             MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient(message, parameters), player);
         }
@@ -391,7 +394,7 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void registerHarvestableBlock(BlockPos pos) {
-        ForgeEventHandlers.harvestableBlocksToCollect.put(pos, options.getActionId());
+        ForgeEventHandlers.trackHarvest(entity.getWorld(), pos, options.getActionId());
     }
 
     @Override
@@ -399,37 +402,37 @@ public class WorkerHelper implements IWorkerHelper {
         double d = getSquareDist(entity, pos);
         if (d < DISTANCE_TOLERANCE) {
             job.accept(pos);
-        } else if (!entity.getNavigator().tryMoveToXYZ(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 2.0)) {
+        } else if (!entity.getNavigation().moveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 2.0)) {
             // We need to teleport
-            entity.setPositionAndUpdate(pos.getX() + .5, pos.getY(), pos.getZ() + .5);
+            entity.teleportTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5);
             job.accept(pos);
         } else {
             this.movingToPos = pos;
             this.movingToEntity = null;
             pathTries = 1;
             this.job = job;
-            prevPosX = entity.posX;
-            prevPosY = entity.posY;
-            prevPosZ = entity.posZ;
+            prevPosX = entity.getX();
+            prevPosY = entity.getY();
+            prevPosZ = entity.getZ();
             stuckCounter = 0;
-//            prevPosX = entity.posX;
+//            prevPosX = entity.getX();
         }
     }
 
     @Override
     public boolean navigateTo(Entity dest, Consumer<BlockPos> job, double maxDist) {
-        if (dest == null || dest.isDead) {
+        if (dest == null || dest.isRemoved()) {
             return false;
         }
         double d = getSquareDist(entity, dest);
         if (d > maxDist * maxDist) {
             return false;
         } else if (d < DISTANCE_TOLERANCE) {
-            job.accept(dest.getPosition());
-        } else if (!entity.getNavigator().tryMoveToEntityLiving(dest, 2.0)) {
+            job.accept(dest.blockPosition());
+        } else if (!entity.getNavigation().moveTo(dest, 2.0)) {
             // We need to teleport
-            entity.setPositionAndUpdate(dest.posX, dest.posY, dest.posZ);
-            job.accept(dest.getPosition());
+            entity.teleportTo(dest.getX(), dest.getY(), dest.getZ());
+            job.accept(dest.blockPosition());
         } else {
             this.movingToPos = null;
             this.movingToEntity = dest;
@@ -440,19 +443,19 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     private static double getSquareDist(Entity source, BlockPos dest) {
-        double d0 = dest.distanceSqToCenter(source.posX, source.posY - 1, source.posZ);
-        double d1 = dest.distanceSqToCenter(source.posX, source.posY, source.posZ);
-        double d2 = dest.distanceSqToCenter(source.posX, source.posY + source.getEyeHeight(), source.posZ);
+        double d0 = dest.distToCenterSqr(source.getX(), source.getY() - 1, source.getZ());
+        double d1 = dest.distToCenterSqr(source.getX(), source.getY(), source.getZ());
+        double d2 = dest.distToCenterSqr(source.getX(), source.getY() + source.getEyeHeight(), source.getZ());
         return Math.min(Math.min(d0, d1), d2);
     }
 
     private static double getSquareDist(Entity source, Entity dest) {
-        Vec3d lowPosition = new Vec3d(source.posX, source.posY - 1, source.posZ);
-        Vec3d position = new Vec3d(source.posX, source.posY, source.posZ);
-        Vec3d eyePosition = new Vec3d(source.posX, source.posY + source.getEyeHeight(), source.posZ);
-        double d0 = lowPosition.squareDistanceTo(dest.posX, dest.posY, dest.posZ);
-        double d1 = position.squareDistanceTo(dest.posX, dest.posY, dest.posZ);
-        double d2 = eyePosition.squareDistanceTo(dest.posX, dest.posY, dest.posZ);
+        Vec3 lowPosition = new Vec3(source.getX(), source.getY() - 1, source.getZ());
+        Vec3 position = new Vec3(source.getX(), source.getY(), source.getZ());
+        Vec3 eyePosition = new Vec3(source.getX(), source.getY() + source.getEyeHeight(), source.getZ());
+        double d0 = lowPosition.distanceToSqr(dest.getX(), dest.getY(), dest.getZ());
+        double d1 = position.distanceToSqr(dest.getX(), dest.getY(), dest.getZ());
+        double d2 = eyePosition.distanceToSqr(dest.getX(), dest.getY(), dest.getZ());
         return Math.min(Math.min(d0, d1), d2);
     }
 
@@ -462,7 +465,7 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     private boolean isStuck() {
-        return Math.abs(entity.posX - prevPosX) < 0.01 && Math.abs(entity.posY - prevPosY) < 0.01 && Math.abs(entity.posZ - prevPosZ) < 0.01;
+        return Math.abs(entity.getX() - prevPosX) < 0.01 && Math.abs(entity.getY() - prevPosY) < 0.01 && Math.abs(entity.getZ() - prevPosZ) < 0.01;
     }
 
     private boolean isCube(ItemStack stack) {
@@ -511,20 +514,20 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     private void spawnAngryCreep() {
-        entity.setHeldBlockState(ModBlocks.heldCubeBlock.getDefaultState());
+        entity.setHeldBlockState(Registration.CUBE.get().defaultBlockState());
         entity.setVariationFace(1);
         ServerActionManager manager = ServerActionManager.getManager();
-        World world = entity.getWorld();
+        Level world = entity.getWorld();
 
-        int cnt = world.countEntities(EntityMeeCreeps.class);
+        int cnt = ((net.minecraft.server.level.ServerLevel) world).getEntities(Registration.CREEP.get(), e -> true).size();
         if (cnt >= ConfigSetup.maxSpawnCount.get()) {
             return;
         }
 
-        Random r = entity.getRandom();
-        BlockPos targetPos = new BlockPos(entity.posX + r.nextFloat() * 8 - 4, entity.posY, entity.posZ + r.nextFloat() * 8 - 4);
-        int actionId = manager.createActionOptions(world, targetPos, EnumFacing.UP, getPlayer());
-        ActionOptions.spawn(world, targetPos, EnumFacing.UP, actionId, false);
+        net.minecraft.util.RandomSource r = entity.getRandom();
+        BlockPos targetPos = BlockPos.containing(entity.getX() + r.nextFloat() * 8 - 4, entity.getY(), entity.getZ() + r.nextFloat() * 8 - 4);
+        int actionId = manager.createActionOptions(world, targetPos, Direction.UP, getPlayer());
+        ActionOptions.spawn(world, targetPos, Direction.UP, actionId, false);
         manager.performAction(null, actionId, new MeeCreepActionType("meecreeps.angry"), null);
     }
 
@@ -544,7 +547,7 @@ public class WorkerHelper implements IWorkerHelper {
             if (!drop.isEmpty()) {
                 ItemStack remaining = entity.addStack(drop);
                 if (!remaining.isEmpty()) {
-                    entity.entityDropItem(remaining, 0.0f);
+                    entity.spawnAtLocation(remaining, 0.0f);
                     needsToPutAway = true;
                 }
             }
@@ -556,28 +559,28 @@ public class WorkerHelper implements IWorkerHelper {
 
     private void handleJob() {
         if (movingToEntity != null) {
-            if (movingToEntity.isDead) {
+            if (movingToEntity.isRemoved()) {
                 job = null;
             } else {
                 double d = getSquareDist(entity, movingToEntity);
                 if (d < DISTANCE_TOLERANCE) {
-                    job.accept(movingToEntity.getPosition());
+                    job.accept(movingToEntity.blockPosition());
                     job = null;
-                } else if (entity.getNavigator().noPath()) {
+                } else if (entity.getNavigation().isDone()) {
                     if (pathTries > 2) {
-                        entity.setPositionAndUpdate(movingToEntity.posX, movingToEntity.posY, movingToEntity.posZ);
-                        job.accept(movingToEntity.getPosition());
+                        entity.teleportTo(movingToEntity.getX(), movingToEntity.getY(), movingToEntity.getZ());
+                        job.accept(movingToEntity.blockPosition());
                         job = null;
                     } else {
                         pathTries++;
-                        entity.getNavigator().tryMoveToEntityLiving(movingToEntity, 2.0);
+                        entity.getNavigation().moveTo(movingToEntity, 2.0);
                         stuckCounter = 0;
                     }
                 } else if (isStuck()) {
                     stuckCounter++;
                     if (stuckCounter > 5) {
-                        entity.setPositionAndUpdate(movingToEntity.posX, movingToEntity.posY, movingToEntity.posZ);
-                        job.accept(movingToEntity.getPosition());
+                        entity.teleportTo(movingToEntity.getX(), movingToEntity.getY(), movingToEntity.getZ());
+                        job.accept(movingToEntity.blockPosition());
                         job = null;
                     }
                 }
@@ -587,34 +590,34 @@ public class WorkerHelper implements IWorkerHelper {
             if (d < DISTANCE_TOLERANCE) {
                 job.accept(movingToPos);
                 job = null;
-            } else if (entity.getNavigator().noPath()) {
+            } else if (entity.getNavigation().isDone()) {
                 if (pathTries > 2) {
-                    entity.setPositionAndUpdate(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5);
+                    entity.teleportTo(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5);
                     job.accept(movingToPos);
                     job = null;
                 } else {
                     pathTries++;
-                    entity.getNavigator().tryMoveToXYZ(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5, 2.0);
+                    entity.getNavigation().moveTo(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5, 2.0);
                     stuckCounter = 0;
                 }
             } else if (isStuck()) {
                 stuckCounter++;
                 if (stuckCounter > 5) {
-                    entity.setPositionAndUpdate(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5);
+                    entity.teleportTo(movingToPos.getX() + .5, movingToPos.getY(), movingToPos.getZ() + .5);
                     job.accept(movingToPos);
                     job = null;
                 }
             }
         }
-        prevPosX = entity.posX;
-        prevPosY = entity.posY;
-        prevPosZ = entity.posZ;
+        prevPosX = entity.getX();
+        prevPosY = entity.getY();
+        prevPosZ = entity.getZ();
     }
 
     @Override
     public boolean placeBuildingBlock(BlockPos pos, IDesiredBlock desiredBlock) {
-        World world = entity.getWorld();
-        if (!world.isAirBlock(pos) && !world.getBlockState(pos).getBlock().isReplaceable(world, pos)) {
+        Level world = entity.getWorld();
+        if (!world.isEmptyBlock(pos) && !world.getBlockState(pos).canBeReplaced()) {
             if (!allowedToHarvest(world.getBlockState(pos), world, pos, GeneralTools.getHarvester(world))) {
                 return false;
             }
@@ -628,40 +631,96 @@ public class WorkerHelper implements IWorkerHelper {
         return true;
     }
 
-    private void reallyPlace(BlockPos pos, IDesiredBlock desiredBlock, World world) {
+    private void reallyPlace(BlockPos pos, IDesiredBlock desiredBlock, Level world) {
+        reallyPlace(pos, desiredBlock, world, 0);
+    }
+
+    private void reallyPlace(BlockPos pos, IDesiredBlock desiredBlock, Level world, int moveAttempts) {
+        // Navigation's arrival tolerance can leave us inside the block we want to place.
+        // Check the whole body, including overlap with a neighbouring block, before using materials.
+        if (entity.getBoundingBox().intersects(new AABB(pos))) {
+            BlockPos spot = findPlacementSpot(pos);
+            if (spot == null) {
+                double rise = pos.getY() + 1.0 - entity.getY();
+                if (moveAttempts < 6 && rise > 0 && rise <= 1.25
+                        && world.noCollision(entity, entity.getBoundingBox().expandTowards(0, rise, 0))) {
+                    entity.getNavigation().stop();
+                    entity.getJumpControl().jump();
+                    delay(1, () -> reallyPlace(pos, desiredBlock, world, moveAttempts + 1));
+                    return;
+                }
+                positionsToSkip.add(pos);
+                return;
+            }
+            if (moveAttempts >= 6 || !entity.getNavigation().moveTo(spot.getX() + .5, spot.getY(), spot.getZ() + .5, 2.0)) {
+                // Use the same fallback as normal navigation, but only at a checked, clear position.
+                entity.teleportTo(spot.getX() + .5, spot.getY(), spot.getZ() + .5);
+            }
+            delay(1, () -> reallyPlace(pos, desiredBlock, world, moveAttempts + 1));
+            return;
+        }
+        entity.getNavigation().stop();
         ItemStack blockStack = entity.consumeItem(desiredBlock.getMatcher(), 1);
         if (!blockStack.isEmpty()) {
             placeStackAt(blockStack, world, pos);
-            boolean jump = !entity.isNotColliding();
-            if (jump) {
-                entity.getEntity().getJumpHelper().setJumping();
+            // BlockItem consumes the item only on success. Return unused materials on failure.
+            if (!blockStack.isEmpty()) {
+                ItemStack remaining = entity.addStack(blockStack);
+                if (!remaining.isEmpty()) {
+                    itemsToPickup.add(entity.spawnAtLocation(remaining, 0.0f));
+                }
             }
         }
     }
 
+    @Nullable
+    private BlockPos findPlacementSpot(BlockPos target) {
+        BlockPos best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    BlockPos spot = target.offset(dx, dy, dz);
+                    AABB body = entity.getBoundingBox().move(spot.getX() + .5 - entity.getX(),
+                            spot.getY() - entity.getY(), spot.getZ() + .5 - entity.getZ());
+                    if (body.intersects(new AABB(target))
+                            || !entity.level().getBlockState(spot.below()).isFaceSturdy(entity.level(), spot.below(), Direction.UP)
+                            || !entity.level().noCollision(entity, body)) {
+                        continue;
+                    }
+                    double distance = entity.position().distanceToSqr(spot.getX() + .5, spot.getY(), spot.getZ() + .5);
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        best = spot;
+                    }
+                }
+            }
+        }
+        return best;
+    }
+
     @Override
-    public void placeStackAt(ItemStack blockStack, World world, BlockPos pos) {
-        IBlockState state = BlockTools.placeStackAt(GeneralTools.getHarvester(world), blockStack, world, pos, null);
-        SoundTools.playSound(world, state.getBlock().getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+    public void placeStackAt(ItemStack blockStack, Level world, BlockPos pos) {
+        // BlockItem already plays the placement sound when placement succeeds.
+        BlockTools.placeStackAt(GeneralTools.getHarvester(world), blockStack, world, pos, null);
     }
 
 
     @Override
     public boolean harvestAndPickup(BlockPos pos) {
-        World world = entity.getEntityWorld();
-        if (world.isAirBlock(pos)) {
+        Level world = entity.level();
+        if (world.isEmptyBlock(pos)) {
             return true;
         }
-        IBlockState state = world.getBlockState(pos);
+        BlockState state = world.getBlockState(pos);
         if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester(world))) {
             return false;
         }
         Block block = state.getBlock();
-        List<ItemStack> drops = block.getDrops(world, pos, state, 0);
-        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester(world));
-        SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
-        block.onBlockHarvested(world, pos, state, GeneralTools.getHarvester(world));
-        entity.getEntityWorld().setBlockToAir(pos);
+        List<ItemStack> drops = mcjty.meecreeps.varia.BlockTools.getDrops(world, pos, state);
+        SoundTools.playSound(world, state.getSoundType(world, pos, entity.getEntity()).getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        block.playerWillDestroy(world, pos, state, GeneralTools.getHarvester(world));
+        entity.level().removeBlock(pos, false);
         giveDropsToMeeCreeps(drops);
         return true;
     }
@@ -669,34 +728,33 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public boolean harvestAndDrop(BlockPos pos) {
-        World world = entity.getEntityWorld();
-        if (world.isAirBlock(pos)) {
+        Level world = entity.level();
+        if (world.isEmptyBlock(pos)) {
             return true;
         }
-        IBlockState state = world.getBlockState(pos);
+        BlockState state = world.getBlockState(pos);
         if (!allowedToHarvest(state, world, pos, GeneralTools.getHarvester(world))) {
             return false;
         }
 
         Block block = state.getBlock();
 
-        List<ItemStack> drops = block.getDrops(world, pos, state, 0);
-        net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops, world, pos, state, 0, 1.0f, false, GeneralTools.getHarvester(world));
-        SoundTools.playSound(world, block.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
-        block.onBlockHarvested(world, pos, state, GeneralTools.getHarvester(world));
-        entity.getEntityWorld().setBlockToAir(pos);
+        List<ItemStack> drops = mcjty.meecreeps.varia.BlockTools.getDrops(world, pos, state);
+        SoundTools.playSound(world, state.getSoundType(world, pos, entity.getEntity()).getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        block.playerWillDestroy(world, pos, state, GeneralTools.getHarvester(world));
+        entity.level().removeBlock(pos, false);
         for (ItemStack stack : drops) {
-            entity.entityDropItem(stack, 0.0f);
+            entity.spawnAtLocation(stack, 0.0f);
         }
         return true;
     }
 
 
     @Override
-    public void pickup(EntityItem item) {
+    public void pickup(ItemEntity item) {
         ItemStack remaining = entity.addStack(item.getItem().copy());
         if (remaining.isEmpty()) {
-            item.setDead();
+            item.discard();
         } else {
             item.setItem(remaining);
             needsToPutAway = true;
@@ -704,11 +762,11 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
-    public boolean allowedToHarvest(IBlockState state, World world, BlockPos pos, EntityPlayer entityPlayer) {
-        if (state.getBlock().getBlockHardness(state, world, pos) < 0) {
+    public boolean allowedToHarvest(BlockState state, Level world, BlockPos pos, Player entityPlayer) {
+        if (state.getDestroySpeed(world, pos) < 0) {
             return false;
         }
-        if (!state.getBlock().canEntityDestroy(state, world, pos, entityPlayer)) {
+        if (!state.canEntityDestroy(world, pos, entityPlayer)) {
             return false;
         }
         BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(world, pos, state, entityPlayer);
@@ -716,7 +774,7 @@ public class WorkerHelper implements IWorkerHelper {
         if (event.isCanceled()) {
             return false;
         }
-        return state.getBlock().canHarvestBlock(world, pos, entityPlayer);
+        return state.canHarvestBlock(world, pos, entityPlayer);
     }
 
     @Override
@@ -744,7 +802,7 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void dropAndPutAwayLater(ItemStack stack) {
-        EntityItem entityItem = entity.getEntity().entityDropItem(stack, 0.0f);
+        ItemEntity entityItem = entity.getEntity().spawnAtLocation(stack, 0.0f);
         itemsToPickup.add(entityItem);
         putStuffAway();
     }
@@ -754,46 +812,49 @@ public class WorkerHelper implements IWorkerHelper {
         return findSuitablePositionNearPlayer(this.entity, options.getPlayer(), distance);
     }
 
-    public static BlockPos findSuitablePositionNearPlayer(@Nonnull EntityMeeCreeps meeCreep, @Nonnull EntityPlayer player, double distance) {
-        Vec3d playerPos = player.getPositionVector();
-        Vec3d entityPos = meeCreep.getPositionVector();
+    public static BlockPos findSuitablePositionNearPlayer(@Nonnull EntityMeeCreeps meeCreep, @Nonnull Player player, double distance) {
+        Vec3 playerPos = player.position();
+        Vec3 entityPos = meeCreep.position();
 
         if (entityPos.distanceTo(playerPos) < (distance * 1.2)) {
             // No need to move
-            return meeCreep.getPosition();
+            return meeCreep.blockPosition();
         }
 
         double dx = playerPos.x - entityPos.x;
-        double dy = playerPos.x - entityPos.x;
-        double dz = playerPos.x - entityPos.x;
-        Vec3d v = new Vec3d(-dx, -dy, -dz);
+        double dy = playerPos.y - entityPos.y;
+        double dz = playerPos.z - entityPos.z;
+        Vec3 v = new Vec3(-dx, -dy, -dz);
         v = v.normalize();
-        Vec3d pos = new Vec3d(playerPos.x + v.x * distance, playerPos.y + v.y * distance, playerPos.z + v.z * distance);
+        Vec3 pos = new Vec3(playerPos.x + v.x * distance, playerPos.y + v.y * distance, playerPos.z + v.z * distance);
         // First find a good spot at the specific location
-        World world = player.getEntityWorld();
+        Level world = player.level();
 
-        float width = meeCreep.width;
+        float width = meeCreep.getBbWidth();
         float eyeHeight = meeCreep.getEyeHeight();
 
         // First try on the prefered spot
-        BlockPos p = scanSuitablePos(new BlockPos(pos.x, pos.y + .5, pos.z), world, width, eyeHeight);
-        if (p != null) return p;
+        BlockPos p = scanSuitablePos(BlockPos.containing(pos.x, pos.y + .5, pos.z), world, width, eyeHeight);
+        if (p != null)
+            return p;
         // No good spot to stand on found. Try other spots around the prefered spot
         p = scanAround(pos, world, width, eyeHeight);
-        if (p != null) return p;
+        if (p != null)
+            return p;
         // No good spot to stand on found. Try other spots around the player
         p = scanAround(playerPos, world, width, eyeHeight);
-        if (p != null) return p;
+        if (p != null)
+            return p;
 
         // If all else fails we go stand where the player is
-        return player.getPosition();
+        return player.blockPosition();
     }
 
-    private static BlockPos scanAround(Vec3d vec, World world, float width, float eyeHeight) {
-        BlockPos pos = new BlockPos(vec.x, vec.y + 0.5, vec.z);
+    private static BlockPos scanAround(Vec3 vec, Level world, float width, float eyeHeight) {
+        BlockPos pos = BlockPos.containing(vec.x, vec.y + 0.5, vec.z);
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
-                BlockPos p = pos.add(dx, 0, dz);
+                BlockPos p = pos.offset(dx, 0, dz);
                 p = scanSuitablePos(p, world, width, eyeHeight);
                 if (p != null) {
                     return p;
@@ -803,13 +864,13 @@ public class WorkerHelper implements IWorkerHelper {
         return null;
     }
 
-    private static BlockPos scanSuitablePos(BlockPos pos, World world, float width, float eyeHeight) {
+    private static BlockPos scanSuitablePos(BlockPos pos, Level world, float width, float eyeHeight) {
         for (int d = 0; d < 6; d++) {
-            BlockPos p = pos.down(d);
+            BlockPos p = pos.below(d);
             if (isSuitableStandingPos(world, p, width, eyeHeight)) {
                 return p;
             }
-            p = pos.up(d);
+            p = pos.above(d);
             if (isSuitableStandingPos(world, p, width, eyeHeight)) {
                 return p;
             }
@@ -817,43 +878,43 @@ public class WorkerHelper implements IWorkerHelper {
         return null;
     }
 
-    private static boolean isSuitableStandingPos(World world, BlockPos p, float width, float eyeHeight) {
-        return canStandOn(world.getBlockState(p.down()))
+    private static boolean isSuitableStandingPos(Level world, BlockPos p, float width, float eyeHeight) {
+        return canStandOn(world.getBlockState(p.below()))
                 && !canStandOn(world.getBlockState(p))
                 && !willSuffocateHere(world, p.getX() + .5, p.getY(), p.getZ() + .5, width, eyeHeight);
     }
 
-    private static boolean canStandOn(IBlockState state) {
-        return state.getMaterial().blocksMovement() && state.isFullCube();
+    private static boolean canStandOn(BlockState state) {
+        return state.isSolid();
     }
 
-    private static boolean willSuffocateHere(World world, double posX, double posY, double posZ, float width, float eyeHeight) {
-        BlockPos.PooledMutableBlockPos mutableBlockPos = BlockPos.PooledMutableBlockPos.retain();
+    private static boolean willSuffocateHere(Level world, double posX, double posY, double posZ, float width, float eyeHeight) {
+        BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
 
         for (int i = 0; i < 8; ++i) {
-            int x = MathHelper.floor(posX + ((((i >> 1) % 2) - 0.5F) * width * 0.8F));
-            int y = MathHelper.floor(posY + ((((i >> 0) % 2) - 0.5F) * 0.1F) + eyeHeight);
-            int z = MathHelper.floor(posZ + ((((i >> 2) % 2) - 0.5F) * width * 0.8F));
+            int x = Mth.floor(posX + ((((i >> 1) % 2) - 0.5F) * width * 0.8F));
+            int y = Mth.floor(posY + ((((i >> 0) % 2) - 0.5F) * 0.1F) + eyeHeight);
+            int z = Mth.floor(posZ + ((((i >> 2) % 2) - 0.5F) * width * 0.8F));
 
             if (mutableBlockPos.getX() != x || mutableBlockPos.getY() != y || mutableBlockPos.getZ() != z) {
-                mutableBlockPos.setPos(x, y, z);
+                mutableBlockPos.set(x, y, z);
 
-                if (world.getBlockState(mutableBlockPos).causesSuffocation()) {
-                    mutableBlockPos.release();
+                if (world.getBlockState(mutableBlockPos).isSuffocating(world, mutableBlockPos)) {
+
                     return true;
                 }
             }
         }
 
-        mutableBlockPos.release();
+
         return false;
     }
 
     @Override
     public void giveToPlayerOrDrop() {
-        EntityPlayerMP player = getPlayer();
-        BlockPos position = entity.getPosition();
-        if (player == null || position.distanceSq(player.getPosition()) > 2 * 2) {
+        ServerPlayer player = getPlayer();
+        BlockPos position = entity.blockPosition();
+        if (player == null || position.distSqr(player.blockPosition()) > 2 * 2) {
             if (player != null) {
                 showMessage("message.meecreeps.where_are_you");
             }
@@ -863,14 +924,14 @@ public class WorkerHelper implements IWorkerHelper {
             List<ItemStack> remaining = new ArrayList<>();
             for (ItemStack stack : entity.getInventory()) {
                 if (!stack.isEmpty()) {
-                    if (!player.inventory.addItemStackToInventory(stack)) {
+                    if (!player.getInventory().add(stack)) {
                         remaining.add(stack);
                     }
                 }
             }
-            player.openContainer.detectAndSendChanges();
+            player.containerMenu.broadcastChanges();
             for (ItemStack stack : remaining) {
-                entity.entityDropItem(stack, 0.0f);
+                entity.spawnAtLocation(stack, 0.0f);
             }
             entity.getInventory().clear();
         }
@@ -878,8 +939,8 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Nullable
-    protected EntityPlayerMP getPlayer() {
-        return (EntityPlayerMP) options.getPlayer();
+    protected ServerPlayer getPlayer() {
+        return (ServerPlayer) options.getPlayer();
     }
 
     @Override
@@ -921,30 +982,30 @@ public class WorkerHelper implements IWorkerHelper {
     /**
      * Find all chests that have an item frame attached to them with an meecreep cube in them
      */
-    private List<BlockPos> findMeeCreepChests(AxisAlignedBB box) {
-        List<EntityItemFrame> frames = entity.getEntityWorld().getEntitiesWithinAABB(EntityItemFrame.class, box, input -> {
-            if (!input.getDisplayedItem().isEmpty() && input.getDisplayedItem().getItem() instanceof CreepCubeItem) {
-                BlockPos position = input.getHangingPosition().offset(input.facingDirection.getOpposite());
-                if (InventoryTools.isInventory(entity.getEntityWorld(), position)) {
+    private List<BlockPos> findMeeCreepChests(AABB box) {
+        List<ItemFrame> frames = entity.level().getEntitiesOfClass(ItemFrame.class, box, input -> {
+            if (!input.getItem().isEmpty() && input.getItem().getItem() instanceof CreepCubeItem) {
+                BlockPos position = input.getPos().relative(input.getDirection().getOpposite());
+                if (InventoryTools.isInventory(entity.level(), position)) {
                     return true;
                 }
             }
             return false;
         });
-        return frames.stream().map(entityItemFrame -> entityItemFrame.getHangingPosition().offset(entityItemFrame.facingDirection.getOpposite())).collect(Collectors.toList());
+        return frames.stream().map(entityItemFrame -> entityItemFrame.getPos().relative(entityItemFrame.getDirection().getOpposite())).collect(Collectors.toList());
     }
 
     private boolean findMeeCreepBoxOnGround() {
-        BlockPos position = entity.getEntity().getPosition();
-        List<EntityItem> items = entity.getWorld().getEntitiesWithinAABB(EntityItem.class, worker.getSearchBox(),
+        BlockPos position = entity.getEntity().blockPosition();
+        List<ItemEntity> items = entity.getWorld().getEntitiesOfClass(ItemEntity.class, worker.getSearchBox(),
                 input -> !input.getItem().isEmpty() && input.getItem().getItem() instanceof CreepCubeItem);
         if (!items.isEmpty()) {
             items.sort((o1, o2) -> {
-                double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
-                double d2 = position.distanceSq(o2.posX, o2.posY, o2.posZ);
+                double d1 = position.distToCenterSqr(o1.position());
+                double d2 = position.distToCenterSqr(o2.position());
                 return Double.compare(d1, d2);
             });
-            EntityItem entityItem = items.get(0);
+            ItemEntity entityItem = items.get(0);
             navigateTo(entityItem, (pos) -> pickup(entityItem));
             return true;
         }
@@ -955,16 +1016,16 @@ public class WorkerHelper implements IWorkerHelper {
      * See if there is a specific item around. If so start navigating to it and return true
      */
     @Override
-    public boolean findItemOnGround(AxisAlignedBB box, Predicate<ItemStack> matcher, Consumer<EntityItem> job) {
-        BlockPos position = entity.getPosition();
-        List<EntityItem> items = entity.getEntityWorld().getEntitiesWithinAABB(EntityItem.class, box, input -> matcher.test(input.getItem()));
+    public boolean findItemOnGround(AABB box, Predicate<ItemStack> matcher, Consumer<ItemEntity> job) {
+        BlockPos position = entity.blockPosition();
+        List<ItemEntity> items = entity.level().getEntitiesOfClass(ItemEntity.class, box, input -> matcher.test(input.getItem()));
         if (!items.isEmpty()) {
             items.sort((o1, o2) -> {
-                double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
-                double d2 = position.distanceSq(o2.posX, o2.posY, o2.posZ);
+                double d1 = position.distToCenterSqr(o1.position());
+                double d2 = position.distToCenterSqr(o2.position());
                 return Double.compare(d1, d2);
             });
-            EntityItem entityItem = items.get(0);
+            ItemEntity entityItem = items.get(0);
             navigateTo(entityItem, (pos) -> job.accept(entityItem));
             return true;
         }
@@ -977,7 +1038,7 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     private void putInventoryInChestWithMessage(BlockPos pos, String message, String... parameters) {
-        if (!InventoryTools.isInventory(entity.getEntityWorld(), pos)) {
+        if (!InventoryTools.isInventory(entity.level(), pos)) {
             // No longer an inventory here. Just drop the items on the ground here
             if (message != null) {
                 showMessage("message.meecreeps.inventory_missing");
@@ -987,13 +1048,14 @@ public class WorkerHelper implements IWorkerHelper {
             if (message != null) {
                 showMessage(message, parameters);
             }
-            TileEntity te = entity.getEntityWorld().getTileEntity(pos);
-            IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+            BlockEntity te = entity.level().getBlockEntity(pos);
+            IItemHandler handler = te.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElse(null);
+            ChestAnimation.open(entity.level(), pos);
             for (ItemStack stack : entity.getInventory()) {
                 if (!stack.isEmpty()) {
                     ItemStack remaining = ItemHandlerHelper.insertItem(handler, stack, false);
                     if (!remaining.isEmpty()) {
-                        entity.entityDropItem(remaining, 0.0f);
+                        entity.spawnAtLocation(remaining, 0.0f);
                     }
                 }
             }
@@ -1003,13 +1065,14 @@ public class WorkerHelper implements IWorkerHelper {
 
     private void fetchFromInventory(BlockPos pos, Predicate<ItemStack> matcher, int maxAmount) {
         materialChest = pos;
-        World world = entity.getEntityWorld();
+        Level world = entity.level();
         if (!InventoryTools.isInventory(world, pos)) {
             // No longer an inventory. We cannot get the items from here
             return;
         }
-        TileEntity te = world.getTileEntity(pos);
-        IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+        BlockEntity te = world.getBlockEntity(pos);
+        IItemHandler handler = te.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElse(null);
+        ChestAnimation.open(world, pos);
         for (int i = 0; i < handler.getSlots(); i++) {
             if (maxAmount <= 0) {
                 return;
@@ -1017,7 +1080,7 @@ public class WorkerHelper implements IWorkerHelper {
             ItemStack stack = handler.getStackInSlot(i);
             if (stack == null) {
                 // There are still bad mods!
-                String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
+                String badBlock = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(world.getBlockState(pos).getBlock()).toString();
                 MeeCreeps.setup.getLogger().warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
             } else if (!stack.isEmpty() && matcher.test(stack)) {
                 ItemStack extracted = handler.extractItem(i, Math.min(maxAmount, stack.getCount()), false);
@@ -1035,18 +1098,18 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     protected boolean findInventoryContainingMost(List<BlockPos> inventoryList, Predicate<ItemStack> matcher, Consumer<BlockPos> job) {
-        World world = entity.getEntityWorld();
+        Level world = entity.level();
         List<BlockPos> inventories = new ArrayList<>();
         Map<BlockPos, Float> countMatching = new HashMap<>();
         for (BlockPos pos : inventoryList) {
-            TileEntity te = world.getTileEntity(pos);
-            IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+            BlockEntity te = world.getBlockEntity(pos);
+            IItemHandler handler = te.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElse(null);
             int cnt = 0;
             for (int i = 0; i < handler.getSlots(); i++) {
                 ItemStack stack = handler.getStackInSlot(i);
                 if (stack == null) {
                     // There are still bad mods!
-                    String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
+                    String badBlock = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(world.getBlockState(pos).getBlock()).toString();
                     MeeCreeps.setup.getLogger().warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
                 } else if (!stack.isEmpty()) {
                     if (matcher.test(stack)) {
@@ -1069,21 +1132,21 @@ public class WorkerHelper implements IWorkerHelper {
         }
     }
 
-    protected boolean findInventoryContainingMost(AxisAlignedBB box, Predicate<ItemStack> matcher, Consumer<BlockPos> job) {
-        World world = entity.getEntityWorld();
+    protected boolean findInventoryContainingMost(AABB box, Predicate<ItemStack> matcher, Consumer<BlockPos> job) {
+        Level world = entity.level();
         List<BlockPos> inventories = new ArrayList<>();
         Map<BlockPos, Float> countMatching = new HashMap<>();
         GeneralTools.traverseBox(world, box,
                 (pos, state) -> InventoryTools.isInventory(world, pos),
                 (pos, state) -> {
-                    TileEntity te = world.getTileEntity(pos);
-                    IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+                    BlockEntity te = world.getBlockEntity(pos);
+                    IItemHandler handler = te.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElse(null);
                     int cnt = 0;
                     for (int i = 0; i < handler.getSlots(); i++) {
                         ItemStack stack = handler.getStackInSlot(i);
                         if (stack == null) {
                             // There are still bad mods!
-                            String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
+                            String badBlock = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(world.getBlockState(pos).getBlock()).toString();
                             MeeCreeps.setup.getLogger().warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
                         } else if (!stack.isEmpty()) {
                             if (matcher.test(stack)) {
@@ -1119,7 +1182,7 @@ public class WorkerHelper implements IWorkerHelper {
                     break;
                 case TARGET:
                     BlockPos pos = options.getTargetPos();
-                    if (InventoryTools.isInventory(entity.getEntityWorld(), pos)) {
+                    if (InventoryTools.isInventory(entity.level(), pos)) {
                         navigateTo(pos, p -> putInventoryInChestWithMessage(p, "message.meecreeps.put_stuff_away_target"));
                         return true;
                     }
@@ -1132,7 +1195,7 @@ public class WorkerHelper implements IWorkerHelper {
                     break;
                 case LAST_CHEST:
                     if (materialChest != null) {
-                        if (InventoryTools.isInventory(entity.getEntityWorld(), materialChest)) {
+                        if (InventoryTools.isInventory(entity.level(), materialChest)) {
                             navigateTo(materialChest, this::putAwayAndTellPlayerTheDistance);
                             return true;
                         }
@@ -1145,10 +1208,10 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     private void putAwayAndTellPlayerTheDistance(BlockPos p) {
-        EntityPlayerMP player = getPlayer();
+        ServerPlayer player = getPlayer();
         double dist = 0;
         if (player != null) {
-            dist = player.getPosition().getDistance(p.getX(), p.getY(), p.getZ());
+            dist = Math.sqrt(player.blockPosition().distSqr(p));
         }
         putInventoryInChestWithMessage(p, "message.meecreeps.put_stuff_away_specific",
                 Integer.toString((int) dist));
@@ -1159,15 +1222,15 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
-    public boolean findSuitableInventory(AxisAlignedBB box, Predicate<ItemStack> matcher, Consumer<BlockPos> job) {
-        World world = entity.getEntityWorld();
+    public boolean findSuitableInventory(AABB box, Predicate<ItemStack> matcher, Consumer<BlockPos> job) {
+        Level world = entity.level();
         List<BlockPos> inventories = new ArrayList<>();
         Map<BlockPos, Float> countMatching = new HashMap<>();
         GeneralTools.traverseBox(world, box,
                 (pos, state) -> InventoryTools.isInventory(world, pos),
                 (pos, state) -> {
-                    TileEntity te = world.getTileEntity(pos);
-                    IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+                    BlockEntity te = world.getBlockEntity(pos);
+                    IItemHandler handler = te.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElse(null);
                     // @todo config?
                     if (handler.getSlots() > 8) {
                         int cnt = 0;
@@ -1176,7 +1239,7 @@ public class WorkerHelper implements IWorkerHelper {
                             ItemStack stack = handler.getStackInSlot(i);
                             if (stack == null) {
                                 // There are still bad mods!
-                                String badBlock = world.getBlockState(pos).getBlock().getRegistryName().toString();
+                                String badBlock = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(world.getBlockState(pos).getBlock()).toString();
                                 MeeCreeps.setup.getLogger().warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
                             } else if (!stack.isEmpty()) {
                                 if (matcher.test(stack)) {
@@ -1204,15 +1267,15 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
 //    @Override
-//    public List<BlockPos> findInventoriesWithMostSpace(AxisAlignedBB box) {
-//        World world = entity.getEntityWorld();
+//    public List<BlockPos> findInventoriesWithMostSpace(AABB box) {
+//        Level world = entity.level();
 //        List<BlockPos> inventories = new ArrayList<>();
 //        Map<BlockPos, Float> countMatching = new HashMap<>();
 //        GeneralTools.traverseBox(world, box,
 //                (pos, state) -> InventoryTools.isInventory(world, pos),
 //                (pos, state) -> {
-//                    TileEntity te = world.getTileEntity(pos);
-//                    IItemHandler handler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+//                    BlockEntity te = world.getBlockEntity(pos);
+//                    IItemHandler handler = te.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElse(null);
 //                    // @todo config?
 //                    if (handler.getSlots() > 8) {
 //                        int free = 0;
@@ -1232,15 +1295,15 @@ public class WorkerHelper implements IWorkerHelper {
 //    }
 
     private boolean tryFindingItemsToPickup() {
-        BlockPos position = entity.getPosition();
-        List<EntityItem> items = itemsToPickup;
+        BlockPos position = entity.blockPosition();
+        List<ItemEntity> items = itemsToPickup;
         if (!items.isEmpty()) {
             items.sort((o1, o2) -> {
-                double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
-                double d2 = position.distanceSq(o2.posX, o2.posY, o2.posZ);
+                double d1 = position.distToCenterSqr(o1.position());
+                double d2 = position.distToCenterSqr(o2.position());
                 return Double.compare(d1, d2);
             });
-            EntityItem entityItem = items.get(0);
+            ItemEntity entityItem = items.get(0);
             items.remove(0);
             navigateTo(entityItem, (p) -> pickup(entityItem));
             return true;
@@ -1252,8 +1315,8 @@ public class WorkerHelper implements IWorkerHelper {
      * Return true if the given postion is air, the postion below is not and the postion above is also air
      */
     boolean isStandable(BlockPos pos) {
-        World world = entity.getWorld();
-        return !world.isAirBlock(pos.down()) && world.isAirBlock(pos) && world.isAirBlock(pos.up());
+        Level world = entity.getWorld();
+        return !world.isEmptyBlock(pos.below()) && world.isEmptyBlock(pos) && world.isEmptyBlock(pos.above());
     }
 
     /**
@@ -1264,14 +1327,14 @@ public class WorkerHelper implements IWorkerHelper {
         if (isStandable(pos)) {
             return pos;
         }
-        if (isStandable(pos.down())) {
-            return pos.down();
+        if (isStandable(pos.below())) {
+            return pos.below();
         }
-        if (isStandable(pos.up())) {
-            return pos.up();
+        if (isStandable(pos.above())) {
+            return pos.above();
         }
-        if (isStandable(pos.down(2))) {
-            return pos.down(2);
+        if (isStandable(pos.below(2))) {
+            return pos.below(2);
         }
         return null;
     }
@@ -1282,17 +1345,17 @@ public class WorkerHelper implements IWorkerHelper {
     @Override
     public BlockPos findBestNavigationSpot(BlockPos pos) {
         Entity ent = entity.getEntity();
-        World world = entity.getWorld();
+        Level world = entity.getWorld();
 
         BlockPos spotN = findSuitableSpot(pos.north());
         BlockPos spotS = findSuitableSpot(pos.south());
         BlockPos spotW = findSuitableSpot(pos.west());
         BlockPos spotE = findSuitableSpot(pos.east());
 
-        double dn = spotN == null ? Double.MAX_VALUE : spotN.distanceSqToCenter(ent.posX, ent.posY, ent.posZ);
-        double ds = spotS == null ? Double.MAX_VALUE : spotS.distanceSqToCenter(ent.posX, ent.posY, ent.posZ);
-        double de = spotE == null ? Double.MAX_VALUE : spotE.distanceSqToCenter(ent.posX, ent.posY, ent.posZ);
-        double dw = spotW == null ? Double.MAX_VALUE : spotW.distanceSqToCenter(ent.posX, ent.posY, ent.posZ);
+        double dn = spotN == null ? Double.MAX_VALUE : spotN.distToCenterSqr(ent.getX(), ent.getY(), ent.getZ());
+        double ds = spotS == null ? Double.MAX_VALUE : spotS.distToCenterSqr(ent.getX(), ent.getY(), ent.getZ());
+        double de = spotE == null ? Double.MAX_VALUE : spotE.distToCenterSqr(ent.getX(), ent.getY(), ent.getZ());
+        double dw = spotW == null ? Double.MAX_VALUE : spotW.distToCenterSqr(ent.getX(), ent.getY(), ent.getZ());
         BlockPos p;
         if (dn <= ds && dn <= de && dn <= dw) {
             p = spotN;
@@ -1308,7 +1371,7 @@ public class WorkerHelper implements IWorkerHelper {
             // No suitable spot. Try standing on top
             p = findSuitableSpot(pos);
             // We also need to be able to jump up one spot
-            if (p != null && !world.isAirBlock(p.up(2))) {
+            if (p != null && !world.isEmptyBlock(p.above(2))) {
                 p = null;
             }
         }
@@ -1316,17 +1379,17 @@ public class WorkerHelper implements IWorkerHelper {
         return p;
     }
 
-    public void readFromNBT(NBTTagCompound tag) {
+    public void readFromNBT(CompoundTag tag) {
         worker.readFromNBT(tag);
-        if (tag.hasKey("materialChest")) {
-            materialChest = BlockPos.fromLong(tag.getLong("materialChest"));
+        if (tag.contains("materialChest")) {
+            materialChest = BlockPos.of(tag.getLong("materialChest"));
         }
     }
 
-    public void writeToNBT(NBTTagCompound tag) {
+    public void writeToNBT(CompoundTag tag) {
         worker.writeToNBT(tag);
         if (materialChest != null) {
-            tag.setLong("materialChest", materialChest.toLong());
+            tag.putLong("materialChest", materialChest.asLong());
         }
     }
 }

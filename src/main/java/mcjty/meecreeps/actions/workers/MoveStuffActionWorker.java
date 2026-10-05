@@ -3,13 +3,13 @@ package mcjty.meecreeps.actions.workers;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 public class MoveStuffActionWorker extends AbstractActionWorker {
 
@@ -18,7 +18,7 @@ public class MoveStuffActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    public AxisAlignedBB getActionBox() {
+    public AABB getActionBox() {
         return null;
     }
 
@@ -39,10 +39,10 @@ public class MoveStuffActionWorker extends AbstractActionWorker {
         EntityMeeCreeps meeCreep = (EntityMeeCreeps) entity;
 
         if (timeToWrapUp) {
-            meeCreep.placeDownBlock(meeCreep.getPosition());
+            meeCreep.placeDownBlock(meeCreep.blockPosition());
             helper.done();
         } else {
-            EntityPlayer player = options.getPlayer();
+            Player player = options.getPlayer();
 
             if (meeCreep.getHeldBlockState() == null && player != null) {
                 pickupBlock();
@@ -51,12 +51,13 @@ public class MoveStuffActionWorker extends AbstractActionWorker {
             if (player == null) {
                 // No player, time to stop.
                 helper.taskIsDone();
-            } else if (player.getEntityWorld().provider.getDimension() != meeCreep.getEntityWorld().provider.getDimension()) {
+            } else if (player.level().dimension() != meeCreep.level().dimension()) {
                 // Wrong dimension, do nothing as this is handled by ServerActionManager
             } else {
                 // Find a spot close to the player where we can navigate too
                 BlockPos p = helper.findSuitablePositionNearPlayer(4.0);
-                helper.navigateTo(p, blockPos -> {});
+                helper.navigateTo(p, blockPos -> {
+                });
             }
         }
     }
@@ -64,9 +65,9 @@ public class MoveStuffActionWorker extends AbstractActionWorker {
     private void pickupBlock() {
         EntityMeeCreeps meeCreep = (EntityMeeCreeps) helper.getMeeCreep();
 
-        World world = meeCreep.getWorld();
+        Level world = meeCreep.getWorld();
         BlockPos pos = options.getTargetPos();
-        IBlockState state = world.getBlockState(pos);
+        BlockState state = world.getBlockState(pos);
         if (!helper.allowedToHarvest(state, world, pos, options.getPlayer())) {
             helper.showMessage("message.meecreeps.cant_pickup_block");
             helper.taskIsDone();
@@ -74,16 +75,16 @@ public class MoveStuffActionWorker extends AbstractActionWorker {
         }
         meeCreep.setHeldBlockState(state);
 
-        TileEntity tileEntity = world.getTileEntity(pos);
+        BlockEntity tileEntity = world.getBlockEntity(pos);
         if (tileEntity != null) {
-            NBTTagCompound tc = new NBTTagCompound();
-            tileEntity.writeToNBT(tc);
-            world.removeTileEntity(pos);
-            tc.removeTag("x");
-            tc.removeTag("y");
-            tc.removeTag("z");
+            CompoundTag tc = new CompoundTag();
+            tc = tileEntity.saveWithFullMetadata();
+            world.removeBlockEntity(pos);
+            tc.remove("x");
+            tc.remove("y");
+            tc.remove("z");
             meeCreep.setCarriedNBT(tc);
         }
-        world.setBlockToAir(pos);
+        world.removeBlock(pos, false);
     }
 }

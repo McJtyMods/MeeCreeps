@@ -5,15 +5,15 @@ import mcjty.meecreeps.api.IActionFactory;
 import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.InventoryTools;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockCrops;
-import net.minecraft.block.BlockNetherWart;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.NetherWartBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.IPlantable;
 
 import javax.annotation.Nonnull;
@@ -21,34 +21,34 @@ import javax.annotation.Nonnull;
 public class HarvestActionFactory implements IActionFactory {
 
     @Override
-    public boolean isPossible(World world, BlockPos pos, EnumFacing side) {
+    public boolean isPossible(Level world, BlockPos pos, Direction side) {
         if (!InventoryTools.isInventory(world, pos)) {
             return false;
         }
 
         // @todo config for harvest area
-        AxisAlignedBB box = new AxisAlignedBB(pos.add(-10, -5, -10), pos.add(10, 5, 10));
+        AABB box = new AABB(pos.offset(-10, -5, -10), pos.offset(10, 5, 10));
 
-        for (double x = box.minX ; x <= box.maxX ; x++) {
-            for (double y = box.minY ; y <= box.maxY ; y++) {
-                for (double z = box.minZ ; z <= box.maxZ ; z++) {
-                    BlockPos p = new BlockPos(x, y, z);
-                    IBlockState state = world.getBlockState(p);
-                    if (state.getBlock() == Blocks.FARMLAND) {
-                        IBlockState cropState = world.getBlockState(p.up());
+        for (double x = box.minX; x <= box.maxX; x++) {
+            for (double y = box.minY; y <= box.maxY; y++) {
+                for (double z = box.minZ; z <= box.maxZ; z++) {
+                    BlockPos p = BlockPos.containing(x, y, z);
+                    BlockState state = world.getBlockState(p);
+                    if ((state.getBlock() == Blocks.FARMLAND || state.getBlock() == Blocks.SOUL_SAND)) {
+                        BlockState cropState = world.getBlockState(p.above());
                         Block cropBlock = cropState.getBlock();
-                        boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(p), world, p, EnumFacing.UP, (IPlantable) cropBlock);
+                        boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(p), world, p, Direction.UP, (IPlantable) cropBlock);
                         if (hasCrops) {
-                            if (cropBlock instanceof BlockCrops) {
-                                BlockCrops crops = (BlockCrops) cropBlock;
+                            if (cropBlock instanceof CropBlock) {
+                                CropBlock crops = (CropBlock) cropBlock;
                                 int age = crops.getAge(cropState);
                                 int maxAge = crops.getMaxAge();
                                 if (age >= maxAge) {
                                     return true;
                                 }
-                            } else if (cropBlock instanceof BlockNetherWart) {
-                                BlockNetherWart wart = (BlockNetherWart) cropBlock;
-                                int age = cropState.getValue(BlockNetherWart.AGE);
+                            } else if (cropBlock instanceof NetherWartBlock) {
+                                NetherWartBlock wart = (NetherWartBlock) cropBlock;
+                                int age = cropState.getValue(NetherWartBlock.AGE);
                                 int maxAge = 3;
                                 if (age >= maxAge) {
                                     return true;
@@ -64,23 +64,23 @@ public class HarvestActionFactory implements IActionFactory {
     }
 
     @Override
-    public boolean isPossibleSecondary(World world, BlockPos pos, EnumFacing side) {
+    public boolean isPossibleSecondary(Level world, BlockPos pos, Direction side) {
         if (!InventoryTools.isInventory(world, pos)) {
             return false;
         }
 
         // @todo config for harvest area
-        AxisAlignedBB box = new AxisAlignedBB(pos.add(-10, -5, -10), pos.add(10, 5, 10));
+        AABB box = new AABB(pos.offset(-10, -5, -10), pos.offset(10, 5, 10));
 
-        for (double x = box.minX ; x <= box.maxX ; x++) {
-            for (double y = box.minY ; y <= box.maxY ; y++) {
-                for (double z = box.minZ ; z <= box.maxZ ; z++) {
-                    BlockPos p = new BlockPos(x, y, z);
-                    IBlockState state = world.getBlockState(p);
-                    if (state.getBlock() == Blocks.FARMLAND) {
-                        IBlockState cropState = world.getBlockState(p.up());
+        for (double x = box.minX; x <= box.maxX; x++) {
+            for (double y = box.minY; y <= box.maxY; y++) {
+                for (double z = box.minZ; z <= box.maxZ; z++) {
+                    BlockPos p = BlockPos.containing(x, y, z);
+                    BlockState state = world.getBlockState(p);
+                    if ((state.getBlock() == Blocks.FARMLAND || state.getBlock() == Blocks.SOUL_SAND)) {
+                        BlockState cropState = world.getBlockState(p.above());
                         Block cropBlock = cropState.getBlock();
-                        boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(p), world, p, EnumFacing.UP, (IPlantable) cropBlock);
+                        boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(p), world, p, Direction.UP, (IPlantable) cropBlock);
                         if (hasCrops) {
                             return true;
                         }

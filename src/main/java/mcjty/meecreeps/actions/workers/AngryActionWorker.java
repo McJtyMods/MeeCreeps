@@ -3,16 +3,16 @@ package mcjty.meecreeps.actions.workers;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
 
 import java.util.List;
 
 public class AngryActionWorker extends AbstractActionWorker {
 
     @Override
-    public AxisAlignedBB getActionBox() {
+    public AABB getActionBox() {
         return null;
     }
 
@@ -35,18 +35,18 @@ public class AngryActionWorker extends AbstractActionWorker {
 
     private void attack(EntityMeeCreeps enemy) {
         IMeeCreep entity = helper.getMeeCreep();
-        enemy.attackEntityFrom(DamageSource.causeMobDamage(entity.getEntity()), 4.0F);
+        enemy.hurt(entity.getEntity().damageSources().mobAttack(entity.getEntity()), 4.0F);
     }
 
     private boolean findMeeCreeps() {
         IMeeCreep entity = helper.getMeeCreep();
-        BlockPos position = entity.getEntity().getPosition();
-        List<EntityMeeCreeps> meeCreeps = entity.getWorld().getEntitiesWithinAABB(EntityMeeCreeps.class, getSearchBox(),
+        BlockPos position = entity.getEntity().blockPosition();
+        List<EntityMeeCreeps> meeCreeps = entity.getWorld().getEntitiesOfClass(EntityMeeCreeps.class, getSearchBox(),
                 input -> input != entity.getEntity());
         if (!meeCreeps.isEmpty()) {
             meeCreeps.sort((o1, o2) -> {
-                double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
-                double d2 = position.distanceSq(o2.posX, o2.posY, o2.posZ);
+                double d1 = position.distToCenterSqr(o1.position());
+                double d2 = position.distToCenterSqr(o2.position());
                 return Double.compare(d1, d2);
             });
             EntityMeeCreeps enemy = meeCreeps.get(0);

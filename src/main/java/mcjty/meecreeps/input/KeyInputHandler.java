@@ -1,15 +1,17 @@
 package mcjty.meecreeps.input;
 
+import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.render.BalloonRenderer;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.client.event.InputEvent;
 
+@Mod.EventBusSubscriber(modid = MeeCreeps.MODID, value = Dist.CLIENT)
 public class KeyInputHandler {
-
     @SubscribeEvent
-    public void onKeyInput(InputEvent.KeyInputEvent event) {
-        if (KeyBindings.repeatLastMessage.isPressed()) {
+    public static void key(InputEvent.Key e) {
+        while (KeyBindings.REPEAT.consumeClick())
             BalloonRenderer.repeatLast();
-        }
     }
 }

@@ -1,12 +1,12 @@
 package mcjty.meecreeps.config;
 
-import mcjty.lib.thirteen.ConfigSpec;
+import net.minecraftforge.common.ForgeConfigSpec;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
-import net.minecraftforge.common.config.Configuration;
+
 import org.apache.logging.log4j.Level;
 
-import java.io.File;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,47 +15,31 @@ public class ConfigSetup {
     private static final String CATEGORY_GENERAL = "general";
     private static final String CATEGORY_PERMISSON = "permission";
 
-    public static Configuration mainConfig;
+    public static ForgeConfigSpec.IntValue portalTimeout;
+    public static ForgeConfigSpec.IntValue portalTimeoutAfterEntry;
+    public static ForgeConfigSpec.IntValue maxCharge;
+    public static ForgeConfigSpec.IntValue chargesPerEnderpearl;
 
-    public static void init() {
-        mainConfig = new Configuration(new File(MeeCreeps.setup.getModConfigDir().getPath(), "meecreeps.cfg"));
-        try {
-            mainConfig.load();
-            initConfig(mainConfig);
-        } catch (Exception e1) {
-            MeeCreeps.setup.getLogger().log(Level.ERROR, "Problem loading config file!", e1);
-        } finally {
-            if (mainConfig.hasChanged()) {
-                mainConfig.save();
-            }
-        }
-    }
+    public static ForgeConfigSpec.IntValue meeCreepBoxMaxUsage;
+    public static ForgeConfigSpec.IntValue maxMeecreepsPerPlayer;
 
-    public static ConfigSpec.IntValue portalTimeout;
-    public static ConfigSpec.IntValue portalTimeoutAfterEntry;
-    public static ConfigSpec.IntValue maxCharge;
-    public static ConfigSpec.IntValue chargesPerEnderpearl;
+    public static ForgeConfigSpec.DoubleValue meeCreepVolume;
+    public static ForgeConfigSpec.DoubleValue teleportVolume;
 
-    public static ConfigSpec.IntValue meeCreepBoxMaxUsage;
-    public static ConfigSpec.IntValue maxMeecreepsPerPlayer;
+    public static ForgeConfigSpec.IntValue messageTimeout;
+    public static ForgeConfigSpec.IntValue messageX;
+    public static ForgeConfigSpec.IntValue messageY;
 
-    public static ConfigSpec.DoubleValue meeCreepVolume;
-    public static ConfigSpec.DoubleValue teleportVolume;
+    public static ForgeConfigSpec.IntValue maxSpawnCount;
+    public static ForgeConfigSpec.IntValue maxTreeBlocks;
 
-    public static ConfigSpec.IntValue messageTimeout;
-    public static ConfigSpec.IntValue messageX;
-    public static ConfigSpec.IntValue messageY;
-
-    public static ConfigSpec.IntValue maxSpawnCount;
-    public static ConfigSpec.IntValue maxTreeBlocks;
-
-    public static ConfigSpec.DoubleValue delayAtHardness;
-    public static ConfigSpec.DoubleValue delayFactor;
+    public static ForgeConfigSpec.DoubleValue delayAtHardness;
+    public static ForgeConfigSpec.DoubleValue delayFactor;
 
     public static Set<String> allowedActions = new HashSet<>();
 
-    private static final ConfigSpec.Builder SERVER_BUILDER = new ConfigSpec.Builder();
-    private static final ConfigSpec.Builder CLIENT_BUILDER = new ConfigSpec.Builder();
+    private static final ForgeConfigSpec.Builder SERVER_BUILDER = new ForgeConfigSpec.Builder();
+    private static final ForgeConfigSpec.Builder CLIENT_BUILDER = new ForgeConfigSpec.Builder();
 
     static {
         SERVER_BUILDER.comment("General configuration").push(CATEGORY_GENERAL);
@@ -63,10 +47,10 @@ public class ConfigSetup {
 
         portalTimeout = SERVER_BUILDER
                 .comment("Amount of ticks until the portalpair disappears")
-                .defineInRange("portalTimeout", 30*20, 1, 1000000);
+                .defineInRange("portalTimeout", 30 * 20, 1, 1000000);
         portalTimeoutAfterEntry = SERVER_BUILDER
                 .comment("Amount of ticks until the portalpair disappears after an entity has gone through")
-                .defineInRange("portalTimeoutAfterEntry", 5*20, 1, 1000000);
+                .defineInRange("portalTimeoutAfterEntry", 5 * 20, 1, 1000000);
         maxCharge = SERVER_BUILDER
                 .comment("Maximum charge in a portalgun/cartridge")
                 .defineInRange("maxCharge", 64, 1, 1000000);
@@ -115,33 +99,24 @@ public class ConfigSetup {
         CLIENT_BUILDER.pop();
     }
 
-    public static ConfigSpec SERVER_CONFIG;
-    public static ConfigSpec CLIENT_CONFIG;
+    public static ForgeConfigSpec SERVER_CONFIG;
+    public static ForgeConfigSpec CLIENT_CONFIG;
 
 
-    private static void initConfig(Configuration cfg) {
-        SERVER_CONFIG = SERVER_BUILDER.build(cfg);
-        CLIENT_CONFIG = CLIENT_BUILDER.build(cfg);
-
-        initPermissionConfig(cfg);
-    }
-
-    // @todo
-    // config for type of pickaxe
-
-    private static void initPermissionConfig(Configuration cfg) {
-        cfg.addCustomCategoryComment(CATEGORY_PERMISSON, "Permission configuration");
+    public static void init() {
+        SERVER_BUILDER.push("permission");
         for (MeeCreepsApi.Factory factory : MeeCreeps.api.getFactories()) {
-            boolean allowed = cfg.getBoolean("allowed_" + factory.getId(), CATEGORY_PERMISSON, true, "");
-            if (allowed) {
-                allowedActions.add(factory.getId());
-            }
+            actionPermissions.put(factory.getId(), SERVER_BUILDER.define("allowed_" + factory.getId(), true));
         }
+        SERVER_BUILDER.pop();
+        SERVER_CONFIG = SERVER_BUILDER.build();
+        CLIENT_CONFIG = CLIENT_BUILDER.build();
     }
 
-    public static void postInit() {
-        if (mainConfig.hasChanged()) {
-            mainConfig.save();
-        }
+    public static final java.util.Map<String, ForgeConfigSpec.BooleanValue> actionPermissions = new java.util.HashMap<>();
+
+    public static boolean isAllowed(String id) {
+        var permission = actionPermissions.get(id);
+        return permission != null && permission.get();
     }
 }

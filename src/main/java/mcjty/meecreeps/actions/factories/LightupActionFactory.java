@@ -5,25 +5,26 @@ import mcjty.meecreeps.api.IActionFactory;
 import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldEntitySpawner;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 
 import javax.annotation.Nonnull;
 
 public class LightupActionFactory implements IActionFactory {
 
     @Override
-    public boolean isPossible(World world, BlockPos pos, EnumFacing side) {
+    public boolean isPossible(Level world, BlockPos pos, Direction side) {
         // @todo config for area
-        AxisAlignedBB box = new AxisAlignedBB(pos.add(-10, -5, -10), pos.add(10, 5, 10));
-//        AxisAlignedBB box = new AxisAlignedBB(pos.add(-2, -2, -2), pos.add(2, 2, 2));
+        AABB box = new AABB(pos.offset(-10, -5, -10), pos.offset(10, 5, 10));
+//        AABB box = new AABB(pos.offset(-2, -2, -2), pos.offset(2, 2, 2));
         return GeneralTools.traverseBoxTest(box, p -> {
-            if (WorldEntitySpawner.canCreatureTypeSpawnAtLocation(EntityLiving.SpawnPlacementType.ON_GROUND, world, p)) {
-                int light = world.getLightFromNeighbors(p);
+            if (world.isEmptyBlock(p) && world.getBlockState(p.below()).isFaceSturdy(world, p.below(), Direction.UP)) {
+                // Ignore daylight so exposed areas are also prepared for night.
+                int light = world.getBrightness(LightLayer.BLOCK, p);
                 if (light < 7) {
                     return true;
                 }
@@ -33,7 +34,7 @@ public class LightupActionFactory implements IActionFactory {
     }
 
     @Override
-    public boolean isPossibleSecondary(World world, BlockPos pos, EnumFacing side) {
+    public boolean isPossibleSecondary(Level world, BlockPos pos, Direction side) {
         return false;
     }
 

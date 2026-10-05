@@ -1,43 +1,43 @@
 package mcjty.meecreeps.actions;
 
-import io.netty.buffer.ByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
 import mcjty.lib.network.NetworkTools;
-import mcjty.lib.thirteen.Context;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.network.NetworkEvent.Context;
+
 
 import java.util.function.Supplier;
 
-public class PacketShowBalloonToClient implements IMessage {
+public class PacketShowBalloonToClient {
     private String message;
     private String[] parameters;
 
-    @Override
-    public void fromBytes(ByteBuf buf) {
+    public void fromBytes(FriendlyByteBuf buf) {
         message = NetworkTools.readStringUTF8(buf);
-        int size = buf.readInt();
+        int size = buf.readVarInt();
+        if (size < 0 || size > 256)
+            throw new IllegalArgumentException("Invalid packet collection size");
         parameters = new String[size];
-        for (int i = 0 ; i < size ; i++) {
+        for (int i = 0; i < size; i++) {
             parameters[i] = NetworkTools.readStringUTF8(buf);
         }
     }
 
-    @Override
-    public void toBytes(ByteBuf buf) {
+    public void toBytes(FriendlyByteBuf buf) {
         NetworkTools.writeStringUTF8(buf, message);
         if (parameters != null) {
-            buf.writeInt(parameters.length);
+            buf.writeVarInt(parameters.length);
             for (String s : parameters) {
                 NetworkTools.writeStringUTF8(buf, s);
             }
         } else {
-            buf.writeInt(0);
+            buf.writeVarInt(0);
         }
     }
 
     public PacketShowBalloonToClient() {
     }
 
-    public PacketShowBalloonToClient(ByteBuf buf) {
+    public PacketShowBalloonToClient(FriendlyByteBuf buf) {
         fromBytes(buf);
     }
 

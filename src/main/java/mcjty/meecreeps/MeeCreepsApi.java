@@ -6,10 +6,10 @@ import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.actions.factories.*;
 import mcjty.meecreeps.api.IActionFactory;
 import mcjty.meecreeps.api.IMeeCreepsApi;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -55,7 +55,7 @@ public class MeeCreepsApi implements IMeeCreepsApi {
     }
 
     @Override
-    public boolean spawnMeeCreep(String id, String furtherQuestionId, World world, BlockPos targetPos, EnumFacing targetSide, @Nullable EntityPlayerMP player, boolean doSound) {
+    public boolean spawnMeeCreep(String id, String furtherQuestionId, Level world, BlockPos targetPos, Direction targetSide, @Nullable ServerPlayer player, boolean doSound) {
         ServerActionManager manager = ServerActionManager.getManager();
         int actionId = manager.createActionOptions(world, targetPos, targetSide, player);
         ActionOptions.spawn(world, targetPos, targetSide, actionId, doSound);

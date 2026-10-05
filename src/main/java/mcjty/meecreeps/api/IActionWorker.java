@@ -1,7 +1,7 @@
 package mcjty.meecreeps.api;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.phys.AABB;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -22,26 +22,29 @@ public interface IActionWorker {
      * Called at initialization time. In contrast with the constructor the helper will be correctly setup here
      * @param meeCreep
      */
-    default void init(IMeeCreep meeCreep) { }
+    default void init(IMeeCreep meeCreep) {
+    }
 
     /**
      * Optionally return a box on which this action should operate. This is optional in case the action does
      * not require such a box
      */
     @Nullable
-    AxisAlignedBB getActionBox();
+    AABB getActionBox();
 
     /**
      * Return a box where the IWorkerHelper can look for stuff (like inventories and items on the ground).
      * This must be provided.
      */
     @Nonnull
-    AxisAlignedBB getSearchBox();
+    AABB getSearchBox();
 
     /**
      * If this returns true the MeeCreep will only finish when the task is done. Not earlier
      */
-    default boolean onlyStopWhenDone() { return false; }
+    default boolean onlyStopWhenDone() {
+        return false;
+    }
 
     /**
      * If this returns true the MeeCreep wants to follow the player. Returning true here ensures
@@ -49,7 +52,9 @@ public interface IActionWorker {
      * or to another dimension. If this flag is not set the MeeCreep may become unloaded and
      * fail to teleport by itself. Note that this long-distance teleport will cancel any current job
      */
-    default boolean needsToFollowPlayer() { return false; }
+    default boolean needsToFollowPlayer() {
+        return false;
+    }
 
     /**
      * Return a sorted array of prefered chest locations for putting back items. The
@@ -57,7 +62,9 @@ public interface IActionWorker {
      */
     PreferedChest[] getPreferedChests();
 
-    default void readFromNBT(NBTTagCompound tag) {}
+    default void readFromNBT(CompoundTag tag) {
+    }
 
-    default void writeToNBT(NBTTagCompound tag) {}
+    default void writeToNBT(CompoundTag tag) {
+    }
 }

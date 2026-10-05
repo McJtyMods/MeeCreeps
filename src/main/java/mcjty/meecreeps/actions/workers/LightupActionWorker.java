@@ -1,24 +1,25 @@
 package mcjty.meecreeps.actions.workers;
 
+import net.minecraft.core.Direction;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldEntitySpawner;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 
 public class LightupActionWorker extends AbstractActionWorker {
 
-    private AxisAlignedBB actionBox = null;
+    private AABB actionBox = null;
 
     @Override
-    public AxisAlignedBB getActionBox() {
+    public AABB getActionBox() {
         if (actionBox == null) {
             // @todo config
-            actionBox = new AxisAlignedBB(options.getTargetPos().add(-10, -5, -10), options.getTargetPos().add(10, 5, 10));
+            actionBox = new AABB(options.getTargetPos().offset(-10, -5, -10), options.getTargetPos().offset(10, 5, 10));
         }
         return actionBox;
     }
@@ -30,11 +31,12 @@ public class LightupActionWorker extends AbstractActionWorker {
 
     private BlockPos findDarkSpot() {
         IMeeCreep entity = helper.getMeeCreep();
-        World world = entity.getWorld();
-        AxisAlignedBB box = getActionBox();
+        Level world = entity.getWorld();
+        AABB box = getActionBox();
         return GeneralTools.traverseBoxFirst(box, p -> {
-            if (world.isAirBlock(p) && WorldEntitySpawner.canCreatureTypeSpawnAtLocation(EntityLiving.SpawnPlacementType.ON_GROUND, world, p)) {
-                int light = world.getLightFromNeighbors(p);
+            if (world.isEmptyBlock(p) && world.getBlockState(p.below()).isFaceSturdy(world, p.below(), Direction.UP)) {
+                // Ignore daylight so exposed areas are also prepared for night.
+                int light = world.getBrightness(LightLayer.BLOCK, p);
                 if (light < 7) {
                     return p;
                 }
@@ -45,12 +47,14 @@ public class LightupActionWorker extends AbstractActionWorker {
 
     private void placeTorch(BlockPos pos) {
         IMeeCreep entity = helper.getMeeCreep();
-        World world = entity.getWorld();
-        int light = world.getLightFromNeighbors(pos);
-        if (light < 7) {
+        Level world = entity.getWorld();
+        int light = world.getBrightness(LightLayer.BLOCK, pos);
+        if (light < 7 && world.isEmptyBlock(pos)
+                && world.getBlockState(pos.below()).isFaceSturdy(world, pos.below(), Direction.UP)) {
             ItemStack torch = entity.consumeItem(WorkerHelper::isTorch, 1);
             if (!torch.isEmpty()) {
                 helper.placeStackAt(torch, world, pos);
+                entity.addStack(torch);
             }
         }
     }

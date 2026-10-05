@@ -4,21 +4,21 @@ import mcjty.meecreeps.actions.workers.DigdownActionWorker;
 import mcjty.meecreeps.api.IActionFactory;
 import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.api.IWorkerHelper;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;
 
 public class DigdownActionFactory implements IActionFactory {
 
     @Override
-    public boolean isPossible(World world, BlockPos pos, EnumFacing side) {
-        if (side != EnumFacing.UP) {
+    public boolean isPossible(Level world, BlockPos pos, Direction side) {
+        if (side != Direction.UP) {
             return false;
         }
-        TileEntity te = world.getTileEntity(pos);
+        BlockEntity te = world.getBlockEntity(pos);
         if (te != null) {
             return false;
         }
@@ -28,7 +28,7 @@ public class DigdownActionFactory implements IActionFactory {
     }
 
     @Override
-    public boolean isPossibleSecondary(World world, BlockPos pos, EnumFacing side) {
+    public boolean isPossibleSecondary(Level world, BlockPos pos, Direction side) {
         return false;
     }
 

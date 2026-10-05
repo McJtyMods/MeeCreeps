@@ -1,44 +1,49 @@
 package mcjty.meecreeps.blocks;
 
+import mcjty.meecreeps.setup.Registration;
+import mcjty.meecreeps.varia.LevelTools;
 import mcjty.lib.varia.SoundTools;
-import mcjty.lib.varia.TeleportationTools;
+import mcjty.meecreeps.varia.EntityTeleportation;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.teleport.TeleportDestination;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ITickable;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.nbt.Tag;
 
 import javax.annotation.Nullable;
 import java.util.*;
 
-public class PortalTileEntity extends TileEntity implements ITickable {
+public class PortalTileEntity extends BlockEntity {
+
+    public PortalTileEntity(BlockPos pos, BlockState state) {
+        super(Registration.PORTAL_TILE.get(), pos, state);
+    }
 
     private int timeout;
     private boolean soundStart = false;
     private boolean soundEnd = false;
     private int start;  // Client side only
     private TeleportDestination other;
-    private EnumFacing portalSide;            // Side to render the portal on
-    private AxisAlignedBB box = null;
+    private Direction portalSide;            // Side to render the portal on
+    private AABB box = null;
     private Set<UUID> blackListed = new HashSet<>();        // Entities can only go through the portal one time
 
-    @Override
     public void update() {
-        if (!world.isRemote) {
+        if (level != null && !level.isClientSide && other != null && portalSide != null) {
             tickTime();
             if (timeout <= 0) {
                 killPortal();
@@ -46,41 +51,41 @@ public class PortalTileEntity extends TileEntity implements ITickable {
                 return;
             }
 
-            if ((!soundStart) && timeout > ConfigSetup.portalTimeout.get()-10) {
+            if ((!soundStart) && timeout > ConfigSetup.portalTimeout.get() - 10) {
                 soundStart = true;
-                SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "portal"));
+                SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation(MeeCreeps.MODID, "portal"));
                 // @todo config
-                SoundTools.playSound(world, sound, pos.getX(), pos.getY(), pos.getZ(), 1, 1);
+                SoundTools.playSound(level, sound, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), 1, 1);
             }
 
             if ((!soundEnd) && timeout < 10) {
                 soundEnd = true;
                 if (ConfigSetup.teleportVolume.get() > 0.01f) {
-                    SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "portal"));
-                    SoundTools.playSound(world, sound, pos.getX(), pos.getY(), pos.getZ(), ConfigSetup.teleportVolume.get(), 1);
+                    SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation(MeeCreeps.MODID, "portal"));
+                    SoundTools.playSound(level, sound, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), ConfigSetup.teleportVolume.get(), 1);
                 }
             }
 
             getOther().ifPresent(otherPortal -> {
-                double otherX = otherPortal.getPos().getX()+.5;
-                double otherY = otherPortal.getPos().getY()+.5;
-                double otherZ = otherPortal.getPos().getZ()+.5;
-                List<Entity> entities = world.getEntitiesWithinAABB(Entity.class, getTeleportBox());
+                double otherX = otherPortal.getBlockPos().getX() + .5;
+                double otherY = otherPortal.getBlockPos().getY() + .5;
+                double otherZ = otherPortal.getBlockPos().getZ() + .5;
+                List<Entity> entities = level.getEntitiesOfClass(Entity.class, getTeleportBox());
                 for (Entity entity : entities) {
-                    if (!blackListed.contains(entity.getUniqueID())) {
-                        otherPortal.addBlackList(entity.getUniqueID());
+                    if (!blackListed.contains(entity.getUUID())) {
+                        otherPortal.addBlackList(entity.getUUID());
                         double oy = otherY;
-                        if (otherPortal.getPortalSide() == EnumFacing.DOWN) {
-                            oy -= entity.height + .7;
+                        if (otherPortal.getPortalSide() == Direction.DOWN) {
+                            oy -= entity.getBbHeight() + .7;
                         }
-                        TeleportationTools.teleportEntity(entity, otherPortal.getWorld(), otherX, oy, otherZ, otherPortal.getPortalSide());
+                        EntityTeleportation.teleportEntity(entity, otherPortal.getLevel(), otherX, oy, otherZ, otherPortal.getPortalSide());
                         setTimeout(ConfigSetup.portalTimeoutAfterEntry.get());
                         otherPortal.setTimeout(ConfigSetup.portalTimeoutAfterEntry.get());
 
-                        if (entity instanceof EntityPlayer) {
+                        if (entity instanceof Player) {
                             if (ConfigSetup.teleportVolume.get() > 0.01f) {
-                                SoundEvent sound = SoundEvent.REGISTRY.getObject(new ResourceLocation(MeeCreeps.MODID, "teleport"));
-                                SoundTools.playSound(otherPortal.getWorld(), sound, otherX, otherY, otherZ, ConfigSetup.teleportVolume.get(), 1);
+                                SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation(MeeCreeps.MODID, "teleport"));
+                                SoundTools.playSound(otherPortal.getLevel(), sound, otherX, otherY, otherZ, ConfigSetup.teleportVolume.get(), 1);
                             }
                         }
                     }
@@ -90,48 +95,41 @@ public class PortalTileEntity extends TileEntity implements ITickable {
     }
 
     @Override
-    public NBTTagCompound getUpdateTag() {
-        return writeToNBT(new NBTTagCompound());
-    }
-
-    @Nullable
-    @Override
-    public SPacketUpdateTileEntity getUpdatePacket() {
-        NBTTagCompound nbtTag = new NBTTagCompound();
-        nbtTag.setInteger("timeout", timeout);
-        nbtTag.setInteger("start", ConfigSetup.portalTimeout.get() - timeout);
-        nbtTag.setByte("portalSide", portalSide == null ? 127 : (byte) portalSide.ordinal());
-        return new SPacketUpdateTileEntity(getPos(), 1, nbtTag);
+    public CompoundTag getUpdateTag() {
+        return saveWithoutMetadata();
     }
 
     @Override
-    public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity packet) {
-        timeout = packet.getNbtCompound().getInteger("timeout");
-        start = packet.getNbtCompound().getInteger("start");
-        byte side = packet.getNbtCompound().getByte("portalSide");
-        this.portalSide = side == 127 ? null : EnumFacing.VALUES[side];
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
-    private AxisAlignedBB getTeleportBox() {
+    @Override
+    public void onDataPacket(Connection connection, ClientboundBlockEntityDataPacket packet) {
+        if (packet.getTag() != null)
+            load(packet.getTag());
+    }
+
+    private AABB getTeleportBox() {
         if (box == null) {
             switch (portalSide) {
                 case DOWN:
-                    box = new AxisAlignedBB(pos.getX() - .7, pos.getY() + .5, pos.getZ() - .7, pos.getX() + 1.7, pos.getY() + 1, pos.getZ() + 1.7);
+                    box = new AABB(worldPosition.getX() - .7, worldPosition.getY() + .5, worldPosition.getZ() - .7, worldPosition.getX() + 1.7, worldPosition.getY() + 1, worldPosition.getZ() + 1.7);
                     break;
                 case UP:
-                    box = new AxisAlignedBB(pos.getX() - .7, pos.getY() - .2, pos.getZ() - .7, pos.getX() + 1.7, pos.getY() + .5, pos.getZ() + 1.7);
+                    box = new AABB(worldPosition.getX() - .7, worldPosition.getY() - .2, worldPosition.getZ() - .7, worldPosition.getX() + 1.7, worldPosition.getY() + .5, worldPosition.getZ() + 1.7);
                     break;
                 case SOUTH:
-                    box = new AxisAlignedBB(pos.getX() - .2, pos.getY() - 1.2, pos.getZ() - .2, pos.getX() + 1.2, pos.getY() + 2.2, pos.getZ() + 0.2);
+                    box = new AABB(worldPosition.getX() - .2, worldPosition.getY() - 1.2, worldPosition.getZ() - .2, worldPosition.getX() + 1.2, worldPosition.getY() + 2.2, worldPosition.getZ() + 0.2);
                     break;
                 case NORTH:
-                    box = new AxisAlignedBB(pos.getX() - .2, pos.getY() - 1.2, pos.getZ() + .8, pos.getX() + 1.2, pos.getY() + 2.2, pos.getZ() + 1.2);
+                    box = new AABB(worldPosition.getX() - .2, worldPosition.getY() - 1.2, worldPosition.getZ() + .8, worldPosition.getX() + 1.2, worldPosition.getY() + 2.2, worldPosition.getZ() + 1.2);
                     break;
                 case EAST:
-                    box = new AxisAlignedBB(pos.getX() - .2, pos.getY() - 1.2, pos.getZ() - .2, pos.getX() + 0.2, pos.getY() + 2.2, pos.getZ() + 1.2);
+                    box = new AABB(worldPosition.getX() - .2, worldPosition.getY() - 1.2, worldPosition.getZ() - .2, worldPosition.getX() + 0.2, worldPosition.getY() + 2.2, worldPosition.getZ() + 1.2);
                     break;
                 case WEST:
-                    box = new AxisAlignedBB(pos.getX() + .8, pos.getY() - 1.2, pos.getZ() - .2, pos.getX() + 1.2, pos.getY() + 2.2, pos.getZ() + 1.2);
+                    box = new AABB(worldPosition.getX() + .8, worldPosition.getY() - 1.2, worldPosition.getZ() - .2, worldPosition.getX() + 1.2, worldPosition.getY() + 2.2, worldPosition.getZ() + 1.2);
                     break;
             }
         }
@@ -152,24 +150,24 @@ public class PortalTileEntity extends TileEntity implements ITickable {
     }
 
     private void markDirtyClient() {
-        markDirty();
-        if (getWorld() != null) {
-            IBlockState state = getWorld().getBlockState(getPos());
-            getWorld().notifyBlockUpdate(getPos(), state, state, 3);
+        setChanged();
+        if (getLevel() != null) {
+            BlockState state = getLevel().getBlockState(getBlockPos());
+            getLevel().sendBlockUpdated(getBlockPos(), state, state, 3);
         }
     }
 
     private void markDirtyQuick() {
-        if (getWorld() != null) {
-            getWorld().markChunkDirty(this.pos, this);
+        if (getLevel() != null) {
+            setChanged();
         }
     }
 
-    public EnumFacing getPortalSide() {
+    public Direction getPortalSide() {
         return portalSide;
     }
 
-    public void setPortalSide(EnumFacing portalSide) {
+    public void setPortalSide(Direction portalSide) {
         this.portalSide = portalSide;
         box = null;
         markDirtyClient();
@@ -197,12 +195,16 @@ public class PortalTileEntity extends TileEntity implements ITickable {
     }
 
     public void killPortal() {
-        world.setBlockToAir(getPos());
+        level.removeBlock(getBlockPos(), false);
     }
 
     private Optional<PortalTileEntity> getOther() {
-        World otherWorld = TeleportationTools.getWorldForDimension(other.getDimension());
-        TileEntity te = otherWorld.getTileEntity(other.getPos());
+        if (other == null)
+            return Optional.empty();
+        Level otherWorld = LevelTools.getWorld(other.getDimension());
+        if (otherWorld == null)
+            return Optional.empty();
+        BlockEntity te = otherWorld.getBlockEntity(other.getPos());
         if (te instanceof PortalTileEntity) {
             return Optional.of((PortalTileEntity) te);
         } else {
@@ -211,39 +213,33 @@ public class PortalTileEntity extends TileEntity implements ITickable {
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound compound) {
-        super.readFromNBT(compound);
-        timeout = compound.getInteger("timeout");
-        byte pside = compound.getByte("portalSide");
-        this.portalSide = pside == 127 ? null : EnumFacing.VALUES[pside];
-        BlockPos pos = BlockPos.fromLong(compound.getLong("pos"));
-        int dim = compound.getInteger("dim");
-        EnumFacing side = EnumFacing.VALUES[compound.getByte("side")];
-        other = new TeleportDestination("", dim, pos, side);
-        NBTTagList list = compound.getTagList("bl", Constants.NBT.TAG_COMPOUND);
+    public void load(CompoundTag tag) {
+        super.load(tag);
+        timeout = tag.getInt("timeout");
+        start = tag.getInt("start");
+        portalSide = Direction.from3DDataValue(tag.getByte("portalSide"));
+        other = tag.contains("other") ? new TeleportDestination(tag.getCompound("other")) : null;
         blackListed.clear();
-        for (int i = 0 ; i < list.tagCount() ; i++) {
-            NBTTagCompound tc = list.getCompoundTagAt(i);
-            UUID uuid = new UUID(tc.getLong("m"), tc.getLong("l"));
-            blackListed.add(uuid);
-        }
+        ListTag list = tag.getList("bl", Tag.TAG_COMPOUND);
+        for (int i = 0; i < list.size(); i++)
+            blackListed.add(list.getCompound(i).getUUID("id"));
+        box = null;
     }
 
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-        compound.setInteger("timeout", timeout);
-        compound.setByte("portalSide", portalSide == null ? 127 : (byte) portalSide.ordinal());
-        compound.setLong("pos", other.getPos().toLong());
-        compound.setInteger("dim", other.getDimension());
-        compound.setByte("side", (byte) other.getSide().ordinal());
-        NBTTagList list = new NBTTagList();
-        for (UUID uuid : blackListed) {
-            NBTTagCompound tc = new NBTTagCompound();
-            tc.setLong("m", uuid.getMostSignificantBits());
-            tc.setLong("l", uuid.getLeastSignificantBits());
-            list.appendTag(tc);
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
+        tag.putInt("timeout", timeout);
+        tag.putInt("start", ConfigSetup.portalTimeout.get() - timeout);
+        tag.putByte("portalSide", (byte) (portalSide == null ? Direction.UP.ordinal() : portalSide.ordinal()));
+        if (other != null)
+            tag.put("other", other.getCompound());
+        ListTag list = new ListTag();
+        for (UUID id : blackListed) {
+            CompoundTag t = new CompoundTag();
+            t.putUUID("id", id);
+            list.add(t);
         }
-        compound.setTag("bl", list);
-        return super.writeToNBT(compound);
+        tag.put("bl", list);
     }
 }

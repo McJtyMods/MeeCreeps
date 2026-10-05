@@ -1,0 +1,19 @@
+{
+  "result": {
+    "item": "meecreeps:cartridge"
+  },
+  "pattern": [
+    "nnn",
+    "nGn",
+    "nnn"
+  ],
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "n": {
+      "item": "minecraft:gold_nugget"
+    }
+  }
+}

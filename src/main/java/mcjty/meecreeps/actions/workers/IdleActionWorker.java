@@ -1,12 +1,12 @@
 package mcjty.meecreeps.actions.workers;
 
 import mcjty.meecreeps.api.IWorkerHelper;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.world.phys.AABB;
 
 public class IdleActionWorker extends AbstractActionWorker {
 
     @Override
-    public AxisAlignedBB getActionBox() {
+    public AABB getActionBox() {
         return null;
     }
 

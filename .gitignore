@@ -5,3 +5,6 @@
 .gradle
 .settings
 .classpath
+/run-server/
+/run-gametest/
+/run-client/

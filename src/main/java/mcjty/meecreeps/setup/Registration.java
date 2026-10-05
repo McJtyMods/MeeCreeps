@@ -1,68 +1,62 @@
 package mcjty.meecreeps.setup;
 
-
-import mcjty.lib.datafix.fixes.TileEntityNamespace;
 import mcjty.meecreeps.MeeCreeps;
-import mcjty.meecreeps.blocks.HeldCubeBlock;
-import mcjty.meecreeps.blocks.ModBlocks;
-import mcjty.meecreeps.blocks.PortalBlock;
-import mcjty.meecreeps.blocks.PortalTileEntity;
+import mcjty.meecreeps.blocks.*;
 import mcjty.meecreeps.items.*;
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.datafix.FixTypes;
-import net.minecraftforge.common.util.ModFixs;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import mcjty.meecreeps.entities.*;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.item.*;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.crafting.*;
+import net.minecraftforge.registries.*;
+import net.minecraftforge.eventbus.api.IEventBus;
 
-import java.util.HashMap;
-import java.util.Map;
+public final class Registration {
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MeeCreeps.MODID);
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MeeCreeps.MODID);
+    public static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MeeCreeps.MODID);
+    public static final DeferredRegister<BlockEntityType<?>> TILES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MeeCreeps.MODID);
+    public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, MeeCreeps.MODID);
+    public static final DeferredRegister<RecipeSerializer<?>> RECIPES = DeferredRegister.create(ForgeRegistries.RECIPE_SERIALIZERS, MeeCreeps.MODID);
+    public static final RegistryObject<Block> CUBE = BLOCKS.register("creepcube", HeldCubeBlock::new);
+    public static final RegistryObject<Block> PORTAL = BLOCKS.register("portalblock", PortalBlock::new);
+    public static final RegistryObject<Item> CUBE_ITEM = ITEMS.register("creepcube", CreepCubeItem::new);
+    public static final RegistryObject<Item> GUN = ITEMS.register("portalgun", PortalGunItem::new);
+    public static final RegistryObject<Item> EMPTY_GUN = ITEMS.register("emptyportalgun", EmptyPortalGunItem::new);
+    public static final RegistryObject<Item> CARTRIDGE = ITEMS.register("cartridge", CartridgeItem::new);
+    public static final RegistryObject<Item> PROJECTILE_ITEM = ITEMS.register("projectile", ProjectileItem::new);
+    public static final RegistryObject<Item> PORTAL_ITEM = ITEMS.register("portalblock", () -> new BlockItem(PORTAL.get(), new Item.Properties()));
+    public static final RegistryObject<EntityType<EntityMeeCreeps>> CREEP = ENTITIES.register("meecreeps", () -> EntityType.Builder.<EntityMeeCreeps>of(EntityMeeCreeps::new, MobCategory.CREATURE).sized(.6F, 1.95F).clientTrackingRange(10).build("meecreeps:meecreeps"));
+    public static final RegistryObject<EntityType<EntityProjectile>> PROJECTILE = ENTITIES.register("projectile", () -> EntityType.Builder.<EntityProjectile>of(EntityProjectile::new, MobCategory.MISC).sized(.25F, .25F).clientTrackingRange(8).updateInterval(1).build("meecreeps:projectile"));
+    public static final RegistryObject<BlockEntityType<PortalTileEntity>> PORTAL_TILE = TILES.register("portalblock", () -> BlockEntityType.Builder.of(PortalTileEntity::new, PORTAL.get()).build(null));
+    public static final RegistryObject<RecipeSerializer<InsertCartridgeFactory>> INSERT = RECIPES.register("insert_cartridge_factory", () -> new SimpleCraftingRecipeSerializer<>(InsertCartridgeFactory::new));
+    public static final RegistryObject<RecipeSerializer<RemoveCartridgeFactory>> REMOVE = RECIPES.register("remove_cartridge_factory", () -> new SimpleCraftingRecipeSerializer<>(RemoveCartridgeFactory::new));
+    public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MeeCreeps.MODID);
 
-@Mod.EventBusSubscriber
-public class Registration {
-
-    @SubscribeEvent
-    public static void registerBlocks(RegistryEvent.Register<Block> event) {
-        ModFixs modFixs = FMLCommonHandler.instance().getDataFixer().init(MeeCreeps.MODID, 1);
-        Map<String, String> oldToNewIdMap = new HashMap<>();
-
-        event.getRegistry().register(new HeldCubeBlock());
-        event.getRegistry().register(new PortalBlock());
-        GameRegistry.registerTileEntity(PortalTileEntity.class, MeeCreeps.MODID + ":portalblock");
-
-        // We used to accidentally register TEs with names like "minecraft:meecreeps_portalblock" instead of "meecreeps:portalblock".
-        // Set up a DataFixer to map these incorrect names to the correct ones, so that we don't break old saved games.
-        // @todo Remove all this if we ever break saved-game compatibility.
-        oldToNewIdMap.put(MeeCreeps.MODID + "_portalblock", MeeCreeps.MODID + ":portalblock");
-        oldToNewIdMap.put("minecraft:" + MeeCreeps.MODID + "_portalblock", MeeCreeps.MODID + ":portalblock");
-        modFixs.registerFix(FixTypes.BLOCK_ENTITY, new TileEntityNamespace(oldToNewIdMap, 1));
+    static {
+        for (String sound : new String[]{"teleport", "portal", "intro1", "intro2", "intro3", "intro4", "ok", "ok2"})
+            SOUNDS.register(sound, () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MeeCreeps.MODID, sound)));
+        TABS.register("meecreeps", () -> CreativeModeTab.builder().title(Component.literal("MeeCreeps")).icon(() -> new ItemStack(GUN.get())).displayItems((p, o) -> {
+            o.accept(CUBE_ITEM.get());
+            o.accept(GUN.get());
+            o.accept(EMPTY_GUN.get());
+            o.accept(CARTRIDGE.get());
+        }).build());
     }
 
-    @SubscribeEvent
-    public static void registerItems(RegistryEvent.Register<Item> event) {
-        event.getRegistry().register(new CreepCubeItem());
-        event.getRegistry().register(new PortalGunItem());
-        event.getRegistry().register(new EmptyPortalGunItem());
-        event.getRegistry().register(new ProjectileItem());
-        event.getRegistry().register(new CartridgeItem());
-        event.getRegistry().register(new ItemBlock(ModBlocks.portalBlock).setRegistryName(ModBlocks.portalBlock.getRegistryName()));
-    }
-
-    @SubscribeEvent
-    public static void registerSounds(RegistryEvent.Register<SoundEvent> registry) {
-        registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "teleport")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "teleport")));
-        registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "portal")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "portal")));
-        registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "intro1")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "intro1")));
-        registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "intro2")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "intro2")));
-        registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "intro3")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "intro3")));
-        registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "intro4")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "intro4")));
-        registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "ok")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "ok")));
-        registry.getRegistry().register(new SoundEvent(new ResourceLocation(MeeCreeps.MODID, "ok2")).setRegistryName(new ResourceLocation(MeeCreeps.MODID, "ok2")));
+    public static void register(IEventBus bus) {
+        BLOCKS.register(bus);
+        ITEMS.register(bus);
+        ENTITIES.register(bus);
+        TILES.register(bus);
+        SOUNDS.register(bus);
+        RECIPES.register(bus);
+        TABS.register(bus);
+        bus.addListener((net.minecraftforge.event.entity.EntityAttributeCreationEvent e) -> e.put(CREEP.get(), EntityMeeCreeps.createAttributes().build()));
     }
 }

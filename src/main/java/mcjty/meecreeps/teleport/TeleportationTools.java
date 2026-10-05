@@ -1,121 +1,127 @@
 package mcjty.meecreeps.teleport;
 
+import mcjty.meecreeps.setup.Registration;
+import mcjty.meecreeps.varia.LevelTools;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
-import mcjty.meecreeps.blocks.ModBlocks;
 import mcjty.meecreeps.blocks.PortalTileEntity;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.network.MeeCreepsMessages;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
 public class TeleportationTools {
 
-    public static void cancelPortalPair(EntityPlayer player, BlockPos selectedBlock) {
-        World sourceWorld = player.getEntityWorld();
-        TileEntity te = sourceWorld.getTileEntity(selectedBlock);
+    public static void cancelPortalPair(Player player, BlockPos selectedBlock) {
+        Level sourceWorld = player.level();
+        if (selectedBlock == null || player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(selectedBlock)) > 100)
+            return;
+        BlockEntity te = sourceWorld.getBlockEntity(selectedBlock);
         if (te instanceof PortalTileEntity) {
             PortalTileEntity source = (PortalTileEntity) te;
             source.setTimeout(10);
         }
     }
 
-    private static boolean canPlacePortal(World world, BlockPos pos) {
-        if (world.isAirBlock(pos)) {
+    private static boolean canPlacePortal(Level world, BlockPos pos) {
+        if (world.isEmptyBlock(pos)) {
             return true;
         }
-        if (world.getBlockState(pos).getBlock().isReplaceable(world, pos)) {
+        if (world.getBlockState(pos).canBeReplaced()) {
             return true;
         }
         return false;
     }
 
-    private static boolean canCollideWith(World world, BlockPos pos) {
-        if (world.isAirBlock(pos)) {
+    private static boolean canCollideWith(Level world, BlockPos pos) {
+        if (world.isEmptyBlock(pos)) {
             return false;
         }
-        AxisAlignedBB box = world.getBlockState(pos).getCollisionBoundingBox(world, pos);
-        return box != null;
+        return !world.getBlockState(pos).getCollisionShape(world, pos).isEmpty();
     }
 
-    public static void makePortalPair(EntityPlayer player, BlockPos selectedBlock, EnumFacing selectedSide, TeleportDestination dest) {
-        World sourceWorld = player.getEntityWorld();
+    public static void makePortalPair(Player player, BlockPos selectedBlock, Direction selectedSide, TeleportDestination dest) {
+        Level sourceWorld = player.level();
         BlockPos sourcePortalPos = findBestPosition(sourceWorld, selectedBlock, selectedSide);
         if (sourcePortalPos == null) {
-            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_find_portal_spot"), (EntityPlayerMP) player);
+            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.cant_find_portal_spot"), (ServerPlayer) player);
             return;
         }
 
-        World destWorld = mcjty.lib.varia.TeleportationTools.getWorldForDimension(dest.getDimension());
-        if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.portalBlock) {
-            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.portal_already_there"), (EntityPlayerMP) player);
+        Level destWorld = mcjty.meecreeps.varia.LevelTools.getWorld(dest.getDimension());
+        if (destWorld == null || !destWorld.isInWorldBounds(dest.getPos()) || (destWorld == sourceWorld && dest.getPos().equals(sourcePortalPos)))
+            return;
+        if (destWorld.getBlockState(dest.getPos()).getBlock() == Registration.PORTAL.get()) {
+            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.portal_already_there"), (ServerPlayer) player);
             return;
         }
-        if (dest.getSide() == EnumFacing.DOWN) {
-            if (!canPlacePortal(destWorld, dest.getPos()) || canCollideWith(destWorld, dest.getPos().down())) {
-                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), (EntityPlayerMP) player);
+        if (dest.getSide() == Direction.DOWN) {
+            if (!canPlacePortal(destWorld, dest.getPos()) || canCollideWith(destWorld, dest.getPos().below())) {
+                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), (ServerPlayer) player);
                 return;
             }
         } else {
-            if (!canPlacePortal(destWorld, dest.getPos()) || canCollideWith(destWorld, dest.getPos().up())) {
-                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), (EntityPlayerMP) player);
+            if (!canPlacePortal(destWorld, dest.getPos()) || canCollideWith(destWorld, dest.getPos().above())) {
+                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.destination_obstructed"), (ServerPlayer) player);
                 return;
             }
         }
 
-        sourceWorld.setBlockState(sourcePortalPos, ModBlocks.portalBlock.getDefaultState(), 3);
-        PortalTileEntity source = (PortalTileEntity) sourceWorld.getTileEntity(sourcePortalPos);
+        sourceWorld.setBlock(sourcePortalPos, Registration.PORTAL.get().defaultBlockState(), 3);
+        PortalTileEntity source = (PortalTileEntity) sourceWorld.getBlockEntity(sourcePortalPos);
 
-        destWorld.setBlockState(dest.getPos(), ModBlocks.portalBlock.getDefaultState(), 3);
-        PortalTileEntity destination = (PortalTileEntity) destWorld.getTileEntity(dest.getPos());
+        destWorld.setBlock(dest.getPos(), Registration.PORTAL.get().defaultBlockState(), 3);
+        PortalTileEntity destination = (PortalTileEntity) destWorld.getBlockEntity(dest.getPos());
 
         source.setTimeout(ConfigSetup.portalTimeout.get());
         source.setOther(dest);
         source.setPortalSide(selectedSide);
 
         destination.setTimeout(ConfigSetup.portalTimeout.get());
-        destination.setOther(new TeleportDestination("", sourceWorld.provider.getDimension(), sourcePortalPos, selectedSide));
+        destination.setOther(new TeleportDestination("", sourceWorld.dimension(), sourcePortalPos, selectedSide));
         destination.setPortalSide(dest.getSide());
     }
 
-    public static void makePortalPair(World sourceWorld, BlockPos selectedBlock, EnumFacing selectedSide, TeleportDestination dest) {
+    public static void makePortalPair(Level sourceWorld, BlockPos selectedBlock, Direction selectedSide, TeleportDestination dest) {
         BlockPos sourcePortalPos = findBestPosition(sourceWorld, selectedBlock, selectedSide);
         if (sourcePortalPos == null) {
             return;
         }
 
-        World destWorld = mcjty.lib.varia.TeleportationTools.getWorldForDimension(dest.getDimension());
-        if (destWorld.getBlockState(dest.getPos()).getBlock() == ModBlocks.portalBlock) {
+        Level destWorld = mcjty.meecreeps.varia.LevelTools.getWorld(dest.getDimension());
+        if (destWorld == null || !destWorld.isInWorldBounds(dest.getPos()) || (destWorld == sourceWorld && dest.getPos().equals(sourcePortalPos)))
+            return;
+        if (destWorld.getBlockState(dest.getPos()).getBlock() == Registration.PORTAL.get()) {
             return;
         }
-        if (dest.getSide() == EnumFacing.DOWN) {
-            if (!destWorld.isAirBlock(dest.getPos()) || !destWorld.isAirBlock(dest.getPos().down())) {
+        if (dest.getSide() == Direction.DOWN) {
+            if (!destWorld.isEmptyBlock(dest.getPos()) || !destWorld.isEmptyBlock(dest.getPos().below())) {
                 return;
             }
         } else {
-            if (!destWorld.isAirBlock(dest.getPos()) || !destWorld.isAirBlock(dest.getPos().up())) {
+            if (!destWorld.isEmptyBlock(dest.getPos()) || !destWorld.isEmptyBlock(dest.getPos().above())) {
                 return;
             }
         }
 
-        sourceWorld.setBlockState(sourcePortalPos, ModBlocks.portalBlock.getDefaultState(), 3);
-        PortalTileEntity source = (PortalTileEntity) sourceWorld.getTileEntity(sourcePortalPos);
+        sourceWorld.setBlock(sourcePortalPos, Registration.PORTAL.get().defaultBlockState(), 3);
+        PortalTileEntity source = (PortalTileEntity) sourceWorld.getBlockEntity(sourcePortalPos);
 
-        destWorld.setBlockState(dest.getPos(), ModBlocks.portalBlock.getDefaultState(), 3);
-        PortalTileEntity destination = (PortalTileEntity) destWorld.getTileEntity(dest.getPos());
+        destWorld.setBlock(dest.getPos(), Registration.PORTAL.get().defaultBlockState(), 3);
+        PortalTileEntity destination = (PortalTileEntity) destWorld.getBlockEntity(dest.getPos());
 
         source.setTimeout(ConfigSetup.portalTimeout.get());
         source.setOther(dest);
         source.setPortalSide(selectedSide);
 
         destination.setTimeout(ConfigSetup.portalTimeout.get());
-        destination.setOther(new TeleportDestination("", sourceWorld.provider.getDimension(), sourcePortalPos, selectedSide));
+        destination.setOther(new TeleportDestination("", sourceWorld.dimension(), sourcePortalPos, selectedSide));
         destination.setPortalSide(dest.getSide());
     }
 
@@ -123,25 +129,23 @@ public class TeleportationTools {
      * Return the position where the portal block should be placed
      */
     @Nullable
-    public static BlockPos findBestPosition(World world, BlockPos selectedBlock, EnumFacing selectedSide) {
-        if (selectedSide == EnumFacing.UP) {
-            if (world.isAirBlock(selectedBlock.up()) && world.isAirBlock(selectedBlock.up(2))) {
-                return selectedBlock.up();
+    public static BlockPos findBestPosition(Level world, BlockPos selectedBlock, Direction selectedSide) {
+        if (selectedSide == Direction.UP) {
+            if (world.isEmptyBlock(selectedBlock.above()) && world.isEmptyBlock(selectedBlock.above(2))) {
+                return selectedBlock.above();
             }
             return null;
         }
-        if (selectedSide == EnumFacing.DOWN) {
-            if (world.isAirBlock(selectedBlock.down()) && world.isAirBlock(selectedBlock.down(2))) {
-                return selectedBlock.down();
+        if (selectedSide == Direction.DOWN) {
+            if (world.isEmptyBlock(selectedBlock.below()) && world.isEmptyBlock(selectedBlock.below(2))) {
+                return selectedBlock.below();
             }
             return null;
         }
-        selectedBlock = selectedBlock.offset(selectedSide);
-        if (world.isAirBlock(selectedBlock.down())) {
-            selectedBlock = selectedBlock.down();
-        }
-        if (!world.isAirBlock(selectedBlock.down())) {
-            return findBestPosition(world, selectedBlock.down(), EnumFacing.UP);
+        // Wall portals belong on the aimed block's face, even above ground.
+        BlockPos portalPos = selectedBlock.relative(selectedSide);
+        if (canPlacePortal(world, portalPos) && !canCollideWith(world, portalPos.above())) {
+            return portalPos;
         }
         return null;
     }

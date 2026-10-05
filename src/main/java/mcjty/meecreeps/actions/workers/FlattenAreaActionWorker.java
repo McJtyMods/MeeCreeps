@@ -2,8 +2,8 @@ package mcjty.meecreeps.actions.workers;
 
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ public class FlattenAreaActionWorker extends AbstractActionWorker {
 
     @Nullable
     @Override
-    public AxisAlignedBB getActionBox() {
+    public AABB getActionBox() {
         return null;
     }
 
@@ -64,9 +64,9 @@ public class FlattenAreaActionWorker extends AbstractActionWorker {
         for (int x = -hs; x <= hs; x++) {
             for (int y = 1; y <= 5; y++) {
                 for (int z = -hs; z <= hs; z++) {
-                    BlockPos relativePos = new BlockPos(x, y, z);
-                    BlockPos p = tpos.add(relativePos);
-                    if (!entity.getWorld().isAirBlock(p) && !positionsToSkip.contains(p)) {
+                    BlockPos relativePos = BlockPos.containing(x, y, z);
+                    BlockPos p = tpos.offset(relativePos);
+                    if (!entity.getWorld().isEmptyBlock(p) && !positionsToSkip.contains(p)) {
                         todo.add(p);
                     }
                 }
@@ -76,10 +76,10 @@ public class FlattenAreaActionWorker extends AbstractActionWorker {
             return null;
         }
 
-        BlockPos position = entity.getEntity().getPosition();
+        BlockPos position = entity.getEntity().blockPosition();
         todo.sort((o1, o2) -> {
-            double d1 = position.distanceSq(o1);
-            double d2 = position.distanceSq(o2);
+            double d1 = position.distSqr(o1);
+            double d2 = position.distSqr(o2);
             return Double.compare(d1, d2);
         });
         return todo.get(0);

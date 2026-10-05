@@ -1,0 +1,22 @@
+{
+  "result": {
+    "item": "meecreeps:creepcube"
+  },
+  "pattern": [
+    "dgd",
+    "gCg",
+    "ggg"
+  ],
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "C": {
+      "tag": "forge:chests/wooden"
+    },
+    "d": {
+      "item": "minecraft:diamond"
+    },
+    "g": {
+      "item": "minecraft:gold_ingot"
+    }
+  }
+}

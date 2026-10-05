@@ -4,9 +4,9 @@ import mcjty.meecreeps.api.BuildProgress;
 import mcjty.meecreeps.api.IBuildSchematic;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
 
 import javax.annotation.Nullable;
 import java.util.HashSet;
@@ -14,7 +14,7 @@ import java.util.Set;
 
 public abstract class AbstractBuildActionWorker extends AbstractActionWorker {
 
-    private AxisAlignedBB actionBox = null;
+    private AABB actionBox = null;
     private BuildProgress progress = new BuildProgress(2, 0);
     // Set of relative positions to skip because they need optional materials
     private Set<BlockPos> toSkip = new HashSet<>();
@@ -37,10 +37,10 @@ public abstract class AbstractBuildActionWorker extends AbstractActionWorker {
 
     @Nullable
     @Override
-    public AxisAlignedBB getActionBox() {
+    public AABB getActionBox() {
         if (actionBox == null) {
             // @todo config
-            actionBox = new AxisAlignedBB(options.getTargetPos().add(-12, -5, -12), options.getTargetPos().add(12, 5, 12));
+            actionBox = new AABB(options.getTargetPos().offset(-12, -5, -12), options.getTargetPos().offset(12, 5, 12));
         }
         return actionBox;
     }
@@ -69,14 +69,14 @@ public abstract class AbstractBuildActionWorker extends AbstractActionWorker {
 
 
     @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        progress.setHeight(tag.getInteger("stage"));
-        progress.setPass(tag.getInteger("pass"));
+    public void readFromNBT(CompoundTag tag) {
+        progress.setHeight(tag.getInt("stage"));
+        progress.setPass(tag.getInt("pass"));
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound tag) {
-        tag.setInteger("stage", progress.getHeight());
-        tag.setInteger("pass", progress.getPass());
+    public void writeToNBT(CompoundTag tag) {
+        tag.putInt("stage", progress.getHeight());
+        tag.putInt("pass", progress.getPass());
     }
 }

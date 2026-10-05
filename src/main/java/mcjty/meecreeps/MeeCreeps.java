@@ -1,97 +1,63 @@
 package mcjty.meecreeps;
 
-import mcjty.lib.base.ModBase;
-import mcjty.lib.proxy.IProxy;
-import mcjty.meecreeps.api.IMeeCreepsApi;
-import mcjty.meecreeps.commands.CommandClearActions;
-import mcjty.meecreeps.commands.CommandListActions;
-import mcjty.meecreeps.commands.CommandTestApi;
+import mcjty.meecreeps.config.ConfigSetup;
+import mcjty.meecreeps.network.MeeCreepsMessages;
 import mcjty.meecreeps.setup.ModSetup;
-import net.minecraft.entity.player.EntityPlayer;
+import mcjty.meecreeps.setup.Registration;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.*;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
+import mcjty.meecreeps.api.IMeeCreepsApi;
 
-import java.util.Optional;
 import java.util.function.Function;
 
-@Mod(modid = MeeCreeps.MODID, name = "MeeCreeps",
-        dependencies =
-                "required-after:mcjtylib_ng@[" + MeeCreeps.MIN_MCJTYLIB_VER + ",);" +
-                "after:forge@[" + MeeCreeps.MIN_FORGE_VER + ",)",
-        version = MeeCreeps.VERSION,
-        acceptedMinecraftVersions = "[1.12,1.13)")
-public class MeeCreeps implements ModBase {
+@Mod(MeeCreeps.MODID)
+public class MeeCreeps {
     public static final String MODID = "meecreeps";
-    public static final String VERSION = "1.3.1";
-    public static final String MIN_MCJTYLIB_VER = "3.5.0";
-    public static final String MIN_FORGE_VER = "14.22.0.2464";
+    public static final ModSetup setup = new ModSetup();
+    public static final MeeCreepsApi api = new MeeCreepsApi();
 
-    @SidedProxy(clientSide = "mcjty.meecreeps.setup.ClientProxy", serverSide = "mcjty.meecreeps.setup.ServerProxy")
-    public static IProxy proxy;
-    public static ModSetup setup = new ModSetup();
-
-    @Mod.Instance(MODID)
-    public static MeeCreeps instance;
-
-    public static MeeCreepsApi api = new MeeCreepsApi();
-
-    /**
-     * Run before anything else. Read your config, create blocks, items, etc, and
-     * register them with the GameRegistry.
-     */
-    @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent e) {
-        setup.preInit(e);
-        proxy.preInit(e);
+    public MeeCreeps() {
+        var bus = FMLJavaModLoadingContext.get().getModEventBus();
+        api.registerFactories();
+        ConfigSetup.init();
+        Registration.register(bus);
+        bus.addListener(this::commonSetup);
+        bus.addListener(this::imc);
+        bus.addListener(this::enqueueImc);
+        MinecraftForge.EVENT_BUS.register(new ForgeEventHandlers());
+        MinecraftForge.EVENT_BUS.addListener(mcjty.meecreeps.commands.ModCommands::register);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ConfigSetup.SERVER_CONFIG);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ConfigSetup.CLIENT_CONFIG);
     }
 
-    @Mod.EventHandler
-    public void imcCallback(FMLInterModComms.IMCEvent event) {
-        for (FMLInterModComms.IMCMessage message : event.getMessages()) {
-            if (message.key.equalsIgnoreCase("getMeeCreepsApi")) {
-                Optional<Function<IMeeCreepsApi, Void>> value = message.getFunctionValue(IMeeCreepsApi.class, Void.class);
-                if (value.isPresent()) {
-                    value.get().apply(api);
-                } else {
-                    setup.getLogger().warn("Some mod didn't return a valid result with getMeeCreepsApi!");
-                }
-            }
-        }
+
+    private void commonSetup(FMLCommonSetupEvent event) {
+        event.enqueueWork(() -> {
+            MeeCreepsMessages.registerMessages(MODID);
+            CommandHandler.registerCommands();
+        });
     }
 
-    /**
-     * Do your mod setup. Build whatever data structures you care about. Register recipes.
-     */
-    @Mod.EventHandler
-    public void init(FMLInitializationEvent e) {
-        setup.init(e);
-        proxy.init(e);
+
+    private void enqueueImc(net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent event) {
+        if (net.minecraftforge.fml.ModList.get().isLoaded("theoneprobe"))
+            net.minecraftforge.fml.InterModComms.sendTo("theoneprobe", "getTheOneProbe", () -> new mcjty.meecreeps.compat.TopCompatibility());
+        if (net.minecraftforge.fml.ModList.get().isLoaded("interactionwheel"))
+            net.minecraftforge.fml.InterModComms.sendTo("interactionwheel", "getInteractionWheel", () -> new mcjty.meecreeps.compat.WheelCompatibility());
     }
 
-    /**
-     * Handle interaction with other mods, complete your setup based on this.
-     */
-    @Mod.EventHandler
-    public void postInit(FMLPostInitializationEvent e) {
-        setup.postInit(e);
-        proxy.postInit(e);
-    }
 
-    @Mod.EventHandler
-    public void serverLoad(FMLServerStartingEvent event) {
-        event.registerServerCommand(new CommandTestApi());
-        event.registerServerCommand(new CommandClearActions());
-        event.registerServerCommand(new CommandListActions());
-    }
-
-    @Override
-    public String getModId() {
-        return MODID;
-    }
-
-    @Override
-    public void openManual(EntityPlayer entityPlayer, int i, String s) {
-        // @todo
+    @SuppressWarnings("unchecked")
+    private void imc(InterModProcessEvent event) {
+        event.getIMCStream().filter(m -> m.method().equals("getMeeCreepsApi")).forEach(m -> {
+            Object callback = m.messageSupplier().get();
+            if (callback instanceof Function<?, ?>)
+                ((Function<IMeeCreepsApi, ?>) callback).apply(api);
+        });
     }
 }

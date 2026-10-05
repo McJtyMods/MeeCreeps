@@ -13,12 +13,15 @@ public class MeeCreepActionType {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof MeeCreepActionType)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof MeeCreepActionType))
+            return false;
 
         MeeCreepActionType that = (MeeCreepActionType) o;
 
-        if (!id.equals(that.id)) return false;
+        if (!id.equals(that.id))
+            return false;
 
         return true;
     }

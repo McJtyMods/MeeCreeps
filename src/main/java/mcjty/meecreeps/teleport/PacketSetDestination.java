@@ -1,35 +1,33 @@
 package mcjty.meecreeps.teleport;
 
-import io.netty.buffer.ByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
 import mcjty.lib.network.NetworkTools;
-import mcjty.lib.thirteen.Context;
+import net.minecraftforge.network.NetworkEvent.Context;
 import mcjty.meecreeps.items.PortalGunItem;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+
 
 import java.util.function.Supplier;
 
-public class PacketSetDestination implements IMessage {
+public class PacketSetDestination {
 
     private TeleportDestination destination;
     private int destinationIndex;
 
-    @Override
-    public void fromBytes(ByteBuf buf) {
-        destination = new TeleportDestination(NetworkTools.readStringUTF8(buf), buf.readInt(),
-                BlockPos.fromLong(buf.readLong()),
-                EnumFacing.VALUES[buf.readByte()]);
+    public void fromBytes(FriendlyByteBuf buf) {
+        destination = new TeleportDestination(NetworkTools.readStringUTF8(buf), buf.readResourceKey(net.minecraft.core.registries.Registries.DIMENSION),
+                BlockPos.of(buf.readLong()),
+                Direction.values()[buf.readByte()]);
         destinationIndex = buf.readInt();
     }
 
-    @Override
-    public void toBytes(ByteBuf buf) {
+    public void toBytes(FriendlyByteBuf buf) {
         NetworkTools.writeStringUTF8(buf, destination.getName());
-        buf.writeInt(destination.getDimension());
-        buf.writeLong(destination.getPos().toLong());
+        buf.writeResourceKey(destination.getDimension());
+        buf.writeLong(destination.getPos().asLong());
         buf.writeByte(destination.getSide().ordinal());
         buf.writeInt(destinationIndex);
     }
@@ -37,7 +35,7 @@ public class PacketSetDestination implements IMessage {
     public PacketSetDestination() {
     }
 
-    public PacketSetDestination(ByteBuf buf) {
+    public PacketSetDestination(FriendlyByteBuf buf) {
         fromBytes(buf);
     }
 
@@ -49,9 +47,16 @@ public class PacketSetDestination implements IMessage {
     public void handle(Supplier<Context> supplier) {
         Context ctx = supplier.get();
         ctx.enqueueWork(() -> {
-            EntityPlayerMP player = ctx.getSender();
+            ServerPlayer player = ctx.getSender();
+            if (player == null || destinationIndex < 0 || destinationIndex >= 8 || destination.getName().length() > 64)
+                return;
+            if (destination.getDimension() != player.level().dimension() || player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(destination.getPos())) > 100)
+                return;
+            if (!player.level().hasChunkAt(destination.getPos()) || !player.level().getBlockState(destination.getPos()).canBeReplaced())
+                return;
             ItemStack heldItem = PortalGunItem.getGun(player);
-            if (heldItem.isEmpty()) return;
+            if (heldItem.isEmpty())
+                return;
             PortalGunItem.addDestination(heldItem, destination, destinationIndex);
         });
         ctx.setPacketHandled(true);

@@ -1,14 +1,14 @@
 package mcjty.meecreeps.varia;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.common.DimensionManager;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import mcjty.meecreeps.varia.LevelTools;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.FakePlayerFactory;
 
@@ -18,23 +18,17 @@ import java.util.function.*;
 
 public class GeneralTools {
 
-    private static FakePlayer harvester = null;
-
-    public static FakePlayer getHarvester(World world) {
-        if (harvester == null) {
-            harvester = FakePlayerFactory.get(DimensionManager.getWorld(0), new GameProfile(UUID.nameUUIDFromBytes("meecreeps".getBytes()), "meecreeps"));
-        }
-        // @todo config, make it possible to specify lesser pickaxe in config
-        harvester.setWorld(world);
-        harvester.setHeldItem(EnumHand.MAIN_HAND, new ItemStack(Items.DIAMOND_PICKAXE));
+    public static FakePlayer getHarvester(Level world) {
+        FakePlayer harvester = FakePlayerFactory.get((net.minecraft.server.level.ServerLevel) world, new GameProfile(UUID.nameUUIDFromBytes("meecreeps".getBytes(java.nio.charset.StandardCharsets.UTF_8)), "[MeeCreeps]"));
+        harvester.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.DIAMOND_PICKAXE));
         return harvester;
     }
 
-    public static boolean traverseBoxTest(AxisAlignedBB box, Predicate<BlockPos> matcher) {
+    public static boolean traverseBoxTest(AABB box, Predicate<BlockPos> matcher) {
         for (int x = (int) box.minX; x <= box.maxX; x++) {
             for (int y = (int) box.minY; y <= box.maxY; y++) {
                 for (int z = (int) box.minZ; z <= box.maxZ; z++) {
-                    BlockPos pos = new BlockPos(x, y, z);
+                    BlockPos pos = BlockPos.containing(x, y, z);
                     if (matcher.test(pos)) {
                         return true;
                     }
@@ -45,11 +39,11 @@ public class GeneralTools {
     }
 
     @Nullable
-    public static <T> T traverseBoxFirst(AxisAlignedBB box, Function<BlockPos, T> matcher) {
+    public static <T> T traverseBoxFirst(AABB box, Function<BlockPos, T> matcher) {
         for (int x = (int) box.minX; x <= box.maxX; x++) {
             for (int y = (int) box.minY; y <= box.maxY; y++) {
                 for (int z = (int) box.minZ; z <= box.maxZ; z++) {
-                    BlockPos pos = new BlockPos(x, y, z);
+                    BlockPos pos = BlockPos.containing(x, y, z);
                     T result = matcher.apply(pos);
                     if (result != null) {
                         return result;
@@ -60,23 +54,23 @@ public class GeneralTools {
         return null;
     }
 
-    public static void traverseBoxConsume(AxisAlignedBB box, Consumer<BlockPos> consumer) {
+    public static void traverseBoxConsume(AABB box, Consumer<BlockPos> consumer) {
         for (int x = (int) box.minX; x <= box.maxX; x++) {
             for (int y = (int) box.minY; y <= box.maxY; y++) {
                 for (int z = (int) box.minZ; z <= box.maxZ; z++) {
-                    BlockPos pos = new BlockPos(x, y, z);
+                    BlockPos pos = BlockPos.containing(x, y, z);
                     consumer.accept(pos);
                 }
             }
         }
     }
 
-    public static void traverseBox(World world, AxisAlignedBB box, BiPredicate<BlockPos, IBlockState> tester, BiConsumer<BlockPos, IBlockState> consumer) {
+    public static void traverseBox(Level world, AABB box, BiPredicate<BlockPos, BlockState> tester, BiConsumer<BlockPos, BlockState> consumer) {
         for (int x = (int) box.minX; x <= box.maxX; x++) {
             for (int y = (int) box.minY; y <= box.maxY; y++) {
                 for (int z = (int) box.minZ; z <= box.maxZ; z++) {
-                    BlockPos pos = new BlockPos(x, y, z);
-                    IBlockState state = world.getBlockState(pos);
+                    BlockPos pos = BlockPos.containing(x, y, z);
+                    BlockState state = world.getBlockState(pos);
                     if (tester.test(pos, state)) {
                         consumer.accept(pos, state);
                     }

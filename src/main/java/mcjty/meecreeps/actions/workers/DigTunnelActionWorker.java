@@ -4,29 +4,27 @@ import mcjty.lib.varia.SoundTools;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockDynamicLiquid;
-import net.minecraft.block.BlockLiquid;
-import net.minecraft.block.BlockStaticLiquid;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public class DigTunnelActionWorker extends AbstractActionWorker {
 
-    private AxisAlignedBB actionBox = null;
+    private AABB actionBox = null;
 
     private int offset = 0;     // Offset from starting point
     private int blockidx = 0;
@@ -51,10 +49,10 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    public AxisAlignedBB getActionBox() {
+    public AABB getActionBox() {
         if (actionBox == null) {
             // @todo config
-            actionBox = new AxisAlignedBB(options.getTargetPos().add(-20, -5, -20), options.getTargetPos().add(20, 5, 20));
+            actionBox = new AABB(options.getTargetPos().offset(-20, -5, -20), options.getTargetPos().offset(20, 5, 20));
         }
         return actionBox;
     }
@@ -69,7 +67,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
             b.add(Blocks.DIRT);
             b.add(Blocks.SANDSTONE);
             b.add(Blocks.NETHERRACK);
-            b.add(Blocks.NETHER_BRICK);
+            b.add(Blocks.NETHER_BRICKS);
             b.add(Blocks.END_STONE);
             b.add(Blocks.RED_SANDSTONE);
             b.add(Blocks.PURPUR_BLOCK);
@@ -79,13 +77,13 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     }
 
     private boolean isSupportBlock(ItemStack stack) {
-        return stack.getItem() instanceof ItemBlock ? isNotInterestedIn(((ItemBlock) stack.getItem()).getBlock()) : false;
+        return stack.getItem() instanceof BlockItem ? isNotInterestedIn(((BlockItem) stack.getItem()).getBlock()) : false;
     }
 
     private void dig(BlockPos p) {
         IMeeCreep entity = helper.getMeeCreep();
-        World world = entity.getWorld();
-        IBlockState state = world.getBlockState(p);
+        Level world = entity.getWorld();
+        BlockState state = world.getBlockState(p);
         boolean result;
         if (isNotInterestedIn(state.getBlock())) {
             result = helper.harvestAndDrop(p);
@@ -98,47 +96,56 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
         }
     }
 
-    private BlockPos getBlockToDig(BlockPos p, EnumFacing facing, int blockidx) {
+    private BlockPos getBlockToDig(BlockPos p, Direction facing, int blockidx) {
         switch (blockidx) {
-            case 0: return p.up(1).offset(facing.rotateY());
-            case 1: return p.up(1);
-            case 2: return p.up(1).offset(facing.rotateYCCW());
-            case 3: return p.offset(facing.rotateY());
-            case 4: return p;
-            case 5: return p.offset(facing.rotateYCCW());
-            case 6: return p.down(1).offset(facing.rotateYCCW());
-            case 7: return p.down(1);
-            case 8: return p.down(1).offset(facing.rotateY());
+            case 0:
+                return p.above(1).relative(facing.getClockWise());
+            case 1:
+                return p.above(1);
+            case 2:
+                return p.above(1).relative(facing.getCounterClockWise());
+            case 3:
+                return p.relative(facing.getClockWise());
+            case 4:
+                return p;
+            case 5:
+                return p.relative(facing.getCounterClockWise());
+            case 6:
+                return p.below(1).relative(facing.getCounterClockWise());
+            case 7:
+                return p.below(1);
+            case 8:
+                return p.below(1).relative(facing.getClockWise());
         }
         return p;
     }
 
-    private void buildSupport(BlockPos pos, EntityItem entityItem) {
+    private void buildSupport(BlockPos pos, ItemEntity entityItem) {
         ItemStack blockStack = entityItem.getItem();
-        ItemStack actual = blockStack.splitStack(1);
+        ItemStack actual = blockStack.split(1);
         if (blockStack.isEmpty()) {
-            entityItem.setDead();
+            entityItem.discard();
         }
         if (actual.isEmpty()) {
             return;
         }
         Item item = actual.getItem();
-        if (!(item instanceof ItemBlock)) {
+        if (!(item instanceof BlockItem)) {
             // Safety
             return;
         }
 
         IMeeCreep entity = helper.getMeeCreep();
-        World world = entity.getWorld();
-        Block block = ((ItemBlock) item).getBlock();
-        IBlockState stateForPlacement = block.getStateForPlacement(world, pos, EnumFacing.UP, 0, 0, 0, item.getMetadata(actual), GeneralTools.getHarvester(world), EnumHand.MAIN_HAND);
-        world.setBlockState(pos, stateForPlacement, 3);
-        SoundTools.playSound(world, block.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        Level world = entity.getWorld();
+        Block block = ((BlockItem) item).getBlock();
+        BlockState stateForPlacement = mcjty.meecreeps.varia.BlockTools.placeStackAt(GeneralTools.getHarvester(world), actual, world, pos, Direction.UP);
+        world.setBlock(pos, stateForPlacement, 3);
+        SoundTools.playSound(world, stateForPlacement.getSoundType(world, pos, entity.getEntity()).getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
     }
 
     private void placeTorch(BlockPos pos) {
         IMeeCreep entity = helper.getMeeCreep();
-        World world = entity.getWorld();
+        Level world = entity.getWorld();
         ItemStack torch = entity.consumeItem(WorkerHelper::isTorch, 1);
         if (!torch.isEmpty()) {
             helper.placeStackAt(torch, world, pos);
@@ -165,15 +172,15 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
             }
         }
 
-        EnumFacing facing = helper.getContext().getTargetSide().getOpposite();
+        Direction facing = helper.getContext().getTargetSide().getOpposite();
         // Target is bottom position but we need it to be at the center so that's why we do up()
-        BlockPos p = helper.getContext().getTargetPos().up().offset(facing, this.offset);
+        BlockPos p = helper.getContext().getTargetPos().above().relative(facing, this.offset);
 
         if (checkSupports(facing, p)) {
             return;
         }
 
-        BlockPos torchPos = p.down().offset(facing.getOpposite());
+        BlockPos torchPos = p.below().relative(facing.getOpposite());
         if (this.offset % 7 == 0 && !WorkerHelper.isTorch(entity.getWorld().getBlockState(torchPos).getBlock())) {
             // Time to place a torch if we have any
             if (entity.hasItem(WorkerHelper::isTorch)) {
@@ -183,7 +190,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
 
         BlockPos digpos = getBlockToDig(p, facing, blockidx);
         // Navigate to the block just adjacent to where we want to dig
-        helper.navigateTo(p.offset(facing.getOpposite()), blockPos -> {
+        helper.navigateTo(p.relative(facing.getOpposite()), blockPos -> {
             helper.delayForHardBlocks(digpos, pp -> dig(digpos));
         });
 
@@ -203,79 +210,79 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
         }
     }
 
-    private boolean checkClear(BlockPos p, EnumFacing facing) {
+    private boolean checkClear(BlockPos p, Direction facing) {
         IMeeCreep entity = helper.getMeeCreep();
-        World world = entity.getWorld();
+        Level world = entity.getWorld();
         if (canDig(p, world)) {
             return false;
         }
-        if (canDig(p.offset(facing.rotateY()), world)) {
+        if (canDig(p.relative(facing.getClockWise()), world)) {
             return false;
         }
-        if (canDig(p.offset(facing.rotateYCCW()), world)) {
+        if (canDig(p.relative(facing.getCounterClockWise()), world)) {
             return false;
         }
-        if (canDig(p.up(), world)) {
+        if (canDig(p.above(), world)) {
             return false;
         }
-        if (canDig(p.up().offset(facing.rotateY()), world)) {
+        if (canDig(p.above().relative(facing.getClockWise()), world)) {
             return false;
         }
-        if (canDig(p.up().offset(facing.rotateYCCW()), world)) {
+        if (canDig(p.above().relative(facing.getCounterClockWise()), world)) {
             return false;
         }
-        if (canDig(p.down(), world)) {
+        if (canDig(p.below(), world)) {
             return false;
         }
-        if (canDig(p.down().offset(facing.rotateY()), world)) {
+        if (canDig(p.below().relative(facing.getClockWise()), world)) {
             return false;
         }
-        if (canDig(p.down().offset(facing.rotateYCCW()), world)) {
+        if (canDig(p.below().relative(facing.getCounterClockWise()), world)) {
             return false;
         }
         return true;
     }
 
-    private boolean canDig(BlockPos p, World world) {
-        return !world.isAirBlock(p) && !positionsToSkip.contains(p);
+    private boolean canDig(BlockPos p, Level world) {
+        return !world.isEmptyBlock(p) && !positionsToSkip.contains(p);
     }
 
-    private boolean checkSupports(EnumFacing facing, BlockPos p) {
-        if (checkForSupport(p.down(2))) {
+    private boolean checkSupports(Direction facing, BlockPos p) {
+        if (checkForSupport(p.below(2))) {
             return true;
         }
-        if (checkForSupport(p.down(2).offset(facing.rotateY()))) {
+        if (checkForSupport(p.below(2).relative(facing.getClockWise()))) {
             return true;
         }
-        if (checkForSupport(p.down(2).offset(facing.rotateYCCW()))) {
+        if (checkForSupport(p.below(2).relative(facing.getCounterClockWise()))) {
             return true;
         }
 
-        if (checkForLiquid(p.down(1).offset(facing.rotateY(), 2))) {
+        if (checkForLiquid(p.below(1).relative(facing.getClockWise(), 2))) {
             return true;
         }
-        if (checkForLiquid(p.offset(facing.rotateY(), 2))) {
+        if (checkForLiquid(p.relative(facing.getClockWise(), 2))) {
             return true;
         }
-        if (checkForLiquid(p.up(1).offset(facing.rotateY(), 2))) {
+        if (checkForLiquid(p.above(1).relative(facing.getClockWise(), 2))) {
             return true;
         }
-        if (checkForLiquid(p.down(1).offset(facing.rotateYCCW(), 2))) {
+        if (checkForLiquid(p.below(1).relative(facing.getCounterClockWise(), 2))) {
             return true;
         }
-        if (checkForLiquid(p.offset(facing.rotateYCCW(), 2))) {
+        if (checkForLiquid(p.relative(facing.getCounterClockWise(), 2))) {
             return true;
         }
-        if (checkForLiquid(p.up(1).offset(facing.rotateYCCW(), 2))) {
+        if (checkForLiquid(p.above(1).relative(facing.getCounterClockWise(), 2))) {
             return true;
         }
-        if (checkForLiquid(p.up(2))) {
+        if (checkForLiquid(p.above(2))) {
             return true;
         }
-        if (checkForLiquid(p.up(2).offset(facing.rotateY()))) {
+        if (checkForLiquid(p.above(2).relative(facing.getClockWise()))) {
             return true;
         }
-        if (checkForLiquid(p.up(2).offset(facing.rotateYCCW()))) {
+        if (checkForLiquid(p.above(2).relative(facing.getCounterClockWise()))) {
             return true;
         }
         return false;
@@ -283,7 +290,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
 
     private boolean checkForSupport(BlockPos p) {
         IMeeCreep entity = helper.getMeeCreep();
-        if (entity.getWorld().isAirBlock(p) || isLiquid(p)) {
+        if (entity.getWorld().isEmptyBlock(p) || isLiquid(p)) {
             if (!helper.findItemOnGround(getSearchBox(), this::isSupportBlock, entityItem -> buildSupport(p, entityItem))) {
                 // We cannot continu like this
                 helper.showMessage("message.meecreeps.cant_continue");
@@ -309,18 +316,18 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     private boolean isLiquid(BlockPos p) {
         IMeeCreep entity = helper.getMeeCreep();
         Block block = entity.getWorld().getBlockState(p).getBlock();
-        return block instanceof BlockLiquid || block instanceof BlockDynamicLiquid || block instanceof BlockStaticLiquid;
+        return block instanceof LiquidBlock;
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        offset = tag.getInteger("offset");
-        blockidx = tag.getInteger("blockidx");
+    public void readFromNBT(CompoundTag tag) {
+        offset = tag.getInt("offset");
+        blockidx = tag.getInt("blockidx");
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound tag) {
-        tag.setInteger("offset", offset);
-        tag.setInteger("blockidx", blockidx);
+    public void writeToNBT(CompoundTag tag) {
+        tag.putInt("offset", offset);
+        tag.putInt("blockidx", blockidx);
     }
 }

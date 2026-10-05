@@ -5,16 +5,16 @@ import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.varia.GeneralTools;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockLeaves;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagLong;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongTag;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.nbt.Tag;
 
 import java.util.*;
 
@@ -28,12 +28,12 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    public AxisAlignedBB getActionBox() {
+    public AABB getActionBox() {
         return null;
     }
 
     private void harvest(BlockPos pos) {
-        World world = helper.getMeeCreep().getWorld();
+        Level world = helper.getMeeCreep().getWorld();
         helper.harvestAndDrop(pos);
         findLeaves(pos, world);
     }
@@ -48,16 +48,16 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
         return true;
     }
 
-    protected void findLeaves(BlockPos pos, World world) {
+    protected void findLeaves(BlockPos pos, Level world) {
         int offs = 4;
         for (int x = -offs; x <= offs; x++) {
             for (int y = -offs; y <= offs; y++) {
                 for (int z = -offs; z <= offs; z++) {
-                    BlockPos p = pos.add(x, y, z);
-                    IBlockState st = world.getBlockState(p);
-                    if (st.getBlock().isLeaves(st, world, p)) {
-                        if (st.getPropertyKeys().contains(BlockLeaves.DECAYABLE)) {
-                            if (st.getValue(BlockLeaves.DECAYABLE)) {
+                    BlockPos p = pos.offset(x, y, z);
+                    BlockState st = world.getBlockState(p);
+                    if (st.is(net.minecraft.tags.BlockTags.LEAVES)) {
+                        if (st.getProperties().contains(LeavesBlock.PERSISTENT)) {
+                            if (!st.getValue(LeavesBlock.PERSISTENT)) {
                                 leavesToTick.put(p, 500);
                             }
                         }
@@ -74,13 +74,13 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
             return;
         }
         IMeeCreep entity = helper.getMeeCreep();
-        for (int y = -1 ; y <= 1 ; y++) {
-            for (int x = -1 ; x <= 1 ; x++) {
-                for (int z = -1 ; z <= 1 ; z++) {
+        for (int y = -1; y <= 1; y++) {
+            for (int x = -1; x <= 1; x++) {
+                for (int z = -1; z <= 1; z++) {
                     if (x != 0 || y != 0 || z != 0) {
-                        BlockPos p = pos.add(x, y, z);
+                        BlockPos p = pos.offset(x, y, z);
                         if (!alreadyDone.contains(p)) {
-                            IBlockState log = entity.getWorld().getBlockState(p);
+                            BlockState log = entity.getWorld().getBlockState(p);
                             if (helper.allowedToHarvest(log, entity.getWorld(), p, GeneralTools.getHarvester(entity.getWorld()))) {
                                 if (log.getBlock() == woodBlock) {
                                     traverseTreeLogs(alreadyDone, p, woodBlock);
@@ -96,10 +96,10 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
     protected void findTree() {
         IMeeCreep entity = helper.getMeeCreep();
         BlockPos startPos = options.getTargetPos();
-        if (entity.getWorld().isAirBlock(startPos)) {
+        if (entity.getWorld().isEmptyBlock(startPos)) {
             return;
         }
-        IBlockState logBase = entity.getWorld().getBlockState(startPos);
+        BlockState logBase = entity.getWorld().getBlockState(startPos);
         Set<BlockPos> alreadyDone = new HashSet<>();
         traverseTreeLogs(alreadyDone, startPos, logBase.getBlock());
     }
@@ -135,15 +135,15 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
 
     private void decayLeaves() {
         IMeeCreep entity = helper.getMeeCreep();
-        World world = entity.getWorld();
+        Level world = entity.getWorld();
         Counter<BlockPos> newmap = new Counter<>();
         for (Map.Entry<BlockPos, Integer> entry : leavesToTick.entrySet()) {
             BlockPos pos = entry.getKey();
-            if (!world.isAirBlock(pos)) {
-                IBlockState state = world.getBlockState(pos);
-                state.getBlock().updateTick(world, pos, state, entity.getRandom());
+            if (!world.isEmptyBlock(pos)) {
+                BlockState state = world.getBlockState(pos);
+                state.randomTick((net.minecraft.server.level.ServerLevel) world, pos, entity.getRandom());
 
-                if (!world.isAirBlock(pos)) {
+                if (!world.isEmptyBlock(pos)) {
                     Integer counter = entry.getValue();
                     counter--;
                     if (counter > 0) {
@@ -156,38 +156,38 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound tag) {
-        NBTTagList list = new NBTTagList();
+    public void writeToNBT(CompoundTag tag) {
+        ListTag list = new ListTag();
         for (BlockPos block : blocks) {
-            list.appendTag(new NBTTagLong(block.toLong()));
+            list.add(LongTag.valueOf(block.asLong()));
         }
-        tag.setTag("blocks", list);
+        tag.put("blocks", list);
 
-        list = new NBTTagList();
+        list = new ListTag();
         for (Map.Entry<BlockPos, Integer> entry : leavesToTick.entrySet()) {
             BlockPos block = entry.getKey();
             Integer counter = entry.getValue();
-            NBTTagCompound tc = new NBTTagCompound();
-            tc.setLong("p", block.toLong());
-            tc.setInteger("c", counter);
-            list.appendTag(tc);
+            CompoundTag tc = new CompoundTag();
+            tc.putLong("p", block.asLong());
+            tc.putInt("c", counter);
+            list.add(tc);
         }
-        tag.setTag("leaves", list);
+        tag.put("leaves", list);
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        NBTTagList list = tag.getTagList("blocks", Constants.NBT.TAG_LONG);
+    public void readFromNBT(CompoundTag tag) {
+        ListTag list = tag.getList("blocks", Tag.TAG_LONG);
         blocks.clear();
-        for (int i = 0; i < list.tagCount(); i++) {
-            blocks.add(BlockPos.fromLong(((NBTTagLong) list.get(i)).getLong()));
+        for (int i = 0; i < list.size(); i++) {
+            blocks.add(BlockPos.of(((LongTag) list.get(i)).getAsLong()));
         }
-        list = tag.getTagList("leaves", Constants.NBT.TAG_COMPOUND);
+        list = tag.getList("leaves", Tag.TAG_COMPOUND);
         leavesToTick.clear();
-        for (int i = 0; i < list.tagCount(); i++) {
-            NBTTagCompound tc = list.getCompoundTagAt(i);
-            BlockPos pos = BlockPos.fromLong(tc.getLong("p"));
-            int counter = tc.getInteger("c");
+        for (int i = 0; i < list.size(); i++) {
+            CompoundTag tc = list.getCompound(i);
+            BlockPos pos = BlockPos.of(tc.getLong("p"));
+            int counter = tc.getInt("c");
             leavesToTick.put(pos, counter);
         }
     }

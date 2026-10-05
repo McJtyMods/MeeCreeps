@@ -1,46 +1,43 @@
 package mcjty.meecreeps.network;
 
-
-import mcjty.lib.network.PacketHandler;
-import mcjty.lib.thirteen.ChannelBuilder;
-import mcjty.lib.thirteen.SimpleChannel;
 import mcjty.meecreeps.MeeCreeps;
-import mcjty.meecreeps.actions.PacketActionOptionToClient;
-import mcjty.meecreeps.actions.PacketPerformAction;
-import mcjty.meecreeps.actions.PacketShowBalloonToClient;
-import mcjty.meecreeps.teleport.PacketMakePortals;
-import mcjty.meecreeps.teleport.PacketSetDestination;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import mcjty.meecreeps.actions.*;
+import mcjty.meecreeps.teleport.*;
+import mcjty.lib.network.PacketSendServerCommand;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.*;
+import net.minecraftforge.network.simple.SimpleChannel;
 
-public class MeeCreepsMessages {
+import java.util.Optional;
 
-    public static SimpleNetworkWrapper INSTANCE = null;
-
-    public MeeCreepsMessages() {
-    }
+public final class MeeCreepsMessages {
+    private static final String PROTOCOL = "2";
+    private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(new ResourceLocation(MeeCreeps.MODID, "main"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
+    public static final MeeCreepsMessages INSTANCE = new MeeCreepsMessages();
 
     public static void registerMessages(String name) {
-        SimpleChannel net = ChannelBuilder
-                .named(new ResourceLocation(MeeCreeps.MODID, name))
-                .networkProtocolVersion(() -> "1.0")
-                .clientAcceptedVersions(s -> true)
-                .serverAcceptedVersions(s -> true)
-                .simpleChannel();
-
-        INSTANCE = net.getNetwork();
-
-        // Server side
-        net.registerMessageServer(id(), PacketPerformAction.class, PacketPerformAction::toBytes, PacketPerformAction::new, PacketPerformAction::handle);
-        net.registerMessageServer(id(), PacketSetDestination.class, PacketSetDestination::toBytes, PacketSetDestination::new, PacketSetDestination::handle);
-        net.registerMessageServer(id(), PacketMakePortals.class, PacketMakePortals::toBytes, PacketMakePortals::new, PacketMakePortals::handle);
-
-        // Client side
-        net.registerMessageClient(id(), PacketActionOptionToClient.class, PacketActionOptionToClient::toBytes, PacketActionOptionToClient::new, PacketActionOptionToClient::handle);
-        net.registerMessageClient(id(), PacketShowBalloonToClient.class, PacketShowBalloonToClient::toBytes, PacketShowBalloonToClient::new, PacketShowBalloonToClient::handle);
+        int id = 0;
+        CHANNEL.registerMessage(id++, PacketPerformAction.class, PacketPerformAction::toBytes, PacketPerformAction::new, PacketPerformAction::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(id++, PacketSetDestination.class, PacketSetDestination::toBytes, PacketSetDestination::new, PacketSetDestination::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(id++, PacketMakePortals.class, PacketMakePortals::toBytes, PacketMakePortals::new, PacketMakePortals::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(id++, PacketActionOptionToClient.class, PacketActionOptionToClient::toBytes, PacketActionOptionToClient::new, PacketActionOptionToClient::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(id++, PacketShowBalloonToClient.class, PacketShowBalloonToClient::toBytes, PacketShowBalloonToClient::new, PacketShowBalloonToClient::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(id++, PacketSendServerCommand.class, PacketSendServerCommand::write, PacketSendServerCommand::create, (packet, context) -> {
+            var ctx = context.get();
+            ctx.enqueueWork(() -> {
+                if (ctx.getSender() != null && MeeCreeps.MODID.equals(packet.modid()))
+                    mcjty.lib.McJtyLib.handleCommand(packet.modid(), packet.command(), ctx.getSender(), packet.arguments());
+            });
+            ctx.setPacketHandled(true);
+        }, Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
 
-    private static int id() {
-        return PacketHandler.nextPacketID();
+    public void sendTo(Object packet, ServerPlayer player) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);
+    }
+
+    public void sendToServer(Object packet) {
+        CHANNEL.sendToServer(packet);
     }
 }

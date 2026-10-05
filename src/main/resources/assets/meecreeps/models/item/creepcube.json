@@ -2,9 +2,9 @@
 	"parent": "block/cube",
 	"__comment": "Designed by Wiiv with Cubik Studio - https://cubik.studio",
 	"textures": {
-		"particle": "meecreeps:items/meecreeps_box_side",
-		"side": "meecreeps:items/meecreeps_box_side",
-		"top_bottom": "meecreeps:items/meecreeps_box_top_bottom"
+		"particle": "meecreeps:item/meecreeps_box_side",
+		"side": "meecreeps:item/meecreeps_box_side",
+		"top_bottom": "meecreeps:item/meecreeps_box_top_bottom"
 	},
 	"elements": [
 		{

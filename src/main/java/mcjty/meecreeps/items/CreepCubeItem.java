@@ -1,5 +1,6 @@
 package mcjty.meecreeps.items;
 
+import mcjty.meecreeps.setup.Registration;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.actions.MeeCreepActionType;
@@ -7,23 +8,19 @@ import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.actions.ServerActionManager;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.network.MeeCreepsMessages;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
@@ -33,33 +30,28 @@ import java.util.List;
 public class CreepCubeItem extends Item {
 
     public CreepCubeItem() {
-        setRegistryName("creepcube");
-        setUnlocalizedName(MeeCreeps.MODID + ".creepcube");
-        setMaxStackSize(1);
-        setCreativeTab(MeeCreeps.setup.getTab());
+        super(new Item.Properties().stacksTo(1));
     }
 
-    @SideOnly(Side.CLIENT)
-    public void initModel() {
-        ModelLoader.setCustomModelResourceLocation(this, 0, new ModelResourceLocation(getRegistryName(), "inventory"));
-    }
 
     @Override
-    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-        Collections.addAll(tooltip, StringUtils.split(I18n.format("message.meecreeps.tooltip.cube_intro"), "\n"));
+    public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
+        for (String line : StringUtils.split(I18n.get("message.meecreeps.tooltip.cube_intro"), "\n"))
+            tooltip.add(net.minecraft.network.chat.Component.literal(line));
 
         MeeCreepActionType lastAction = getLastAction(stack);
-        if (lastAction != null) {
+        if (lastAction != null && MeeCreeps.api.getFactory(lastAction) != null) {
             MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(lastAction);
-            tooltip.add(TextFormatting.YELLOW + "    (" + I18n.format(factory.getMessage()) + ")");
+            tooltip.add(net.minecraft.network.chat.Component.translatable(factory.getMessage()).withStyle(ChatFormatting.YELLOW));
         }
         if (isLimited()) {
-            Collections.addAll(tooltip, StringUtils.split(I18n.format("message.meecreeps.tooltip.cube_uses", Integer.toString(ConfigSetup.meeCreepBoxMaxUsage.get() - getUsages(stack))), "\n"));
+            for (String line : StringUtils.split(I18n.get("message.meecreeps.tooltip.cube_uses", Integer.toString(ConfigSetup.meeCreepBoxMaxUsage.get() - getUsages(stack))), "\n"))
+                tooltip.add(net.minecraft.network.chat.Component.literal(line));
         }
     }
 
     @Override
-    public boolean showDurabilityBar(ItemStack stack) {
+    public boolean isBarVisible(ItemStack stack) {
         return isLimited();
     }
 
@@ -68,65 +60,69 @@ public class CreepCubeItem extends Item {
     }
 
     public static void setLastAction(ItemStack cube, MeeCreepActionType type, @Nullable String furtherQuestionId) {
-        if (cube.getTagCompound() == null) {
-            cube.setTagCompound(new NBTTagCompound());
+        if (cube.getTag() == null) {
+            cube.setTag(new CompoundTag());
         }
-        cube.getTagCompound().setString("lastType", type.getId());
+        cube.getTag().putString("lastType", type.getId());
         if (furtherQuestionId != null) {
-            cube.getTagCompound().setString("lastQuestion", furtherQuestionId);
+            cube.getTag().putString("lastQuestion", furtherQuestionId);
         }
     }
 
     @Nullable
     public static MeeCreepActionType getLastAction(ItemStack cube) {
-        if (cube.getTagCompound() == null) {
+        if (cube.getTag() == null) {
             return null;
         }
-        if (!cube.getTagCompound().hasKey("lastType")) {
+        if (!cube.getTag().contains("lastType")) {
             return null;
         }
-        String lastType = cube.getTagCompound().getString("lastType");
+        String lastType = cube.getTag().getString("lastType");
         return new MeeCreepActionType(lastType);
     }
 
     @Nullable
     public static String getLastQuestionId(ItemStack cube) {
-        if (cube.getTagCompound() == null) {
+        if (cube.getTag() == null) {
             return null;
         }
-        if (!cube.getTagCompound().hasKey("lastQuestion")) {
+        if (!cube.getTag().contains("lastQuestion")) {
             return null;
         }
-        return cube.getTagCompound().getString("lastQuestion");
+        return cube.getTag().getString("lastQuestion");
     }
 
     public static void setUsages(ItemStack stack, int uses) {
-        if (stack.getTagCompound() == null) {
-            stack.setTagCompound(new NBTTagCompound());
+        if (stack.getTag() == null) {
+            stack.setTag(new CompoundTag());
         }
-        stack.getTagCompound().setInteger("uses", uses);
+        stack.getTag().putInt("uses", uses);
     }
 
     public static int getUsages(ItemStack stack) {
-        if (stack.getTagCompound() == null) {
+        if (stack.getTag() == null) {
             return 0;
         }
-        return stack.getTagCompound().getInteger("uses");
+        return stack.getTag().getInt("uses");
     }
 
 
     @Override
+    public int getBarWidth(ItemStack stack) {
+        return Math.round(13 * (1 - (float) getDurabilityForDisplay(stack)));
+    }
+
     public double getDurabilityForDisplay(ItemStack stack) {
         int max = ConfigSetup.meeCreepBoxMaxUsage.get();
         int usages = getUsages(stack);
         return usages / (double) max;
     }
 
-    public static ItemStack getCube(EntityPlayer player) {
-        ItemStack heldItem = player.getHeldItem(EnumHand.MAIN_HAND);
-        if (heldItem.getItem() != ModItems.creepCubeItem) {
-            heldItem = player.getHeldItem(EnumHand.OFF_HAND);
-            if (heldItem.getItem() != ModItems.creepCubeItem) {
+    public static ItemStack getCube(Player player) {
+        ItemStack heldItem = player.getItemInHand(InteractionHand.MAIN_HAND);
+        if (heldItem.getItem() != Registration.CUBE_ITEM.get()) {
+            heldItem = player.getItemInHand(InteractionHand.OFF_HAND);
+            if (heldItem.getItem() != Registration.CUBE_ITEM.get()) {
                 // Something went wrong
                 return ItemStack.EMPTY;
             }
@@ -136,49 +132,59 @@ public class CreepCubeItem extends Item {
 
 
     @Override
-    public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
-        if (world.isRemote) {
-            return EnumActionResult.SUCCESS;
+    public InteractionResult onItemUseFirst(ItemStack usedStack, net.minecraft.world.item.context.UseOnContext context) {
+        Player player = context.getPlayer();
+        Level world = context.getLevel();
+        BlockPos pos = context.getClickedPos();
+        Direction side = context.getClickedFace();
+        InteractionHand hand = context.getHand();
+        if (player == null)
+            return InteractionResult.PASS;
+        if (world.isClientSide) {
+            return InteractionResult.SUCCESS;
         }
 
         if (isLimited()) {
-            ItemStack heldItem = player.getHeldItem(hand);
+            ItemStack heldItem = player.getItemInHand(hand);
             if (getUsages(heldItem) >= ConfigSetup.meeCreepBoxMaxUsage.get()) {
-                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.box_unusable"), (EntityPlayerMP) player);
-                return EnumActionResult.SUCCESS;
+                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.box_unusable"), (ServerPlayer) player);
+                return InteractionResult.SUCCESS;
             }
-            setUsages(heldItem, getUsages(heldItem)+1);
         }
 
         if (ConfigSetup.maxMeecreepsPerPlayer.get() >= 0) {
             int cnt = ServerActionManager.getManager().countMeeCreeps(player);
             if (cnt >= ConfigSetup.maxMeecreepsPerPlayer.get()) {
-                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.max_spawn_reached", Integer.toString(ConfigSetup.maxMeecreepsPerPlayer.get())), (EntityPlayerMP) player);
-                return EnumActionResult.SUCCESS;
+                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.max_spawn_reached", Integer.toString(ConfigSetup.maxMeecreepsPerPlayer.get())), (ServerPlayer) player);
+                return InteractionResult.SUCCESS;
             }
         }
 
-        if (player.isSneaking()) {
-            ItemStack heldItem = player.getHeldItem(hand);
+        if (player.isShiftKeyDown()) {
+            ItemStack heldItem = player.getItemInHand(hand);
             MeeCreepActionType lastAction = getLastAction(heldItem);
             if (lastAction == null) {
-                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.no_last_action"), (EntityPlayerMP) player);
+                MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.no_last_action"), (ServerPlayer) player);
             } else {
                 MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(lastAction);
-                if (factory.getFactory().isPossible(world, pos, side) || factory.getFactory().isPossibleSecondary(world, pos, side)) {
-                    MeeCreeps.api.spawnMeeCreep(lastAction.getId(), getLastQuestionId(heldItem), world, pos, side, (EntityPlayerMP) player, false);
+                if (factory != null && ConfigSetup.isAllowed(lastAction.getId()) && (factory.getFactory().isPossible(world, pos, side) || factory.getFactory().isPossibleSecondary(world, pos, side))) {
+                    if (isLimited())
+                        setUsages(heldItem, getUsages(heldItem) + 1);
+                    MeeCreeps.api.spawnMeeCreep(lastAction.getId(), getLastQuestionId(heldItem), world, pos, side, (ServerPlayer) player, false);
                 } else {
-                    MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.last_action_not_possible"), (EntityPlayerMP) player);
+                    MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient("message.meecreeps.last_action_not_possible"), (ServerPlayer) player);
                 }
             }
         } else {
+            if (isLimited())
+                setUsages(usedStack, getUsages(usedStack) + 1);
             ServerActionManager.getManager().createActionOptions(world, pos, side, player);
         }
-        return EnumActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        return EnumActionResult.SUCCESS;
+    public InteractionResult useOn(net.minecraft.world.item.context.UseOnContext context) {
+        return InteractionResult.SUCCESS;
     }
 }

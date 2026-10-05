@@ -4,11 +4,11 @@ import mcjty.meecreeps.actions.workers.ChopTreeAndCollectActionWorker;
 import mcjty.meecreeps.api.IActionFactory;
 import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.api.IWorkerHelper;
-import net.minecraft.block.BlockLog;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -16,16 +16,16 @@ import javax.annotation.Nullable;
 public class ChopTreeAndCollectActionFactory implements IActionFactory {
 
     @Override
-    public boolean isPossible(World world, BlockPos pos, EnumFacing side) {
-        IBlockState state = world.getBlockState(pos);
-        if (state.getBlock() instanceof BlockLog) {
+    public boolean isPossible(Level world, BlockPos pos, Direction side) {
+        BlockState state = world.getBlockState(pos);
+        if (state.is(net.minecraft.tags.BlockTags.LOGS)) {
             return true;
         }
         return false;
     }
 
     @Override
-    public boolean isPossibleSecondary(World world, BlockPos pos, EnumFacing side) {
+    public boolean isPossibleSecondary(Level world, BlockPos pos, Direction side) {
         return false;
     }
 

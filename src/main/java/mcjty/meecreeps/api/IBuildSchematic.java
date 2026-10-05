@@ -1,6 +1,6 @@
 package mcjty.meecreeps.api;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 /**
  * Implement this interface for a build schematic using IDesiredBlock

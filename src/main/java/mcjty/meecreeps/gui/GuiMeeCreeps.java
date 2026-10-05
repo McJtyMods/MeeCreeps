@@ -12,23 +12,21 @@ import mcjty.meecreeps.actions.PacketPerformAction;
 import mcjty.meecreeps.network.MeeCreepsMessages;
 import mcjty.meecreeps.setup.GuiProxy;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class GuiMeeCreeps extends GuiScreen {
+public class GuiMeeCreeps extends Screen {
 
-    private static final int WIDTH = 256;
+    private static final int WIDTH = MeeCreepsDialogBackground.WIDTH;
     private static final int HEIGHT = 200;
 
-    private static final ResourceLocation gui_top = new ResourceLocation(MeeCreeps.MODID, "textures/gui/gui_meecreeps_top.png");
-    private final int OPTION_DISTANCE = 14;
+    private static final int OPTION_DISTANCE = MeeCreepsDialogBackground.ROW_HEIGHT;
     private final int id;
 
     private int guiLeft;
@@ -45,23 +43,25 @@ public class GuiMeeCreeps extends GuiScreen {
     private Runnable outsideWindowAction;
 
     public GuiMeeCreeps(int id) {
+        super(net.minecraft.network.chat.Component.literal("MeeCreeps"));
         this.id = id;
     }
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
         guiLeft = (this.width - WIDTH) / 2;
         guiTop = (this.height - HEIGHT) / 2;
 
         options = ClientActionManager.lastOptions;
         confirmedAction = false;
         showingAlternatives = false;
-        outsideWindowAction = () -> {};
+        outsideWindowAction = () -> {
+        };
     }
 
     @Override
-    public boolean doesGuiPauseGame() {
+    public boolean isPauseScreen() {
         return false;
     }
 
@@ -92,34 +92,33 @@ public class GuiMeeCreeps extends GuiScreen {
     }
 
     private void close() {
-        this.mc.displayGuiScreen(null);
-        if (this.mc.currentScreen == null) {
-            this.mc.setIngameFocus();
+        this.minecraft.setScreen(null);
+        if (this.minecraft.screen == null) {
+            this.minecraft.mouseHandler.grabMouse();
         }
     }
 
     @Override
-    public void onGuiClosed() {
+    public void removed() {
         if (!confirmedAction) {
             outsideWindowAction.run();
         }
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        super.mouseClicked(mouseX, mouseY, mouseButton);
-        if (mouseButton == 0) {
-            int y = (mouseY - guiTop - 21) / OPTION_DISTANCE;
-            if (y >= 0 && y < questions.size()) {
-                questions.get(y).getAction().run();
-            } else {
-                close();
-            }
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0 && mouseX >= guiLeft && mouseX <= guiLeft + WIDTH) {
+            getQuestions();
+            int row = (int) Math.floor((mouseY - guiTop - 21) / OPTION_DISTANCE);
+            if (row >= 0 && row < questions.size())
+                questions.get(row).getAction().run();
+            return true;
         }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     private void doAction(MeeCreepActionType type, MeeCreepsApi.Factory factory, String furtherQuestionId) {
-        String heading = factory.getFactory().getFurtherQuestionHeading(Minecraft.getMinecraft().world, options.getTargetPos(), options.getTargetSide());
+        String heading = factory.getFactory().getFurtherQuestionHeading(Minecraft.getInstance().level, options.getTargetPos(), options.getTargetSide());
         if (heading == null || furtherQuestionId != null) {
             confirmedAction = true;
             MeeCreepsMessages.INSTANCE.sendToServer(new PacketPerformAction(options, type, furtherQuestionId));
@@ -127,7 +126,7 @@ public class GuiMeeCreeps extends GuiScreen {
         } else {
             furtherQuestionType = type;
             furtherQuestionsHeading = heading;
-            furtherQuestions = factory.getFactory().getFurtherQuestions(Minecraft.getMinecraft().world, options.getTargetPos(), options.getTargetSide());
+            furtherQuestions = factory.getFactory().getFurtherQuestions(Minecraft.getInstance().level, options.getTargetPos(), options.getTargetSide());
         }
     }
 
@@ -177,7 +176,9 @@ public class GuiMeeCreeps extends GuiScreen {
                 questions.add(new Question(factory.getMessage(), () -> doAction(type, factory, null)));
             }
             if (hasAlternatives()) {
-                questions.add(new Question("message.meecreeps.gui.other_things", () -> { showingAlternatives = true;}));
+                questions.add(new Question("message.meecreeps.gui.other_things", () -> {
+                    showingAlternatives = true;
+                }));
             }
             questions.add(new Question("message.meecreeps.gui.never_mind", this::dismissAndClose));
             outsideWindowAction = this::dismiss;
@@ -186,43 +187,22 @@ public class GuiMeeCreeps extends GuiScreen {
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX, mouseY, partialTicks);
-
-        mc.getTextureManager().bindTexture(gui_top);
-        drawTexturedModalRect(guiLeft, guiTop, 0, 0, WIDTH, 10);
-        int y = guiTop+10;
-
-        List<Question> questions = getQuestions();
-
-        for (int i = 0; i < questions.size() ; i++) {
-            drawTexturedModalRect(guiLeft, y, 0, 10, WIDTH, 15);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        var rows = getQuestions();
+        MeeCreepsDialogBackground.render(graphics, guiLeft, guiTop, rows.size());
+        String heading = id == GuiProxy.GUI_MEECREEP_DISMISS ? "message.meecreeps.gui.problem"
+                : furtherQuestionsHeading != null ? furtherQuestionsHeading
+                : showingAlternatives ? "message.meecreeps.gui.alternatives"
+                : "message.meecreeps.gui.what_can_i_do";
+        graphics.drawString(font, I18n.get(heading), guiLeft + 15, guiTop + 7, 0xff000000, false);
+        int y = guiTop + 21;
+        for (var question : rows) {
+            int color = mouseX >= guiLeft && mouseX < guiLeft + WIDTH && mouseY >= y && mouseY < y + OPTION_DISTANCE
+                    ? 0xff22dd00 : 0xff666600;
+            graphics.drawString(font, I18n.get(question.getMsg()), guiLeft + 40, y, color, false);
             y += OPTION_DISTANCE;
         }
-        drawTexturedModalRect(guiLeft, y, 0, 25, WIDTH, 15);
-        String msg;
-
-        if (id == GuiProxy.GUI_MEECREEP_DISMISS) {
-            msg = "message.meecreeps.gui.problem";
-        } else if (furtherQuestionsHeading != null) {
-            msg = furtherQuestionsHeading;
-        } else if (showingAlternatives) {
-            msg = "message.meecreeps.gui.alternatives";
-        } else if (options.getActionOptions().isEmpty()) {
-            msg = "message.meecreeps.gui.cant_do_much";
-        } else {
-            msg = "message.meecreeps.gui.what_can_i_do";
-        }
-        mc.fontRenderer.drawString(I18n.format(msg), guiLeft+15, guiTop+7, 0);
-        y = guiTop+21;
-        for (Question question : questions) {
-            int color = 0xff666600;
-            if (mouseY > y && mouseY < y+OPTION_DISTANCE) {
-                color = 0xff22dd00;
-            }
-            mc.fontRenderer.drawString(I18n.format(question.getMsg()), guiLeft+40, y, color);
-            y += OPTION_DISTANCE;
-        }
+        super.render(graphics, mouseX, mouseY, partialTicks);
     }
 
     private boolean hasAlternatives() {

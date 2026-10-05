@@ -1,217 +1,82 @@
 buildscript {
     repositories {
-        jcenter()
-        maven {
-            name = "forge"
-            url = "http://files.minecraftforge.net/maven"
-        }
-        maven {
-            name = "sonatype"
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
-        }
+        maven { url = 'https://maven.minecraftforge.net' }
+        mavenCentral()
+        gradlePluginPortal()
     }
-    dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+    dependencies { classpath 'net.minecraftforge.gradle:ForgeGradle:5.1.77' }
+}
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+
+group = 'com.github.mcjty'
+archivesBaseName = 'meecreeps'
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+sourceSets {
+    gametest {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
     }
 }
-
-plugins {
-    id 'com.matthewprenger.cursegradle' version '1.1.0'
-}
-
-apply plugin: 'net.minecraftforge.gradle.forge'
-apply plugin: 'maven'
-
-repositories {
-    maven { // The repo from which to get waila
-        name "Mobius Repo"
-        url "http://tehnut.info/maven"
-        //url "http://mobiusstrip.eu/maven"
-    }
-    maven { // JEI
-        url "http://dvs1.progwml6.com/files/maven"
-    }
-    maven {
-        name 'OC Repo'
-        url "http://maven.cil.li/"
-    }
-    maven { // TOP
-        name 'tterrag maven'
-        url "http://maven.tterrag.com/"
-    }
-    maven { // McJtyLib
-        url "http://maven.k-4u.nl"
-    }
-    maven { // OC Repo
-        url "http://maven.cil.li/"
-    }
-    maven {
-        name = "sonatype"
-        url = "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
-    maven {
-        name = "CoFH Maven"
-        url = "http://maven.covers1624.net"
-    }
-}
-
-def ENV = System.getenv()
-if (ENV.DRONE_BUILD_NUMBER) {
-    version += ".n" + ENV.DRONE_BUILD_NUMBER
-}
-group= "com.github.mcjty" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "meecreeps"
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 minecraft {
-    version = "${minecraft_version}-${forge_version}"
-    runDir = "run"
-    mappings = mcp_mappings
-    useDepAts = true
+    mappings channel: 'official', version: minecraft_version
+    runs {
+        gameTestServer {
+            workingDirectory project.file('run-gametest')
+            property 'forge.enabledGameTestNamespaces', 'meecreeps'
+            mods { meecreeps { source sourceSets.main; source sourceSets.gametest } }
+        }
+        client {
+            workingDirectory project.file('run')
+            mods { meecreeps { source sourceSets.main } }
+        }
+        server {
+            workingDirectory project.file('run-server')
+            args '--nogui'
+            mods { meecreeps { source sourceSets.main } }
+        }
+    }
 }
-
-task deobfJar(type: Jar) {
-    from sourceSets.main.output
-    classifier = 'dev'
+repositories {
+    maven { url = 'https://modmaven.dev' }
+    maven { url = 'https://api.modrinth.com/maven' }
+    maven { url = 'https://maven.k-4u.nl' }
 }
-
-artifacts {
-    archives sourceJar
-    archives deobfJar
-}
-
-
 dependencies {
-    deobfCompile "mezz.jei:jei_${jei_version}"
-    deobfCompile "mcp.mobius.waila:Hwyla:${waila_version}"
-    deobfCompile "mcjty.theoneprobe:TheOneProbe-${top_version}"
-    deobfCompile "cofh:RedstoneFlux:${redstoneflux_version}"
-    deobfCompile "com.github.mcjty:intwheel:${intwheel_version}"
-    if (!project.hasProperty("singleproject")) {
-        deobfCompile "com.github.mcjty:mcjtylib:${mcjtylib_version}"
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    implementation fg.deobf("com.github.mcjty:mcjtylib:${mcjtylib_version}") { transitive = false }
+    if (project.hasProperty('interactionWheelJar')) {
+        compileOnly files(project.property('interactionWheelJar'))
     } else {
-	compile project(':McJtyLib')
+        compileOnly fg.deobf("maven.modrinth:interaction-wheel:${interactionwheel_version}")
+    }
+    compileOnly fg.deobf("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
+    if (project.hasProperty('withOptionalMods')) {
+        runtimeOnly fg.deobf("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
+        runtimeOnly fg.deobf("maven.modrinth:interaction-wheel:${interactionwheel_version}")
     }
 }
-
-processResources
-{
-    // this will ensure that this task is redone when the versions change.
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
-
-    // replace stuff in mcmod.info, nothing else
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-                
-        // replace version and mcversion
-        expand 'version':project.version, 'mcversion':project.minecraft.version
-    }
-        
-    // copy everything else, thats not the mcmod.info
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
-    }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('META-INF/mods.toml') { expand version: project.version }
 }
+jar.finalizedBy('reobfJar')
+java.withSourcesJar()
 
-task("uploadJars", dependsOn: "reobf") {
-    description = "uploads JARs"
-    if (System.getenv("local_maven") != null) {
-        apply plugin: 'maven'
-        uploadArchives {
-            repositories {
-                mavenDeployer {
-                    repository(url: "file://" + System.getenv("local_maven"))
-                    pom {
-                        groupId = project.group
-                        version = project.version
-                        artifactId = project.archivesBaseName
-                        project {
-                            name project.archivesBaseName
-                            packaging 'jar'
-                            description 'MeeCreeps'
-                            scm {
-                                url 'https://github.com/McJty/MeeCreeps'
-                                connection 'scm:git:git@github.com:McJty/MeeCreeps.git'
-                                developerConnection 'scm:git:git@github.com:McJty/MeeCreeps.git'
-                            }
-                            issueManagement {
-                                system 'github'
-                                url 'https://github.com/McJty/MeeCreeps/issues'
-                            }
-                            licenses {
-                                license {
-                                    name 'MIT'
-                                    distribution 'repo'
-                                }
-                            }
-                            developers {
-                                developer {
-                                    id 'McJty'
-                                    name 'McJty'
-                                    roles { role 'developer' }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-String getChangelogText() {
-    def changelogFile = file('changelog.txt')
-    String str = ''
-    int lineCount = 0
-    boolean done = false
-    changelogFile.eachLine {
-        if (done || it == null) {
-            return
-        }
-        if (it.size() > 1) {
-            def temp = it
-            if (lineCount == 0) {
-                temp = "${modname} ${version}"
-                temp = "<h2>$temp</h2>"
-            } else if (it.startsWith('-')) {
-                temp = "&nbsp;&nbsp;&nbsp;$temp"
-                temp = temp.replaceAll("(\\S+\\/\\S+)#([0-9]+)\\b", "<a href=\"https://github.com/\$1/issues/\$2\">\$0</a>");
-                temp = temp.replaceAll("#([0-9]+)\\b(?!<\\/a>)", "<a href=\"https://github.com/$github_project/issues/\$1\">\$0</a>");
-            } else {
-                temp = "<h4>$temp</h4>"
-            }
-            str += "$temp<br/>"
-            lineCount++
-            return
-        } else {
-            done = true
-        }
-    }
-    return str
-}
-
-tasks.curseforge.enabled = project.hasProperty('curseforge_key')
-
-curseforge {
-    if (project.hasProperty('curseforge_key')) {
-        apiKey = project.curseforge_key
-    }
-
-    project {
-        id = project.projectId
-        changelog = System.getenv('CHANGELOG') == null || System.getenv('CHANGELOG').equals('none') ? getChangelogText() : System.getenv('CHANGELOG')
-        changelogType = 'html'
-        releaseType = project.curse_type
-        addGameVersion '1.12.2'
-        mainArtifact(jar) {
-            displayName = "${modname} - ${version}"
-        }
-        relations {
-            requiredLibrary 'mcjtylib'
-            optionalLibrary 'the-one-probe'
-        }
+// A separate JVM reports GameTest exit codes reliably with ForgeGradle 5.
+tasks.register('writeGameTestLaunch') {
+    dependsOn 'prepareRunGameTestServer', 'gametestClasses'
+    doLast {
+        def launch = tasks.named('runGameTestServer').get()
+        def executable = javaToolchains.launcherFor(java.toolchain).get().executablePath.asFile.toString()
+        def data = [
+            executable: executable,
+            args: launch.allJvmArgs + ['-cp', launch.classpath.asPath, launch.mainClass.get()] + launch.args,
+            environment: launch.environment.findAll { key, value -> key == 'MOD_CLASSES' }.collectEntries { key, value -> [key, value.toString()] },
+            cwd: launch.workingDir.toString()
+        ]
+        file('build/gametest-launch.json').text = groovy.json.JsonOutput.toJson(data)
     }
 }

@@ -3,11 +3,11 @@ package mcjty.meecreeps.actions.schematics;
 import mcjty.meecreeps.api.IBuildSchematic;
 import mcjty.meecreeps.api.IDesiredBlock;
 import mcjty.meecreeps.api.IWorkerHelper;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
 
 import java.util.function.Predicate;
 
@@ -23,12 +23,12 @@ public class SchematicPlatform implements IBuildSchematic {
 
     @Override
     public BlockPos getMinPos() {
-        return new BlockPos(-size/2, 0, -size/2);
+        return new BlockPos(-size / 2, 0, -size / 2);
     }
 
     @Override
     public BlockPos getMaxPos() {
-        return new BlockPos(size/2, 0, size/2);
+        return new BlockPos(size / 2, 0, size / 2);
     }
 
     private static final IDesiredBlock COBBLE = new IDesiredBlock() {
@@ -44,15 +44,14 @@ public class SchematicPlatform implements IBuildSchematic {
 
         @Override
         public Predicate<ItemStack> getMatcher() {
-            return stack -> stack.getItem() == Item.getItemFromBlock(Blocks.COBBLESTONE);
+            return stack -> stack.getItem() == Item.byBlock(Blocks.COBBLESTONE);
         }
 
         @Override
-        public Predicate<IBlockState> getStateMatcher() {
+        public Predicate<BlockState> getStateMatcher() {
             return blockState -> blockState.getBlock() == Blocks.COBBLESTONE;
         }
     };
-
 
 
     @Override

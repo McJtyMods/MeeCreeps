@@ -4,12 +4,12 @@ import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.teleport.TeleportationTools;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
     }
 
     @Override
-    public AxisAlignedBB getActionBox() {
+    public AABB getActionBox() {
         return null;
     }
 
@@ -39,21 +39,21 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
     public void tick(boolean timeToWrapUp) {
         IMeeCreep entity = helper.getMeeCreep();
         EntityMeeCreeps meeCreep = (EntityMeeCreeps) entity;
-        EntityPlayer player = options.getPlayer();
+        Player player = options.getPlayer();
 
         if (timeToWrapUp) {
             helper.done();
         } else if (player == null) {
             helper.taskIsDone();
-        } else if (player.getEntityWorld().provider.getDimension() != meeCreep.getEntityWorld().provider.getDimension()) {
+        } else if (player.level().dimension() != meeCreep.level().dimension()) {
             // Wrong dimension, do nothing as this is handled by ServerActionManager
         } else {
-            BlockPos position = player.getPosition();
-            AxisAlignedBB box = new AxisAlignedBB(position.add(-6, -4, -6), position.add(6, 4, 6));
-            List<EntityItem> items = entity.getWorld().getEntitiesWithinAABB(EntityItem.class, box, input -> {
+            BlockPos position = player.blockPosition();
+            AABB box = new AABB(position.offset(-6, -4, -6), position.offset(6, 4, 6));
+            List<ItemEntity> items = entity.getWorld().getEntitiesOfClass(ItemEntity.class, box, input -> {
                 if (!input.getItem().isEmpty()) {
-                    if (input.getItem().getItem() instanceof ItemBlock) {
-                        if (DigTunnelActionWorker.isNotInterestedIn(((ItemBlock) input.getItem().getItem()).getBlock())) {
+                    if (input.getItem().getItem() instanceof BlockItem) {
+                        if (DigTunnelActionWorker.isNotInterestedIn(((BlockItem) input.getItem().getItem()).getBlock())) {
                             return false;
                         }
                     }
@@ -62,18 +62,19 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
             });
             if (!items.isEmpty()) {
                 items.sort((o1, o2) -> {
-                    double d1 = position.distanceSq(o1.posX, o1.posY, o1.posZ);
-                    double d2 = position.distanceSq(o2.posX, o2.posY, o2.posZ);
+                    double d1 = position.distToCenterSqr(o1.position());
+                    double d2 = position.distToCenterSqr(o2.position());
                     return Double.compare(d1, d2);
                 });
-                EntityItem entityItem = items.get(0);
+                ItemEntity entityItem = items.get(0);
                 helper.navigateTo(entityItem, (pos) -> helper.pickup(entityItem));
             } else if (entity.hasStuffInInventory()) {
                 helper.navigateTo(helper.findSuitablePositionNearPlayer(1.0), blockPos -> helper.giveToPlayerOrDrop());
             } else {
                 // Find a spot close to the player where we can navigate too
                 BlockPos p = helper.findSuitablePositionNearPlayer(4.0);
-                helper.navigateTo(p, blockPos -> {});
+                helper.navigateTo(p, blockPos -> {
+                });
             }
         }
     }

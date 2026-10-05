@@ -1,61 +1,50 @@
 package mcjty.meecreeps.items;
 
-import com.google.gson.JsonObject;
-import mcjty.meecreeps.MeeCreeps;
-import net.minecraft.inventory.InventoryCrafting;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.JsonUtils;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.crafting.CraftingHelper.ShapedPrimer;
-import net.minecraftforge.common.crafting.IRecipeFactory;
-import net.minecraftforge.common.crafting.JsonContext;
-import net.minecraftforge.oredict.ShapedOreRecipe;
+import mcjty.meecreeps.setup.Registration;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceLocation;
 
-public class RemoveCartridgeFactory implements IRecipeFactory {
-    @Override
-    public IRecipe parse(JsonContext context, JsonObject json) {
-        ShapedOreRecipe recipe = ShapedOreRecipe.factory(context, json);
-
-        ShapedPrimer primer = new ShapedPrimer();
-        primer.width = recipe.getWidth();
-        primer.height = recipe.getHeight();
-        primer.mirrored = JsonUtils.getBoolean(json, "mirrored", true);
-        primer.input = recipe.getIngredients();
-
-        return new RemoveCartridgeRecipe(new ResourceLocation(MeeCreeps.MODID, "remove_cartridge_factory"), recipe.getRecipeOutput(), primer);
+public class RemoveCartridgeFactory extends CustomRecipe {
+    public RemoveCartridgeFactory(ResourceLocation id, CraftingBookCategory category) {
+        super(id, category);
     }
 
-    public static class RemoveCartridgeRecipe extends ShapedOreRecipe {
-        public RemoveCartridgeRecipe(ResourceLocation group, ItemStack result, ShapedPrimer primer) {
-            super(group, result, primer);
+    public boolean matches(CraftingContainer inv, Level world) {
+        int guns = 0;
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            var s = inv.getItem(i);
+            if (s.isEmpty())
+                continue;
+            if (s.is(Registration.GUN.get()))
+                guns++;
+            else
+                return false;
         }
+        return guns == 1;
+    }
 
-
-        @Override
-        public ItemStack getCraftingResult(InventoryCrafting inventoryCrafting) {
-            ItemStack result = super.getCraftingResult(inventoryCrafting);
-            if (!result.isEmpty()) {
-
-                ItemStack portalGunItem = ItemStack.EMPTY;
-
-                for (int i = 0; i < inventoryCrafting.getSizeInventory(); ++i) {
-                    ItemStack stack = inventoryCrafting.getStackInSlot(i);
-
-                    if (!stack.isEmpty()) {
-                        if (stack.getItem() instanceof PortalGunItem) {
-                            portalGunItem = stack;
-                        }
-                    }
-                }
-
-                if (!portalGunItem.isEmpty()) {
-                    int charge = PortalGunItem.getCharge(portalGunItem);
-                    CartridgeItem.setCharge(result, charge);
-                }
+    public ItemStack assemble(CraftingContainer inv, RegistryAccess registries) {
+        ItemStack output = new ItemStack(Registration.CARTRIDGE.get());
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            var s = inv.getItem(i);
+            if (s.is(Registration.GUN.get())) {
+                CartridgeItem.setCharge(output, PortalGunItem.getCharge(s));
+                if (s.hasTag())
+                    output.getOrCreateTag().putInt("energyRemainder", s.getTag().getInt("energyRemainder"));
             }
-            return result;
         }
+        return output;
+    }
+
+    public boolean canCraftInDimensions(int w, int h) {
+        return w * h >= 1;
+    }
+
+    public RecipeSerializer<?> getSerializer() {
+        return Registration.REMOVE.get();
     }
 }
