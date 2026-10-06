@@ -1,12 +1,33 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.firstdark.dev/releases' }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath 'com.hypherionmc.modutils:modpublisher:2.2.1'
+    }
+}
+
 plugins {
     id 'java-library'
+    id 'eclipse'
     id 'maven-publish'
     id 'net.neoforged.moddev' version '2.0.146'
 }
 
+apply plugin: 'com.hypherionmc.modutils.modpublisher'
+apply from: 'gradletools.gradle'
+
 group = 'com.github.mcjty'
 base { archivesName = 'meecreeps' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+repos()
+jars()
+
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+}
 sourceSets {
     gametest {
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
@@ -16,8 +37,20 @@ sourceSets {
 neoForge {
     version = project.neo_version
     runs {
-        client { client(); gameDirectory = project.file('run') }
-        server { server(); gameDirectory = project.file('run-server'); programArgument '--nogui' }
+        if (rootProject.findProject(':workspace') == null || project.name == 'workspace' || project.hasProperty('enable_individual_runs')) {
+            client { client(); gameDirectory = project.file('run') }
+            server { server(); gameDirectory = project.file('run-server'); programArgument '--nogui' }
+            clientData {
+                clientData()
+                gameDirectory = project.file('run-data')
+                programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources').absolutePath, '--existing', file('src/main/resources').absolutePath
+            }
+            serverData {
+                serverData()
+                gameDirectory = project.file('run-data')
+                programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources').absolutePath, '--existing', file('src/main/resources').absolutePath
+            }
+        }
         gameTestServer {
             type = 'gameTestServer'
             gameDirectory = project.file('run-gametest')
@@ -29,15 +62,18 @@ neoForge {
         meecreeps { sourceSet sourceSets.main; sourceSet sourceSets.gametest }
     }
 }
-repositories {
-    maven { url = 'https://maven.k-4u.nl' }
-}
 dependencies {
-    compileOnly("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
+    def topDependency = findProject(':TheOneProbe') != null
+            ? project(':TheOneProbe')
+            : "mcjty.theoneprobe:theoneprobe:${top_version}"
+    compileOnly(topDependency) { transitive = false }
     if (project.hasProperty('withOptionalMods')) {
-        runtimeOnly("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
+        runtimeOnly(topDependency) { transitive = false }
     }
 }
+
+modpublisher(['the-one-probe'], [], ['the-one-probe'], [], [])
+
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.compilerArgs += ['-Xmaxerrs', '1000'] }
 processResources {
     inputs.property 'version', project.version

@@ -1,0 +1,136 @@
+// Local build helpers for MeeCreeps on Minecraft 26.2 (Java 25).
+// Dependency versions are supplied by gradle.properties.
+project.ext.set("mod_authors", "McJty")
+
+ext.repos = {
+    repositories {
+        mavenLocal()
+        maven { url "https://maven.k-4u.nl" } // The One Probe
+    }
+}
+
+ext.getChangelogText =  {
+    def changelogFile = file('changelog.txt')
+    StringBuilder str = new StringBuilder()
+    int lineCount = 0
+    boolean done = false
+    changelogFile.eachLine {
+        if (done || it == null) {
+            return
+        }
+        if (it.size() > 1) {
+            def temp = it
+            if (lineCount == 0) {
+                temp = "${mod_name} ${version}"
+                temp = "## $temp"
+            } else if (!it.startsWith('-')) {
+                temp = "#### $temp"
+            } else {
+                temp = temp.replaceAll("(\\S+\\/\\S+)#([0-9]+)\\b", "[\$0](https://github.com/\$1/issues/\$2)")
+                temp = temp.replaceAll("#([0-9]+)\\b", "[\$0](https://github.com/$github_project/issues/\$1)")
+            }
+            str.append(temp).append('\n')
+            lineCount++
+            return
+        } else {
+            done = true
+        }
+    }
+    return str.toString()
+}
+
+ext.getPublishChangelog = {
+    System.getenv('CHANGELOG') == null || System.getenv('CHANGELOG').equals('none') ? getChangelogText() : System.getenv('CHANGELOG')
+}
+
+ext.modpublisher = { curseOptional, curseRequired, modrinthOptional, modrinthRequired, versions ->
+    def curseKey = (project.findProperty('curseforge_key') ?: System.getenv('CURSEFORGE_TOKEN') ?: System.getenv('CURSE_TOKEN') ?: '').toString()
+    def modrinthKey = (project.findProperty('modrinth_token') ?: System.getenv('MODRINTH_TOKEN') ?: '').toString()
+    def allVersions = ([project.minecraft_version] + versions).collect { it.toString() }.unique()
+    def publishArtifactTask = tasks.named('jar')
+    def modrinthProjectIds = [
+            'curios'          : 'vvuO3ImH',
+            'game-stages'     : 'iAlZk5aS',
+            'mcjtylib'        : '1Zu0uTEE',
+            'rftools-base'    : 'hIO8IsD8',
+            'the-lost-cities' : '8VDCUS3b',
+            'the-one-probe'   : 'Eyw0UxEx',
+    ]
+    def toModrinthProjectId = { lib ->
+        modrinthProjectIds.get(lib.toString(), lib.toString())
+    }
+
+    tasks.named('publishCurseforge') {
+        enabled = !curseKey.isEmpty()
+        if (publishArtifactTask != null) {
+            dependsOn publishArtifactTask
+        }
+    }
+    tasks.named('publishModrinth') {
+        enabled = !modrinthKey.isEmpty() && project.hasProperty('modrinthId')
+        if (publishArtifactTask != null) {
+            dependsOn publishArtifactTask
+        }
+    }
+    tasks.named('publishMod') {
+        if (publishArtifactTask != null) {
+            dependsOn publishArtifactTask
+        }
+    }
+    ['publishGitHub', 'publishNightbloom', 'publishModtale'].each { taskName ->
+        def publishTask = tasks.findByName(taskName)
+        if (publishTask != null) {
+            publishTask.enabled = false
+        }
+    }
+
+    publisher {
+        apiKeys {
+            curseforge curseKey
+            modrinth modrinthKey
+        }
+
+        if (project.hasProperty('projectId')) {
+            curseID.set(project.projectId.toString())
+        }
+        if (project.hasProperty('modrinthId')) {
+            modrinthID.set(project.modrinthId.toString())
+        }
+
+        versionType.set(project.curse_type.toString())
+        changelog.set({ getPublishChangelog() })
+        projectVersion.set(project.version.toString())
+        displayName.set("${mod_name} - ${project.version}")
+        gameVersions.set(allVersions)
+        loaders.set(['neoforge'])
+        curseEnvironment.set('both')
+        javaVersions.add(JavaVersion.VERSION_25)
+        artifact.set(jar)
+
+        curseDepends {
+            curseOptional.each { lib -> optional lib }
+            curseRequired.each { lib -> required lib }
+        }
+        modrinthDepends {
+            modrinthOptional.each { lib -> optional toModrinthProjectId(lib) }
+            modrinthRequired.each { lib -> required toModrinthProjectId(lib) }
+        }
+    }
+}
+
+ext.jars = {
+    jar {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        manifest {
+            attributes([
+                    "Specification-Title"     : project.mod_id,
+                    "Specification-Vendor"    : project.mod_authors,
+                    "Specification-Version"   : "1", // We are version 1 of ourselves
+                    "Implementation-Title"    : project.name,
+                    "Implementation-Version"  : project.jar.archiveVersion,
+                    "Implementation-Vendor"   : project.mod_authors,
+                    "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+            ])
+        }
+    }
+}
