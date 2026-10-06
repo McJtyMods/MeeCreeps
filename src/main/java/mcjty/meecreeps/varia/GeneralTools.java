@@ -8,8 +8,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.common.util.FakePlayerFactory;
+import net.fabricmc.fabric.api.entity.FakePlayer;
+
 
 import org.jspecify.annotations.Nullable;
 import java.util.UUID;
@@ -18,7 +18,7 @@ import java.util.function.*;
 public class GeneralTools {
 
     public static FakePlayer getHarvester(Level world) {
-        FakePlayer harvester = FakePlayerFactory.get((net.minecraft.server.level.ServerLevel) world, new GameProfile(UUID.nameUUIDFromBytes("meecreeps".getBytes(java.nio.charset.StandardCharsets.UTF_8)), "[MeeCreeps]"));
+        FakePlayer harvester = FakePlayer.get((net.minecraft.server.level.ServerLevel) world, new GameProfile(UUID.nameUUIDFromBytes("meecreeps".getBytes(java.nio.charset.StandardCharsets.UTF_8)), "[MeeCreeps]"));
         harvester.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.DIAMOND_PICKAXE));
         return harvester;
     }

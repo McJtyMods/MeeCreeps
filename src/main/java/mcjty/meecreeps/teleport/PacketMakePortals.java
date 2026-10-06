@@ -2,7 +2,7 @@ package mcjty.meecreeps.teleport;
 
 import net.minecraft.network.FriendlyByteBuf;
 import mcjty.meecreeps.network.NetworkTools;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.Identifier;
@@ -51,22 +51,20 @@ public class PacketMakePortals implements CustomPacketPayload {
         this.destination = destination;
     }
 
-    public void handle(IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            ServerPlayer player = (ServerPlayer) ctx.player();
-            if (player == null || player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(selectedBlock)) > 100)
-                return;
-            ItemStack heldItem = PortalGunItem.getGun(player);
-            if (heldItem.isEmpty())
-                return; // Something went wrong
+    public void handle(net.minecraft.server.level.ServerPlayer sender) {
+        ServerPlayer player = (ServerPlayer) sender;
+        if (player == null || player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(selectedBlock)) > 100)
+            return;
+        ItemStack heldItem = PortalGunItem.getGun(player);
+        if (heldItem.isEmpty())
+            return; // Something went wrong
 
-            if (PortalGunItem.getCharge(heldItem) <= 0)
-                return;
-            boolean known = PortalGunItem.getDestinations(heldItem).stream().anyMatch(d -> d != null && d.getDimension() == destination.getDimension() && d.getPos().equals(destination.getPos()) && d.getSide() == destination.getSide());
-            if (!known)
-                return;
-            PortalGunItem.setCharge(heldItem, PortalGunItem.getCharge(heldItem) - 1);
-            TeleportationTools.makePortalPair(player, selectedBlock, selectedSide, destination);
-        });
+        if (PortalGunItem.getCharge(heldItem) <= 0)
+            return;
+        boolean known = PortalGunItem.getDestinations(heldItem).stream().anyMatch(d -> d != null && d.getDimension() == destination.getDimension() && d.getPos().equals(destination.getPos()) && d.getSide() == destination.getSide());
+        if (!known)
+            return;
+        PortalGunItem.setCharge(heldItem, PortalGunItem.getCharge(heldItem) - 1);
+        TeleportationTools.makePortalPair(player, selectedBlock, selectedSide, destination);
     }
 }

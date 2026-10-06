@@ -2,7 +2,7 @@ package mcjty.meecreeps.teleport;
 
 import net.minecraft.network.FriendlyByteBuf;
 import mcjty.meecreeps.network.NetworkTools;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.Identifier;
@@ -48,19 +48,17 @@ public class PacketSetDestination implements CustomPacketPayload {
         this.destinationIndex = destinationIndex;
     }
 
-    public void handle(IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            ServerPlayer player = (ServerPlayer) ctx.player();
-            if (player == null || destinationIndex < 0 || destinationIndex >= 8 || destination.getName().length() > 64)
-                return;
-            if (destination.getDimension() != player.level().dimension() || player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(destination.getPos())) > 100)
-                return;
-            if (!player.level().hasChunkAt(destination.getPos()) || !player.level().getBlockState(destination.getPos()).canBeReplaced())
-                return;
-            ItemStack heldItem = PortalGunItem.getGun(player);
-            if (heldItem.isEmpty())
-                return;
-            PortalGunItem.addDestination(heldItem, destination, destinationIndex);
-        });
+    public void handle(net.minecraft.server.level.ServerPlayer sender) {
+        ServerPlayer player = (ServerPlayer) sender;
+        if (player == null || destinationIndex < 0 || destinationIndex >= 8 || destination.getName().length() > 64)
+            return;
+        if (destination.getDimension() != player.level().dimension() || player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(destination.getPos())) > 100)
+            return;
+        if (!player.level().hasChunkAt(destination.getPos()) || !player.level().getBlockState(destination.getPos()).canBeReplaced())
+            return;
+        ItemStack heldItem = PortalGunItem.getGun(player);
+        if (heldItem.isEmpty())
+            return;
+        PortalGunItem.addDestination(heldItem, destination, destinationIndex);
     }
 }

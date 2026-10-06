@@ -13,35 +13,30 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.crafting.*;
-import net.neoforged.neoforge.registries.*;
-import net.neoforged.bus.api.IEventBus;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import java.util.function.Supplier;
+
 
 public final class Registration {
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(Registries.BLOCK, MeeCreeps.MODID);
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(Registries.ITEM, MeeCreeps.MODID);
-    public static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(Registries.ENTITY_TYPE, MeeCreeps.MODID);
-    public static final DeferredRegister<BlockEntityType<?>> TILES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MeeCreeps.MODID);
-    public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(Registries.SOUND_EVENT, MeeCreeps.MODID);
-    public static final DeferredRegister<RecipeSerializer<?>> RECIPES = DeferredRegister.create(Registries.RECIPE_SERIALIZER, MeeCreeps.MODID);
-    public static final DeferredHolder<Block, Block> CUBE = BLOCKS.register("creepcube", HeldCubeBlock::new);
-    public static final DeferredHolder<Block, Block> PORTAL = BLOCKS.register("portalblock", PortalBlock::new);
-    public static final DeferredHolder<Item, Item> CUBE_ITEM = ITEMS.register("creepcube", CreepCubeItem::new);
-    public static final DeferredHolder<Item, Item> GUN = ITEMS.register("portalgun", PortalGunItem::new);
-    public static final DeferredHolder<Item, Item> EMPTY_GUN = ITEMS.register("emptyportalgun", EmptyPortalGunItem::new);
-    public static final DeferredHolder<Item, Item> CARTRIDGE = ITEMS.register("cartridge", CartridgeItem::new);
-    public static final DeferredHolder<Item, Item> PROJECTILE_ITEM = ITEMS.register("projectile", mcjty.meecreeps.items.ProjectileItem::new);
-    public static final DeferredHolder<Item, Item> PORTAL_ITEM = ITEMS.register("portalblock", () -> new BlockItem(PORTAL.get(), new Item.Properties().setId(net.minecraft.resources.ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(MeeCreeps.MODID, "portalblock")))));
-    public static final DeferredHolder<EntityType<?>, EntityType<EntityMeeCreeps>> CREEP = ENTITIES.register("meecreeps", () -> EntityType.Builder.<EntityMeeCreeps>of(EntityMeeCreeps::new, MobCategory.CREATURE).sized(.6F, 1.95F).clientTrackingRange(10).build(net.minecraft.resources.ResourceKey.create(Registries.ENTITY_TYPE, Identifier.parse("meecreeps:meecreeps"))));
-    public static final DeferredHolder<EntityType<?>, EntityType<EntityProjectile>> PROJECTILE = ENTITIES.register("projectile", () -> EntityType.Builder.<EntityProjectile>of(EntityProjectile::new, MobCategory.MISC).sized(.25F, .25F).clientTrackingRange(8).updateInterval(1).build(net.minecraft.resources.ResourceKey.create(Registries.ENTITY_TYPE, Identifier.parse("meecreeps:projectile"))));
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PortalTileEntity>> PORTAL_TILE = TILES.register("portalblock", () -> new BlockEntityType<>(PortalTileEntity::new, PORTAL.get()));
-    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<InsertCartridgeFactory>> INSERT = RECIPES.register("insert_cartridge_factory", () -> new RecipeSerializer<>(com.mojang.serialization.MapCodec.unit(InsertCartridgeFactory::new), net.minecraft.network.codec.StreamCodec.unit(new InsertCartridgeFactory())));
-    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<RemoveCartridgeFactory>> REMOVE = RECIPES.register("remove_cartridge_factory", () -> new RecipeSerializer<>(com.mojang.serialization.MapCodec.unit(RemoveCartridgeFactory::new), net.minecraft.network.codec.StreamCodec.unit(new RemoveCartridgeFactory())));
-    public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MeeCreeps.MODID);
+    public static final Supplier<Block> CUBE = register(BuiltInRegistries.BLOCK, "creepcube", HeldCubeBlock::new);
+    public static final Supplier<Block> PORTAL = register(BuiltInRegistries.BLOCK, "portalblock", PortalBlock::new);
+    public static final Supplier<Item> CUBE_ITEM = register(BuiltInRegistries.ITEM, "creepcube", CreepCubeItem::new);
+    public static final Supplier<Item> GUN = register(BuiltInRegistries.ITEM, "portalgun", PortalGunItem::new);
+    public static final Supplier<Item> EMPTY_GUN = register(BuiltInRegistries.ITEM, "emptyportalgun", EmptyPortalGunItem::new);
+    public static final Supplier<Item> CARTRIDGE = register(BuiltInRegistries.ITEM, "cartridge", CartridgeItem::new);
+    public static final Supplier<Item> PROJECTILE_ITEM = register(BuiltInRegistries.ITEM, "projectile", mcjty.meecreeps.items.ProjectileItem::new);
+    public static final Supplier<Item> PORTAL_ITEM = register(BuiltInRegistries.ITEM, "portalblock", () -> new BlockItem(PORTAL.get(), new Item.Properties().setId(net.minecraft.resources.ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(MeeCreeps.MODID, "portalblock")))));
+    public static final Supplier<EntityType<EntityMeeCreeps>> CREEP = register(BuiltInRegistries.ENTITY_TYPE, "meecreeps", () -> EntityType.Builder.<EntityMeeCreeps>of(EntityMeeCreeps::new, MobCategory.CREATURE).sized(.6F, 1.95F).clientTrackingRange(10).build(net.minecraft.resources.ResourceKey.create(Registries.ENTITY_TYPE, Identifier.parse("meecreeps:meecreeps"))));
+    public static final Supplier<EntityType<EntityProjectile>> PROJECTILE = register(BuiltInRegistries.ENTITY_TYPE, "projectile", () -> EntityType.Builder.<EntityProjectile>of(EntityProjectile::new, MobCategory.MISC).sized(.25F, .25F).clientTrackingRange(8).updateInterval(1).build(net.minecraft.resources.ResourceKey.create(Registries.ENTITY_TYPE, Identifier.parse("meecreeps:projectile"))));
+    public static final Supplier<BlockEntityType<PortalTileEntity>> PORTAL_TILE = register(BuiltInRegistries.BLOCK_ENTITY_TYPE, "portalblock", () -> net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder.create(PortalTileEntity::new, PORTAL.get()).build());
+    public static final Supplier<RecipeSerializer<InsertCartridgeFactory>> INSERT = register(BuiltInRegistries.RECIPE_SERIALIZER, "insert_cartridge_factory", () -> new RecipeSerializer<>(com.mojang.serialization.MapCodec.unit(InsertCartridgeFactory::new), net.minecraft.network.codec.StreamCodec.unit(new InsertCartridgeFactory())));
+    public static final Supplier<RecipeSerializer<RemoveCartridgeFactory>> REMOVE = register(BuiltInRegistries.RECIPE_SERIALIZER, "remove_cartridge_factory", () -> new RecipeSerializer<>(com.mojang.serialization.MapCodec.unit(RemoveCartridgeFactory::new), net.minecraft.network.codec.StreamCodec.unit(new RemoveCartridgeFactory())));
 
     static {
         for (String sound : new String[]{"teleport", "portal", "intro1", "intro2", "intro3", "intro4", "ok", "ok2"})
-            SOUNDS.register(sound, () -> SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath(MeeCreeps.MODID, sound)));
-        TABS.register("meecreeps", () -> CreativeModeTab.builder().title(Component.literal("MeeCreeps")).icon(() -> new ItemStack(GUN.get())).displayItems((p, o) -> {
+            register(BuiltInRegistries.SOUND_EVENT, sound, () -> SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath(MeeCreeps.MODID, sound)));
+        register(BuiltInRegistries.CREATIVE_MODE_TAB, "meecreeps", () -> net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab.builder().title(Component.literal("MeeCreeps")).icon(() -> new ItemStack(GUN.get())).displayItems((p, o) -> {
             o.accept(CUBE_ITEM.get());
             o.accept(GUN.get());
             o.accept(EMPTY_GUN.get());
@@ -49,17 +44,13 @@ public final class Registration {
         }).build());
     }
 
-    public static void register(IEventBus bus) {
-        BLOCKS.register(bus);
-        ITEMS.register(bus);
-        ENTITIES.register(bus);
-        TILES.register(bus);
-        SOUNDS.register(bus);
-        RECIPES.register(bus);
-        TABS.register(bus);
-        bus.addListener((net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent e) ->
-                e.registerItem(net.neoforged.neoforge.capabilities.Capabilities.Energy.ITEM,
-                        (stack, context) -> new ChargingItemEnergy(context), GUN.get(), CARTRIDGE.get()));
-        bus.addListener((net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent e) -> e.put(CREEP.get(), EntityMeeCreeps.createAttributes().build()));
+    private static <T, V extends T> Supplier<V> register(Registry<T> registry, String name, Supplier<V> factory) {
+        V value = Registry.register(registry, Identifier.fromNamespaceAndPath(MeeCreeps.MODID, name), factory.get());
+        return () -> value;
+    }
+
+    public static void register() {
+        net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry.register(CREEP.get(), EntityMeeCreeps.createAttributes());
+        team.reborn.energy.api.EnergyStorage.ITEM.registerForItems((stack, context) -> new ChargingItemEnergy(context), GUN.get(), CARTRIDGE.get());
     }
 }

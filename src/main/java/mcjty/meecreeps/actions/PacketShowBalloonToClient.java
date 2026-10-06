@@ -2,7 +2,7 @@ package mcjty.meecreeps.actions;
 
 import net.minecraft.network.FriendlyByteBuf;
 import mcjty.meecreeps.network.NetworkTools;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.Identifier;
@@ -51,9 +51,7 @@ public class PacketShowBalloonToClient implements CustomPacketPayload {
         this.parameters = parameters;
     }
 
-    public void handle(IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            ClientActionManager.showProblem(message, parameters);
-        });
+    public void handle() {
+        ClientActionManager.showProblem(message, parameters);
     }
 }

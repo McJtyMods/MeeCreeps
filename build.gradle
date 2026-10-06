@@ -1,46 +1,32 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.146'
+    id 'net.fabricmc.fabric-loom' version '1.17.17'
 }
-
 group = 'com.github.mcjty'
-base { archivesName = 'meecreeps' }
+base { archivesName = 'meecreeps-fabric' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
-sourceSets {
-    gametest {
-        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
-        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
-    }
-}
-neoForge {
-    version = project.neo_version
-    runs {
-        client { client(); gameDirectory = project.file('run') }
-        server { server(); gameDirectory = project.file('run-server'); programArgument '--nogui' }
-        gameTestServer {
-            type = 'gameTestServer'
-            gameDirectory = project.file('run-gametest')
-            programArgument '--test'; programArgument 'meecreeps:*'
-            sourceSet = sourceSets.gametest
-        }
-    }
-    mods {
-        meecreeps { sourceSet sourceSets.main; sourceSet sourceSets.gametest }
-    }
-}
 repositories {
-    maven { url = 'https://maven.k-4u.nl' }
+    maven { url = 'https://raw.githubusercontent.com/Fuzss/modresources/main/maven/' }
+    maven { url = 'https://maven.fabricmc.net' }
 }
 dependencies {
-    compileOnly("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
-    if (project.hasProperty('withOptionalMods')) {
-        runtimeOnly("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+    implementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.2.1"
+    implementation include("teamreborn:energy:5.0.0")
+}
+loom {
+    runs {
+        client { client(); runDir 'run-fabric' }
+        server { server(); runDir 'run-server-fabric'; programArg '--nogui' }
     }
 }
+fabricApi { configureTests { createSourceSet = true; modId = 'meecreeps-test'; enableGameTests = true; enableClientGameTests = false } }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.compilerArgs += ['-Xmaxerrs', '1000'] }
 processResources {
     inputs.property 'version', project.version
-    filesMatching('META-INF/neoforge.mods.toml') { expand version: project.version }
+    filesMatching('fabric.mod.json') { expand version: project.version }
 }
 java.withSourcesJar()

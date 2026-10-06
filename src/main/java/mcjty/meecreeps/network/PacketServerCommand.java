@@ -7,7 +7,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 
 public record PacketServerCommand(String command, int id, BlockPos pos) implements CustomPacketPayload {
     public static final Type<PacketServerCommand> TYPE = new Type<>(Identifier.fromNamespaceAndPath("meecreeps", "command"));
@@ -21,7 +21,7 @@ public record PacketServerCommand(String command, int id, BlockPos pos) implemen
     public PacketServerCommand(String command, int id) { this(command, id, null); }
     public PacketServerCommand(String command, BlockPos pos) { this(command, -1, pos); }
     @Override public Type<PacketServerCommand> type() { return TYPE; }
-    public void handle(IPayloadContext ctx) {
-        ctx.enqueueWork(() -> CommandHandler.handle((ServerPlayer) ctx.player(), command, id, pos));
+    public void handle(net.minecraft.server.level.ServerPlayer sender) {
+        CommandHandler.handle(sender, command, id, pos);
     }
 }

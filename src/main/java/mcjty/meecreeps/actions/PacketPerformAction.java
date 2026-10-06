@@ -2,7 +2,7 @@ package mcjty.meecreeps.actions;
 
 import net.minecraft.network.FriendlyByteBuf;
 import mcjty.meecreeps.network.NetworkTools;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.Identifier;
@@ -42,25 +42,22 @@ public class PacketPerformAction implements CustomPacketPayload {
         this.furtherQuestionId = furtherQuestionId;
     }
 
-    public void handle(IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer player))
-                return;
-            var manager = ServerActionManager.getManager();
-            var options = manager.getOptions(id);
-            if (options == null || options.getStage() != Stage.WAITING_FOR_PLAYER_INPUT)
-                return;
-            if (!options.getActionOptions().contains(type) && !options.getMaybeActionOptions().contains(type))
-                return;
-            var factory = mcjty.meecreeps.MeeCreeps.api.getFactory(type);
-            if (factory == null)
-                return;
-            var world = mcjty.meecreeps.varia.LevelTools.getWorld(options.getDimension());
-            if (world == null)
-                return;
-            if (furtherQuestionId != null && !factory.getFactory().getFurtherQuestions(world, options.getTargetPos(), options.getTargetSide()).stream().anyMatch(q -> java.util.Objects.equals(q.getLeft(), furtherQuestionId)))
-                return;
-            manager.performAction(player, id, type, furtherQuestionId);
-        });
+    public void handle(net.minecraft.server.level.ServerPlayer sender) {
+        var player = sender;
+        var manager = ServerActionManager.getManager();
+        var options = manager.getOptions(id);
+        if (options == null || options.getStage() != Stage.WAITING_FOR_PLAYER_INPUT)
+            return;
+        if (!options.getActionOptions().contains(type) && !options.getMaybeActionOptions().contains(type))
+            return;
+        var factory = mcjty.meecreeps.MeeCreeps.api.getFactory(type);
+        if (factory == null)
+            return;
+        var world = mcjty.meecreeps.varia.LevelTools.getWorld(options.getDimension());
+        if (world == null)
+            return;
+        if (furtherQuestionId != null && !factory.getFactory().getFurtherQuestions(world, options.getTargetPos(), options.getTargetSide()).stream().anyMatch(q -> java.util.Objects.equals(q.getLeft(), furtherQuestionId)))
+            return;
+        manager.performAction(player, id, type, furtherQuestionId);
     }
 }

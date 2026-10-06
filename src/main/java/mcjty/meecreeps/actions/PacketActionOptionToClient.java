@@ -1,7 +1,7 @@
 package mcjty.meecreeps.actions;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.Identifier;
@@ -37,9 +37,7 @@ public class PacketActionOptionToClient implements CustomPacketPayload {
         this.guiid = guiid;
     }
 
-    public void handle(IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            ClientActionManager.showActionOptions(options, guiid);
-        });
+    public void handle() {
+        ClientActionManager.showActionOptions(options, guiid);
     }
 }

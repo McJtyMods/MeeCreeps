@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1, "id": "meecreeps", "version": "${version}",
+  "name": "MeeCreeps", "description": "Helpful creatures and portal guns.",
+  "authors": ["McJty"], "license": "MIT", "environment": "*",
+  "entrypoints": {"main": ["mcjty.meecreeps.MeeCreeps"], "client": ["mcjty.meecreeps.setup.ClientSetup"]},
+  "depends": {"fabricloader": ">=0.19.3", "minecraft": "~26.2", "java": ">=25", "fabric-api": ">=0.155.2+26.2", "forgeconfigapiport": ">=26.2.1", "team_reborn_energy": ">=5.0.0"}
+}

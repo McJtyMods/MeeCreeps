@@ -18,8 +18,6 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.gametest.*;
 
 import java.util.List;
 
@@ -284,19 +282,25 @@ public class PortGameTests {
 
     public static void energyAndCartridgeRecipes(GameTestHelper test) {
         ItemStack cartridge = new ItemStack(Registration.CARTRIDGE.get());
-        var access = net.neoforged.neoforge.transfer.access.ItemAccess.forStack(cartridge);
-        var energy = java.util.Objects.requireNonNull(access.getCapability(Capabilities.Energy.ITEM));
-        try (var tx = net.neoforged.neoforge.transfer.transaction.Transaction.openRoot()) {
+        var slot = new net.fabricmc.fabric.api.transfer.v1.item.base.SingleStackStorage() {
+            private ItemStack stack = new ItemStack(Registration.CARTRIDGE.get());
+            protected ItemStack getStack() { return stack; }
+            protected void setStack(ItemStack updated) { stack = updated; }
+        };
+        var access = net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext.ofSingleSlot(slot);
+        var energy = java.util.Objects.requireNonNull(access.find(team.reborn.energy.api.EnergyStorage.ITEM));
+        try (var tx = net.fabricmc.fabric.api.transfer.v1.transaction.Transaction.openOuter()) {
             check(energy.insert(1250, tx) == 1250, "Simulation accepted wrong amount");
         }
-        check(energy.getAmountAsLong() == 0, "Aborted transaction changed energy");
-        try (var tx = net.neoforged.neoforge.transfer.transaction.Transaction.openRoot()) {
+        check(energy.getAmount() == 0, "Aborted transaction changed energy");
+        try (var tx = net.fabricmc.fabric.api.transfer.v1.transaction.Transaction.openOuter()) {
             check(energy.insert(1250, tx) == 1250, "Charging accepted wrong amount");
             tx.commit();
         }
+        cartridge = slot.getResource().toStack();
         check(CartridgeItem.getCharge(cartridge) == 1, "Partial charging failed");
         cartridge = mcjty.meecreeps.varia.ItemSerialization.load(test.getLevel().registryAccess(), mcjty.meecreeps.varia.ItemSerialization.save(test.getLevel().registryAccess(), cartridge));
-        check(java.util.Objects.requireNonNull(net.neoforged.neoforge.transfer.access.ItemAccess.forStack(cartridge).getCapability(Capabilities.Energy.ITEM)).getAmountAsLong() == 1250, "Energy failed NBT reload");
+        check(ItemEnergy.stored(cartridge) == 1250, "Energy failed NBT reload");
         var inv = new TransientCraftingContainer(new AbstractContainerMenu(null, 0) {
             public ItemStack quickMoveStack(Player player, int slot) {
                 return ItemStack.EMPTY;
@@ -411,15 +415,12 @@ public class PortGameTests {
         helper.setWorker(new mcjty.meecreeps.actions.workers.IdleActionWorker(helper) {
             @Override
             public void tick(boolean wrapUp) {
-                java.util.function.Consumer<net.neoforged.neoforge.event.level.block.BreakBlockEvent> deny = e -> {
-                    if (e.getPos().equals(pos))
-                        e.setCanceled(true);
-                };
-                net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(deny);
+                var active = new java.util.concurrent.atomic.AtomicBoolean(true);
+                net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.BEFORE.register((level, player, blockPos, state, blockEntity) -> !(active.get() && level == world && blockPos.equals(pos)));
                 try {
                     check(!helper.harvestAndPickup(pos), "Canceled break was allowed");
                 } finally {
-                    net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(deny);
+                    active.set(false);
                 }
                 check(world.getBlockState(pos).is(Blocks.STONE), "Protected block was removed");
                 check(helper.harvestAndPickup(pos), "Permitted break failed");

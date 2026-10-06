@@ -6,7 +6,7 @@ import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.blockentity.*;
 import net.minecraft.resources.Identifier;
 import net.minecraft.core.Direction;
-import net.neoforged.neoforge.client.NeoForgeRenderTypes;
+
 
 public class PortalTESR implements BlockEntityRenderer<PortalTileEntity, PortalTESR.State> {
     public PortalTESR(BlockEntityRendererProvider.Context context) {
@@ -44,7 +44,7 @@ public class PortalTESR implements BlockEntityRenderer<PortalTileEntity, PortalT
         // A square quad keeps the circular texture round throughout rotation.
         float halfHeight = 1F;
         // Vanilla's emissive shader still applies directional diffuse shading.
-        collector.submitCustomGeometry(pose, NeoForgeRenderTypes.getUnlitTranslucent(Identifier.fromNamespaceAndPath("meecreeps", "textures/effects/portal.png")), (snapshot, v) -> {
+        collector.submitCustomGeometry(pose, net.minecraft.client.renderer.rendertype.RenderTypes.entityTranslucentEmissive(Identifier.fromNamespaceAndPath("meecreeps", "textures/effects/portal.png")), (snapshot, v) -> {
             var matrix = snapshot.pose();
             v.addVertex(matrix, -1, -halfHeight, 0).setColor(255, 255, 255, 255).setUv(0, 1).setOverlay(0).setLight(15728880).setNormal(snapshot, 0, 0, 1);
             v.addVertex(matrix, 1, -halfHeight, 0).setColor(255, 255, 255, 255).setUv(1, 1).setOverlay(0).setLight(15728880).setNormal(snapshot, 0, 0, 1);

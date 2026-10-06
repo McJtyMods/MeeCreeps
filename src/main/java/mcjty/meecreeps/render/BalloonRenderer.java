@@ -5,17 +5,11 @@ import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.gui.MeeCreepsDialogBackground;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.RenderGuiEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.*;
 
-@EventBusSubscriber(modid = MeeCreeps.MODID, value = Dist.CLIENT)
 public final class BalloonRenderer {
     private record Message(int expires, FormattedCharSequence text) {
     }
@@ -36,17 +30,14 @@ public final class BalloonRenderer {
             addMessage(lastMessage);
     }
 
-    @SubscribeEvent
-    public static void tick(ClientTickEvent.Post e) {
+    public static void tick() {
         ticks++;
         messages.removeIf(m -> m.expires <= ticks);
     }
 
-    @SubscribeEvent
-    public static void render(RenderGuiEvent.Post e) {
+    public static void render(GuiGraphicsExtractor g) {
         if (messages.isEmpty())
             return;
-        GuiGraphicsExtractor g = e.getGuiGraphics();
         int w = g.guiWidth(), h = g.guiHeight(), boxW = MeeCreepsDialogBackground.WIDTH;
         int bodyRows = messages.size() - 1, boxH = MeeCreepsDialogBackground.height(bodyRows);
         int px = ConfigSetup.messageX.get(), py = ConfigSetup.messageY.get();

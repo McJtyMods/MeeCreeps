@@ -9,3 +9,6 @@
 /run-server/
 /run-gametest/
 /run-client/
+
+/run-fabric/
+/run-server-fabric/

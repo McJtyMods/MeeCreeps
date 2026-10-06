@@ -25,7 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
 import java.util.List;
 
-public class CreepCubeItem extends Item {
+public class CreepCubeItem extends Item implements FirstUseItem {
 
     public CreepCubeItem() {
         super(new Item.Properties().setId(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.ITEM, net.minecraft.resources.Identifier.fromNamespaceAndPath("meecreeps", "creepcube"))).stacksTo(1));

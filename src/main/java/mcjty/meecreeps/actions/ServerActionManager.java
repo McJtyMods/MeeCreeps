@@ -42,7 +42,7 @@ public class ServerActionManager extends SavedData {
                 var data = new ServerActionManager();
                 data.readFromNBT(tag, LevelTools.overworld().registryAccess());
                 return data;
-            }, data -> data.save(new CompoundTag(), LevelTools.overworld().registryAccess())));
+            }, data -> data.save(new CompoundTag(), LevelTools.overworld().registryAccess())), null);
 
     public void save() { setDirty(); }
 

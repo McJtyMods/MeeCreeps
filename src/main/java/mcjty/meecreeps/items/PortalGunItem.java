@@ -29,7 +29,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PortalGunItem extends Item {
+public class PortalGunItem extends Item implements FirstUseItem {
 
     public PortalGunItem() {
         super(new Item.Properties().setId(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.ITEM, net.minecraft.resources.Identifier.fromNamespaceAndPath("meecreeps", "portalgun"))).stacksTo(1));

@@ -42,7 +42,7 @@ public class HarvestActionWorker extends AbstractActionWorker {
             return;
         Block block = state.getBlock();
         List<ItemStack> drops = mcjty.meecreeps.varia.BlockTools.getDrops(world, pos, state);
-        SoundTools.playSound(world, state.getSoundType(world, pos, entity.getEntity()).getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        SoundTools.playSound(world, state.getSoundType().getBreakSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
         entity.getWorld().removeBlock(pos, false);
         helper.giveDropsToMeeCreeps(drops);
     }

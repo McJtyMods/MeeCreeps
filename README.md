@@ -1,15 +1,19 @@
 # MeeCreeps
 
-MeeCreeps for Minecraft 26.2 and NeoForge 26.2.0.75 or later. Requires Java 25. The One Probe is optional; the tested release is `26.2_neo-15.0.1-2`. Interaction Wheel integration is disabled because it is unavailable for 26.2. McJtyLib is no longer required: the mod handles its own networking, sounds, and saved tasks.
+MeeCreeps for Minecraft 26.2 with Fabric Loader 0.19.3 or later. Requires Java 25, Fabric API 0.155.2+26.2 or later, and Forge Config API Port 26.2.1 or later (Fabric edition). Team Reborn Energy 5.0.0 is bundled in the mod jar.
 
-Set `JAVA_HOME` to a Java 25 **JDK**, then build with `./gradlew build`. Install `build/libs/meecreeps-26.2-4.0.0.jar` in your Minecraft 26.2 NeoForge instance. The project uses ModDevGradle and Gradle 9.2.1.
+The One Probe integration is temporarily disabled. Its source is preserved under `src/disabled/java` for a future Fabric release. Interaction Wheel integration remains disabled; the built-in portal destination screen is available. McJtyLib is not required.
 
-Run a development client with `./gradlew runClient`, or add `-PwithOptionalMods` to include The One Probe. Use `./gradlew runServer` for a dedicated development server.
+Set `JAVA_HOME` to Java 25, then build with `./gradlew build`. Install `build/libs/meecreeps-fabric-26.2-4.0.0.jar`, Fabric API, and Forge Config API Port in your Minecraft 26.2 Fabric instance. The project uses Fabric Loom 1.17.17 and Gradle 9.5.1.
 
-Run the 23 integration tests with `python3 scripts/run-gametests.py` or `./gradlew runGameTestServer`. Add `-PwithOptionalMods` to test with The One Probe installed. Tests cover transactional energy charging and rollback, persistence and component synchronization, cartridge recipes and remainders, action networking and ownership checks, entity saves, portal expiry and aimed height, cross-dimension teleportation, protected harvesting, crop replanting, moving a chest with its inventory, chest animation, lighting, building around obstructions, and material shortage feedback. Test sources and structures are excluded from the release jar.
+Run a development client with `./gradlew runClient` or a dedicated server with `./gradlew runServer`. Development worlds use `run-fabric` and `run-server-fabric`.
 
-Portal guns and cartridges accept NeoForge energy: 1,000 FE equals one portal charge. Cartridges can also be charged with ender pearls. Cartridge insertion/removal preserves destinations and partial FE charges. Sneak-use the portal gun on a block to manage its eight destinations; Delete removes the selected destination. This built-in destination screen works without Interaction Wheel. The message-repeat key defaults to B.
+Run the 24 MeeCreeps integration tests with `python3 scripts/run-gametests.py` or `./gradlew runGameTest`. They also run as part of `./gradlew build`. Fabric includes an additional framework test. Tests cover item interaction before chest opening, transactional energy charging and rollback, persistence and component synchronization, cartridge recipes and remainders, action payloads and ownership checks, entity saves, portal expiry and aimed height, cross-dimension teleportation, protected harvesting, crop replanting, moving a chest with its inventory, chest animation, lighting, building around obstructions, and material shortage feedback. Test sources and structures are excluded from the release jar. The original NeoForge test registration and port tests are archived under `src/disabled/gametest`.
+
+Portal guns and cartridges accept Fabric energy through Team Reborn Energy: 1,000 energy units equal one portal charge. Cartridges can also be charged with ender pearls. Cartridge insertion/removal preserves destinations and partial charges. Sneak-use the portal gun on a block to manage its eight destinations; Delete removes the selected destination. The message-repeat key defaults to B.
 
 Commands: `/meecreeps list` (operator), `/meecreeps clear` (your tasks), and `/meecreeps clear all` (operator). Legacy `/creep_list`, `/creep_clear`, and `/creep_test` command names are available.
 
-This port uses data components for item charge, destinations, and cube history, registry-aware item serialization for carried inventories and saved tasks, and the 26.2 render-state APIs for entities, portals, and GUIs. Existing MeeCreeps worlds from older Minecraft versions have not been migration-tested; use a new 26.2 world and the generated TOML configuration files.
+The mod uses data components for item charge, destinations, and cube history, registry-aware item serialization for carried inventories and saved tasks, and the 26.2 render-state APIs for entities, portals, and GUIs. Fabric callbacks handle lifecycle, interaction, networking, and protected block breaking. The public API is available as `MeeCreeps.api` for other mods to register action factories during initialization.
+
+Existing worlds from older Minecraft versions or NeoForge have not been migration-tested. Use a new 26.2 world and the generated TOML configuration files.

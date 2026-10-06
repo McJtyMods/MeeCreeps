@@ -19,7 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
-public class CartridgeItem extends Item {
+public class CartridgeItem extends Item implements FirstUseItem {
 
     public CartridgeItem() {
         super(new Item.Properties().setId(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.ITEM, net.minecraft.resources.Identifier.fromNamespaceAndPath("meecreeps", "cartridge"))).stacksTo(1));

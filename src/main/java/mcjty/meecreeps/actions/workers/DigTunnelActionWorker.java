@@ -138,7 +138,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
         Block block = ((BlockItem) item).getBlock();
         BlockState stateForPlacement = mcjty.meecreeps.varia.BlockTools.placeStackAt(GeneralTools.getHarvester(world), actual, world, pos, Direction.UP);
         world.setBlock(pos, stateForPlacement, 3);
-        SoundTools.playSound(world, stateForPlacement.getSoundType(world, pos, entity.getEntity()).getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        SoundTools.playSound(world, stateForPlacement.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
     }
 
     private void placeTorch(BlockPos pos) {

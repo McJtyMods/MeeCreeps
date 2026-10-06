@@ -15,7 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
-public class EmptyPortalGunItem extends Item {
+public class EmptyPortalGunItem extends Item implements FirstUseItem {
 
     public EmptyPortalGunItem() {
         super(new Item.Properties().setId(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.ITEM, net.minecraft.resources.Identifier.fromNamespaceAndPath("meecreeps", "emptyportalgun"))).stacksTo(1));

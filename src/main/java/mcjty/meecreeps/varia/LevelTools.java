@@ -4,11 +4,13 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
+
 
 public final class LevelTools {
+    private static MinecraftServer currentServer;
+    public static void setServer(MinecraftServer server) { currentServer = server; }
     public static MinecraftServer server() {
-        return ServerLifecycleHooks.getCurrentServer();
+        return currentServer;
     }
 
     public static ServerLevel overworld() {

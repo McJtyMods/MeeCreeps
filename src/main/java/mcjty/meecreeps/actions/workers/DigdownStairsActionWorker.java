@@ -140,7 +140,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         Block block = ((BlockItem) item).getBlock();
         BlockState stateForPlacement = mcjty.meecreeps.varia.BlockTools.placeStackAt(GeneralTools.getHarvester(world), actual, world, pos, Direction.UP);
         world.setBlock(pos, stateForPlacement, 3);
-        SoundTools.playSound(world, stateForPlacement.getSoundType(world, pos, entity.getEntity()).getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        SoundTools.playSound(world, stateForPlacement.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
     }
 
     private void buildStairs(BlockPos pos) {
@@ -151,7 +151,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         BlockState stateForPlacement = block.defaultBlockState();
         stateForPlacement = stateForPlacement.setValue(StairBlock.FACING, getDirection().getOpposite());
         world.setBlock(pos, stateForPlacement, 3);
-        SoundTools.playSound(world, stateForPlacement.getSoundType(world, pos, entity.getEntity()).getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
+        SoundTools.playSound(world, stateForPlacement.getSoundType().getPlaceSound(), pos.getX(), pos.getY(), pos.getZ(), 1.0f, 1.0f);
     }
 
     private void collectCobble(ItemEntity entityItem) {
