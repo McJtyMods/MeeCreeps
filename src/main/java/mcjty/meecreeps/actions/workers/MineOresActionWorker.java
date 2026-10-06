@@ -10,11 +10,9 @@ import net.minecraft.world.level.block.NetherWartBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.IPlantable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +29,7 @@ public class MineOresActionWorker extends AbstractActionWorker {
     public AABB getActionBox() {
         if (actionBox == null) {
             // @todo config
-            actionBox = new AABB(options.getTargetPos().offset(-10, -5, -10), options.getTargetPos().offset(10, 5, 10));
+            actionBox = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(-10, -5, -10)), net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(10, 5, 10)));
         }
         return actionBox;
     }
@@ -46,7 +44,6 @@ public class MineOresActionWorker extends AbstractActionWorker {
         world.removeBlock(pos, false);
         helper.giveDropsToMeeCreeps(drops);
     }
-
 
     @Override
     public void tick(boolean timeToWrapUp) {
@@ -67,7 +64,8 @@ public class MineOresActionWorker extends AbstractActionWorker {
                 (pos, state) -> {
                     BlockState cropState = world.getBlockState(pos.above());
                     Block cropBlock = cropState.getBlock();
-                    boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(pos), world, pos, Direction.UP, (IPlantable) cropBlock);
+                    boolean hasCrops = (cropBlock instanceof CropBlock || cropBlock instanceof NetherWartBlock)
+                                && cropState.canSurvive(world, pos.above());
                     if (hasCrops) {
                         if (cropBlock instanceof CropBlock) {
                             CropBlock crops = (CropBlock) cropBlock;

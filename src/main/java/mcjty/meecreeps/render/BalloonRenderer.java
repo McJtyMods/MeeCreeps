@@ -5,17 +5,17 @@ import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.gui.MeeCreepsDialogBackground;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.client.event.RenderGuiEvent;
-import net.minecraftforge.event.TickEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.*;
 
-@Mod.EventBusSubscriber(modid = MeeCreeps.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = MeeCreeps.MODID, value = Dist.CLIENT)
 public final class BalloonRenderer {
     private record Message(int expires, FormattedCharSequence text) {
     }
@@ -37,11 +37,9 @@ public final class BalloonRenderer {
     }
 
     @SubscribeEvent
-    public static void tick(TickEvent.ClientTickEvent e) {
-        if (e.phase == TickEvent.Phase.END) {
-            ticks++;
-            messages.removeIf(m -> m.expires <= ticks);
-        }
+    public static void tick(ClientTickEvent.Post e) {
+        ticks++;
+        messages.removeIf(m -> m.expires <= ticks);
     }
 
     @SubscribeEvent

@@ -3,11 +3,9 @@ package mcjty.meecreeps.actions.workers;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
-import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 
@@ -34,7 +32,6 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
         return true;
     }
 
-
     @Override
     public void tick(boolean timeToWrapUp) {
         IMeeCreep entity = helper.getMeeCreep();
@@ -49,7 +46,7 @@ public class FollowAndPickupActionWorker extends AbstractActionWorker {
             // Wrong dimension, do nothing as this is handled by ServerActionManager
         } else {
             BlockPos position = player.blockPosition();
-            AABB box = new AABB(position.offset(-6, -4, -6), position.offset(6, 4, 6));
+            AABB box = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(position.offset(-6, -4, -6)), net.minecraft.world.phys.Vec3.atLowerCornerOf(position.offset(6, 4, 6)));
             List<ItemEntity> items = entity.getWorld().getEntitiesOfClass(ItemEntity.class, box, input -> {
                 if (!input.getItem().isEmpty()) {
                     if (input.getItem().getItem() instanceof BlockItem) {

@@ -16,8 +16,8 @@ import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.gametest.GameTestHolder;
-import net.minecraftforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
 
@@ -115,7 +115,7 @@ public class ChestAnimationTests {
         BlockPos pos = test.absolutePos(new BlockPos(3, 1, 3));
         level.setBlock(pos, Blocks.CHEST.defaultBlockState(), 3);
         var chest = (ChestBlockEntity) level.getBlockEntity(pos);
-        var player = test.makeMockPlayer();
+        var player = test.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
         test.onEachTick(() -> animate(chest));
         ChestAnimation.open(level, pos);
         test.runAfterDelay(18, () -> chest.startOpen(player));

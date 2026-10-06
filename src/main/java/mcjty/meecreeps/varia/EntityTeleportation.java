@@ -5,9 +5,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ITeleporter;
-
-import java.util.function.Function;
+import net.minecraft.world.level.portal.DimensionTransition;
 
 public final class EntityTeleportation {
     public static Entity teleportEntity(Entity entity, Level destination, double x, double y, double z, Direction side) {
@@ -22,12 +20,6 @@ public final class EntityTeleportation {
             entity.moveTo(x, y, z, yaw, entity.getXRot());
             return entity;
         }
-        return entity.changeDimension(target, new ITeleporter() {
-            public Entity placeEntity(Entity original, ServerLevel current, ServerLevel dest, float rotation, Function<Boolean, Entity> reposition) {
-                Entity moved = reposition.apply(false);
-                moved.moveTo(x, y, z, yaw, moved.getXRot());
-                return moved;
-            }
-        });
+        return entity.changeDimension(new DimensionTransition(target, new net.minecraft.world.phys.Vec3(x, y, z), entity.getDeltaMovement(), yaw, entity.getXRot(), DimensionTransition.DO_NOTHING));
     }
 }

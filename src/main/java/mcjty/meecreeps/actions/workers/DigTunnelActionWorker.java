@@ -14,7 +14,6 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.Direction;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -32,7 +31,6 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     private int torchChecker = 40;
     // We cannot break those so skip them
     private Set<BlockPos> positionsToSkip = new HashSet<>();
-
 
     public DigTunnelActionWorker(IWorkerHelper helper) {
         super(helper);
@@ -52,7 +50,7 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
     public AABB getActionBox() {
         if (actionBox == null) {
             // @todo config
-            actionBox = new AABB(options.getTargetPos().offset(-20, -5, -20), options.getTargetPos().offset(20, 5, 20));
+            actionBox = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(-20, -5, -20)), net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(20, 5, 20)));
         }
         return actionBox;
     }

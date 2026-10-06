@@ -1,6 +1,5 @@
 package mcjty.meecreeps.items;
 
-import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.network.MeeCreepsMessages;
@@ -11,7 +10,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.core.Direction;
@@ -20,8 +18,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.List;
 
 public class CartridgeItem extends Item {
@@ -31,15 +27,9 @@ public class CartridgeItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
         for (String line : StringUtils.split(I18n.get("message.meecreeps.tooltip.cartridge_item", Integer.toString(getCharge(stack))), "\n"))
             tooltip.add(net.minecraft.network.chat.Component.literal(line));
-    }
-
-
-    @Override
-    public net.minecraftforge.common.capabilities.ICapabilityProvider initCapabilities(ItemStack stack, CompoundTag nbt) {
-        return new ItemEnergy(stack);
     }
 
     public static void setCharge(ItemStack stack, int charge) {
@@ -47,12 +37,11 @@ public class CartridgeItem extends Item {
     }
 
     public static int getCharge(ItemStack stack) {
-        if (stack.getTag() == null) {
+        if (!StackData.has(stack)) {
             return 0;
         }
-        return stack.getTag().getInt("charge");
+        return StackData.get(stack).getInt("charge");
     }
-
 
     @Override
     public boolean isBarVisible(ItemStack stack) {

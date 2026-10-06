@@ -20,7 +20,7 @@ public class TeleportDestination {
 
     public TeleportDestination(CompoundTag tc) {
         name = tc.getString("name");
-        dimension = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, new net.minecraft.resources.ResourceLocation(tc.getString("dim")));
+        dimension = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, net.minecraft.resources.ResourceLocation.parse(tc.getString("dim")));
         pos = new BlockPos(tc.getInt("x"), tc.getInt("y"), tc.getInt("z"));
         side = Direction.values()[tc.getByte("side")];
     }

@@ -1,12 +1,17 @@
 package mcjty.meecreeps.actions;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent.Context;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
 
+public class PacketActionOptionToClient implements CustomPacketPayload {
+    public static final Type<PacketActionOptionToClient> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("meecreeps", "packet_action_option_to_client"));
+    public static final StreamCodec<FriendlyByteBuf, PacketActionOptionToClient> CODEC = StreamCodec.of((buf, packet) -> packet.toBytes(buf), PacketActionOptionToClient::new);
+    @Override
+    public Type<PacketActionOptionToClient> type() { return TYPE; }
 
-import java.util.function.Supplier;
-
-public class PacketActionOptionToClient {
     private ActionOptions options;
     private int guiid;
 
@@ -32,11 +37,9 @@ public class PacketActionOptionToClient {
         this.guiid = guiid;
     }
 
-    public void handle(Supplier<Context> supplier) {
-        Context ctx = supplier.get();
+    public void handle(IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             ClientActionManager.showActionOptions(options, guiid);
         });
-        ctx.setPacketHandled(true);
     }
 }

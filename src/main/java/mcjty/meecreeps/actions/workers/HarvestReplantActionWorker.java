@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.IPlantable;
+import net.minecraft.world.item.BlockItem;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,8 +29,8 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
         Block block = needToReplant.get(pos);
         needToReplant.remove(pos);
         for (ItemStack stack : entity.getInventory()) {
-            if (stack.getItem() instanceof IPlantable) {
-                BlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
+            if (stack.getItem() instanceof BlockItem) {
+                BlockState plant = ((BlockItem) stack.getItem()).getBlock().defaultBlockState();
                 if (plant.getBlock() == block) {
                     // This is a valid seed
                     stack.split(1);
@@ -54,8 +54,8 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
         world.removeBlock(pos, false);
         boolean replanted = false;
         for (ItemStack stack : drops) {
-            if ((!replanted) && stack.getItem() instanceof IPlantable) {
-                BlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
+            if ((!replanted) && stack.getItem() instanceof BlockItem) {
+                BlockState plant = ((BlockItem) stack.getItem()).getBlock().defaultBlockState();
                 if (plant.getBlock() == state.getBlock()) {
                     // This is a valid seed
                     ItemStack seed = stack.split(1);
@@ -74,8 +74,8 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
         for (ItemStack stack : entity.getInventory()) {
             if (replanted)
                 break;
-            if (!stack.isEmpty() && stack.getItem() instanceof IPlantable) {
-                BlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
+            if (!stack.isEmpty() && stack.getItem() instanceof BlockItem) {
+                BlockState plant = ((BlockItem) stack.getItem()).getBlock().defaultBlockState();
                 if (plant.getBlock() == state.getBlock()) {
                     // This is a valid seed
                     ItemStack seed = stack.split(1);
@@ -99,8 +99,8 @@ public class HarvestReplantActionWorker extends HarvestActionWorker {
             BlockPos pos = entry.getKey();
             Block block = entry.getValue();
             for (ItemStack stack : entity.getInventory()) {
-                if (stack.getItem() instanceof IPlantable) {
-                    BlockState plant = ((IPlantable) stack.getItem()).getPlant(world, pos);
+                if (stack.getItem() instanceof BlockItem) {
+                    BlockState plant = ((BlockItem) stack.getItem()).getBlock().defaultBlockState();
                     if (plant.getBlock() == block) {
                         // This is a valid seed
                         return pos;

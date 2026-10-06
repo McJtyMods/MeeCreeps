@@ -32,7 +32,6 @@ public class MoveStuffActionWorker extends AbstractActionWorker {
         return true;
     }
 
-
     @Override
     public void tick(boolean timeToWrapUp) {
         IMeeCreep entity = helper.getMeeCreep();
@@ -78,7 +77,7 @@ public class MoveStuffActionWorker extends AbstractActionWorker {
         BlockEntity tileEntity = world.getBlockEntity(pos);
         if (tileEntity != null) {
             CompoundTag tc = new CompoundTag();
-            tc = tileEntity.saveWithFullMetadata();
+            tc = tileEntity.saveWithFullMetadata(world.registryAccess());
             world.removeBlockEntity(pos);
             tc.remove("x");
             tc.remove("y");

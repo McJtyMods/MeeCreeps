@@ -22,7 +22,7 @@ public class PickupActionFactory implements IActionFactory {
         }
 
         // @todo config for pickup area
-        AABB box = new AABB(pos.offset(-10, -10, -10), pos.offset(10, 10, 10));
+        AABB box = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(pos.offset(-10, -10, -10)), net.minecraft.world.phys.Vec3.atLowerCornerOf(pos.offset(10, 10, 10)));
         return !world.getEntitiesOfClass(ItemEntity.class, box).isEmpty();
     }
 

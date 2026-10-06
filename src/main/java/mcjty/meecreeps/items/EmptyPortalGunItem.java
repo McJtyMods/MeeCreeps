@@ -1,6 +1,5 @@
 package mcjty.meecreeps.items;
 
-import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.ClientActionManager;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.world.item.TooltipFlag;
@@ -12,12 +11,9 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.core.BlockPos;
-import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.List;
 
 public class EmptyPortalGunItem extends Item {
@@ -27,11 +23,10 @@ public class EmptyPortalGunItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
         for (String line : StringUtils.split(I18n.get("message.meecreeps.tooltip.emptyportalgun"), "\n"))
             tooltip.add(net.minecraft.network.chat.Component.literal(line));
     }
-
 
     @Override
     public InteractionResult onItemUseFirst(ItemStack usedStack, net.minecraft.world.item.context.UseOnContext context) {

@@ -25,8 +25,8 @@ import java.util.List;
 public class GuiWheel extends Screen {
     private static final int SIZE = 160;
     private static final int SLOT_OFFSET = 4;
-    private static final ResourceLocation WHEEL = new ResourceLocation(MeeCreeps.MODID, "textures/gui/wheel.png");
-    private static final ResourceLocation HIGHLIGHT = new ResourceLocation(MeeCreeps.MODID, "textures/gui/wheel_hilight.png");
+    private static final ResourceLocation WHEEL = ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, "textures/gui/wheel.png");
+    private static final ResourceLocation HIGHLIGHT = ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, "textures/gui/wheel_hilight.png");
     // Position of each 63x63 segment in the original highlight atlas, clockwise from the top.
     private static final int[][] SEGMENT_POSITIONS = {
             {78, 0}, {107, 22}, {107, 78}, {78, 108},
@@ -44,6 +44,11 @@ public class GuiWheel extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        // Keep the world and HUD clear beneath this transparent overlay.
     }
 
     private int left() {

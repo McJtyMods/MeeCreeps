@@ -24,7 +24,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.nbt.Tag;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 public class PortalTileEntity extends BlockEntity {
@@ -53,7 +52,7 @@ public class PortalTileEntity extends BlockEntity {
 
             if ((!soundStart) && timeout > ConfigSetup.portalTimeout.get() - 10) {
                 soundStart = true;
-                SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation(MeeCreeps.MODID, "portal"));
+                SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, "portal"));
                 // @todo config
                 SoundTools.playSound(level, sound, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), 1, 1);
             }
@@ -61,7 +60,7 @@ public class PortalTileEntity extends BlockEntity {
             if ((!soundEnd) && timeout < 10) {
                 soundEnd = true;
                 if (ConfigSetup.teleportVolume.get() > 0.01f) {
-                    SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation(MeeCreeps.MODID, "portal"));
+                    SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, "portal"));
                     SoundTools.playSound(level, sound, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), ConfigSetup.teleportVolume.get(), 1);
                 }
             }
@@ -84,7 +83,7 @@ public class PortalTileEntity extends BlockEntity {
 
                         if (entity instanceof Player) {
                             if (ConfigSetup.teleportVolume.get() > 0.01f) {
-                                SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation(MeeCreeps.MODID, "teleport"));
+                                SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, "teleport"));
                                 SoundTools.playSound(otherPortal.getLevel(), sound, otherX, otherY, otherZ, ConfigSetup.teleportVolume.get(), 1);
                             }
                         }
@@ -95,8 +94,8 @@ public class PortalTileEntity extends BlockEntity {
     }
 
     @Override
-    public CompoundTag getUpdateTag() {
-        return saveWithoutMetadata();
+    public CompoundTag getUpdateTag(net.minecraft.core.HolderLookup.Provider registries) {
+        return saveWithoutMetadata(registries);
     }
 
     @Override
@@ -105,9 +104,9 @@ public class PortalTileEntity extends BlockEntity {
     }
 
     @Override
-    public void onDataPacket(Connection connection, ClientboundBlockEntityDataPacket packet) {
+    public void onDataPacket(Connection connection, ClientboundBlockEntityDataPacket packet, net.minecraft.core.HolderLookup.Provider registries) {
         if (packet.getTag() != null)
-            load(packet.getTag());
+            loadWithComponents(packet.getTag(), registries);
     }
 
     private AABB getTeleportBox() {
@@ -213,8 +212,8 @@ public class PortalTileEntity extends BlockEntity {
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
+    protected void loadAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
         timeout = tag.getInt("timeout");
         start = tag.getInt("start");
         portalSide = Direction.from3DDataValue(tag.getByte("portalSide"));
@@ -227,8 +226,8 @@ public class PortalTileEntity extends BlockEntity {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
+    protected void saveAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
         tag.putInt("timeout", timeout);
         tag.putInt("start", ConfigSetup.portalTimeout.get() - timeout);
         tag.putByte("portalSide", (byte) (portalSide == null ? Direction.UP.ordinal() : portalSide.ordinal()));

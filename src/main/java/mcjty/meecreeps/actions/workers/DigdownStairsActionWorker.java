@@ -13,7 +13,6 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.Direction;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -33,7 +32,6 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
 
     // We cannot break those so skip them
     private Set<BlockPos> positionsToSkip = new HashSet<BlockPos>();
-
 
     public DigdownStairsActionWorker(IWorkerHelper helper) {
         super(helper);
@@ -61,11 +59,10 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
     public AABB getActionBox() {
         if (actionBox == null) {
             // @todo config
-            actionBox = new AABB(options.getTargetPos().offset(-20, -5, -20), options.getTargetPos().offset(20, 5, 20));
+            actionBox = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(-20, -5, -20)), net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(20, 5, 20)));
         }
         return actionBox;
     }
-
 
     private boolean isSupportBlock(ItemStack stack) {
         return stack.getItem() instanceof BlockItem ? DigTunnelActionWorker.isNotInterestedIn(((BlockItem) stack.getItem()).getBlock()) : false;
@@ -243,7 +240,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
                         helper.navigateTo(p, blockPos -> placeStair(facing, p));
                     } else {
                         BlockPos position = entity.getEntity().blockPosition();
-                        AABB box = new AABB(position.offset(-15, -8, -15), position.offset(15, 8, 15));
+                        AABB box = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(position.offset(-15, -8, -15)), net.minecraft.world.phys.Vec3.atLowerCornerOf(position.offset(15, 8, 15)));
 
                         if (!helper.findItemOnGround(box, this::isStair, entityItem -> placeStair(facing, p, entityItem))) {
                             // Collect cobble until we can make stairs

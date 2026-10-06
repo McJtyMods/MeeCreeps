@@ -1,82 +1,50 @@
-buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net' }
-        mavenCentral()
-        gradlePluginPortal()
-    }
-    dependencies { classpath 'net.minecraftforge.gradle:ForgeGradle:5.1.77' }
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.146'
 }
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'java'
-apply plugin: 'maven-publish'
 
 group = 'com.github.mcjty'
-archivesBaseName = 'meecreeps'
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+base { archivesName = 'meecreeps' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 sourceSets {
     gametest {
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
         runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
     }
 }
-minecraft {
-    mappings channel: 'official', version: minecraft_version
+neoForge {
+    version = project.neo_version
     runs {
+        client { client(); gameDirectory = project.file('run') }
+        server { server(); gameDirectory = project.file('run-server'); programArgument '--nogui' }
         gameTestServer {
-            workingDirectory project.file('run-gametest')
-            property 'forge.enabledGameTestNamespaces', 'meecreeps'
-            mods { meecreeps { source sourceSets.main; source sourceSets.gametest } }
+            type = 'gameTestServer'
+            gameDirectory = project.file('run-gametest')
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'meecreeps'
+            sourceSet = sourceSets.gametest
         }
-        client {
-            workingDirectory project.file('run')
-            mods { meecreeps { source sourceSets.main } }
-        }
-        server {
-            workingDirectory project.file('run-server')
-            args '--nogui'
-            mods { meecreeps { source sourceSets.main } }
-        }
+    }
+    mods {
+        meecreeps { sourceSet sourceSets.main; sourceSet sourceSets.gametest }
     }
 }
 repositories {
-    maven { url = 'https://modmaven.dev' }
-    maven { url = 'https://api.modrinth.com/maven' }
     maven { url = 'https://maven.k-4u.nl' }
+    maven { url = 'https://api.modrinth.com/maven' }
 }
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    implementation fg.deobf("com.github.mcjty:mcjtylib:${mcjtylib_version}") { transitive = false }
-    if (project.hasProperty('interactionWheelJar')) {
-        compileOnly files(project.property('interactionWheelJar'))
-    } else {
-        compileOnly fg.deobf("maven.modrinth:interaction-wheel:${interactionwheel_version}")
-    }
-    compileOnly fg.deobf("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
+    implementation("com.github.mcjty:mcjtylib:${mcjtylib_version}") { transitive = false }
+    compileOnly("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
+    compileOnly "maven.modrinth:interaction-wheel:${interactionwheel_version}"
     if (project.hasProperty('withOptionalMods')) {
-        runtimeOnly fg.deobf("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
-        runtimeOnly fg.deobf("maven.modrinth:interaction-wheel:${interactionwheel_version}")
+        runtimeOnly("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
+        runtimeOnly "maven.modrinth:interaction-wheel:${interactionwheel_version}"
     }
 }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 processResources {
     inputs.property 'version', project.version
-    filesMatching('META-INF/mods.toml') { expand version: project.version }
+    filesMatching('META-INF/neoforge.mods.toml') { expand version: project.version }
 }
-jar.finalizedBy('reobfJar')
 java.withSourcesJar()
-
-// A separate JVM reports GameTest exit codes reliably with ForgeGradle 5.
-tasks.register('writeGameTestLaunch') {
-    dependsOn 'prepareRunGameTestServer', 'gametestClasses'
-    doLast {
-        def launch = tasks.named('runGameTestServer').get()
-        def executable = javaToolchains.launcherFor(java.toolchain).get().executablePath.asFile.toString()
-        def data = [
-            executable: executable,
-            args: launch.allJvmArgs + ['-cp', launch.classpath.asPath, launch.mainClass.get()] + launch.args,
-            environment: launch.environment.findAll { key, value -> key == 'MOD_CLASSES' }.collectEntries { key, value -> [key, value.toString()] },
-            cwd: launch.workingDir.toString()
-        ]
-        file('build/gametest-launch.json').text = groovy.json.JsonOutput.toJson(data)
-    }
-}

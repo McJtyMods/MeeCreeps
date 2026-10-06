@@ -56,7 +56,7 @@ public class MakePlatformActionWorker extends AbstractActionWorker {
     public AABB getActionBox() {
         if (actionBox == null) {
             // @todo config
-            actionBox = new AABB(options.getTargetPos().offset(-12, -5, -12), options.getTargetPos().offset(12, 5, 12));
+            actionBox = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(-12, -5, -12)), net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(12, 5, 12)));
         }
         return actionBox;
     }

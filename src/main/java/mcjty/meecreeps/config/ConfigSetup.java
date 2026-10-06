@@ -1,11 +1,8 @@
 package mcjty.meecreeps.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
-
-import org.apache.logging.log4j.Level;
-
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,31 +12,31 @@ public class ConfigSetup {
     private static final String CATEGORY_GENERAL = "general";
     private static final String CATEGORY_PERMISSON = "permission";
 
-    public static ForgeConfigSpec.IntValue portalTimeout;
-    public static ForgeConfigSpec.IntValue portalTimeoutAfterEntry;
-    public static ForgeConfigSpec.IntValue maxCharge;
-    public static ForgeConfigSpec.IntValue chargesPerEnderpearl;
+    public static ModConfigSpec.IntValue portalTimeout;
+    public static ModConfigSpec.IntValue portalTimeoutAfterEntry;
+    public static ModConfigSpec.IntValue maxCharge;
+    public static ModConfigSpec.IntValue chargesPerEnderpearl;
 
-    public static ForgeConfigSpec.IntValue meeCreepBoxMaxUsage;
-    public static ForgeConfigSpec.IntValue maxMeecreepsPerPlayer;
+    public static ModConfigSpec.IntValue meeCreepBoxMaxUsage;
+    public static ModConfigSpec.IntValue maxMeecreepsPerPlayer;
 
-    public static ForgeConfigSpec.DoubleValue meeCreepVolume;
-    public static ForgeConfigSpec.DoubleValue teleportVolume;
+    public static ModConfigSpec.DoubleValue meeCreepVolume;
+    public static ModConfigSpec.DoubleValue teleportVolume;
 
-    public static ForgeConfigSpec.IntValue messageTimeout;
-    public static ForgeConfigSpec.IntValue messageX;
-    public static ForgeConfigSpec.IntValue messageY;
+    public static ModConfigSpec.IntValue messageTimeout;
+    public static ModConfigSpec.IntValue messageX;
+    public static ModConfigSpec.IntValue messageY;
 
-    public static ForgeConfigSpec.IntValue maxSpawnCount;
-    public static ForgeConfigSpec.IntValue maxTreeBlocks;
+    public static ModConfigSpec.IntValue maxSpawnCount;
+    public static ModConfigSpec.IntValue maxTreeBlocks;
 
-    public static ForgeConfigSpec.DoubleValue delayAtHardness;
-    public static ForgeConfigSpec.DoubleValue delayFactor;
+    public static ModConfigSpec.DoubleValue delayAtHardness;
+    public static ModConfigSpec.DoubleValue delayFactor;
 
     public static Set<String> allowedActions = new HashSet<>();
 
-    private static final ForgeConfigSpec.Builder SERVER_BUILDER = new ForgeConfigSpec.Builder();
-    private static final ForgeConfigSpec.Builder CLIENT_BUILDER = new ForgeConfigSpec.Builder();
+    private static final ModConfigSpec.Builder SERVER_BUILDER = new ModConfigSpec.Builder();
+    private static final ModConfigSpec.Builder CLIENT_BUILDER = new ModConfigSpec.Builder();
 
     static {
         SERVER_BUILDER.comment("General configuration").push(CATEGORY_GENERAL);
@@ -99,9 +96,8 @@ public class ConfigSetup {
         CLIENT_BUILDER.pop();
     }
 
-    public static ForgeConfigSpec SERVER_CONFIG;
-    public static ForgeConfigSpec CLIENT_CONFIG;
-
+    public static ModConfigSpec SERVER_CONFIG;
+    public static ModConfigSpec CLIENT_CONFIG;
 
     public static void init() {
         SERVER_BUILDER.push("permission");
@@ -113,7 +109,7 @@ public class ConfigSetup {
         CLIENT_CONFIG = CLIENT_BUILDER.build();
     }
 
-    public static final java.util.Map<String, ForgeConfigSpec.BooleanValue> actionPermissions = new java.util.HashMap<>();
+    public static final java.util.Map<String, ModConfigSpec.BooleanValue> actionPermissions = new java.util.HashMap<>();
 
     public static boolean isAllowed(String id) {
         var permission = actionPermissions.get(id);

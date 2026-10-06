@@ -2,12 +2,17 @@ package mcjty.meecreeps.actions;
 
 import net.minecraft.network.FriendlyByteBuf;
 import mcjty.lib.network.NetworkTools;
-import net.minecraftforge.network.NetworkEvent.Context;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
 
+public class PacketShowBalloonToClient implements CustomPacketPayload {
+    public static final Type<PacketShowBalloonToClient> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("meecreeps", "packet_show_balloon_to_client"));
+    public static final StreamCodec<FriendlyByteBuf, PacketShowBalloonToClient> CODEC = StreamCodec.of((buf, packet) -> packet.toBytes(buf), PacketShowBalloonToClient::new);
+    @Override
+    public Type<PacketShowBalloonToClient> type() { return TYPE; }
 
-import java.util.function.Supplier;
-
-public class PacketShowBalloonToClient {
     private String message;
     private String[] parameters;
 
@@ -46,11 +51,9 @@ public class PacketShowBalloonToClient {
         this.parameters = parameters;
     }
 
-    public void handle(Supplier<Context> supplier) {
-        Context ctx = supplier.get();
+    public void handle(IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             ClientActionManager.showProblem(message, parameters);
         });
-        ctx.setPacketHandled(true);
     }
 }

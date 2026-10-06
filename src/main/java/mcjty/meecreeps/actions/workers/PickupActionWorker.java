@@ -20,11 +20,10 @@ public class PickupActionWorker extends AbstractActionWorker {
     public AABB getActionBox() {
         if (actionBox == null) {
             // @todo config
-            actionBox = new AABB(options.getTargetPos().offset(-10, -10, -10), options.getTargetPos().offset(10, 10, 10));
+            actionBox = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(-10, -10, -10)), net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(10, 10, 10)));
         }
         return actionBox;
     }
-
 
     @Override
     public void tick(boolean timeToWrapUp) {

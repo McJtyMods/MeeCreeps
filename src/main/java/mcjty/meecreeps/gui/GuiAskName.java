@@ -40,8 +40,7 @@ public class GuiAskName extends Screen {
 
     @Override
     public void render(GuiGraphics g, int x, int y, float partial) {
-        renderBackground(g);
-        g.drawCenteredString(font, title, width / 2, height / 2 - 55, 0xffffffff);
         super.render(g, x, y, partial);
+        g.drawCenteredString(font, title, width / 2, height / 2 - 55, 0xffffffff);
     }
 }

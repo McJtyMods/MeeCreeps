@@ -30,7 +30,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
     public AABB getSearchBox() {
         if (searchBox == null) {
             // @todo config
-            searchBox = new AABB(options.getTargetPos().offset(-12, -5, -12), options.getTargetPos().offset(12, 5, 12));
+            searchBox = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(-12, -5, -12)), net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(12, 5, 12)));
         }
         return searchBox;
     }

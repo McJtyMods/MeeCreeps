@@ -2,17 +2,21 @@ package mcjty.meecreeps.teleport;
 
 import net.minecraft.network.FriendlyByteBuf;
 import mcjty.lib.network.NetworkTools;
-import net.minecraftforge.network.NetworkEvent.Context;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
 import mcjty.meecreeps.items.PortalGunItem;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 
-
-import java.util.function.Supplier;
-
-public class PacketMakePortals {
+public class PacketMakePortals implements CustomPacketPayload {
+    public static final Type<PacketMakePortals> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("meecreeps", "packet_make_portals"));
+    public static final StreamCodec<FriendlyByteBuf, PacketMakePortals> CODEC = StreamCodec.of((buf, packet) -> packet.toBytes(buf), PacketMakePortals::new);
+    @Override
+    public Type<PacketMakePortals> type() { return TYPE; }
 
     private BlockPos selectedBlock;
     private TeleportDestination destination;
@@ -47,10 +51,9 @@ public class PacketMakePortals {
         this.destination = destination;
     }
 
-    public void handle(Supplier<Context> supplier) {
-        Context ctx = supplier.get();
+    public void handle(IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            ServerPlayer player = ctx.getSender();
+            ServerPlayer player = (ServerPlayer) ctx.player();
             if (player == null || player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(selectedBlock)) > 100)
                 return;
             ItemStack heldItem = PortalGunItem.getGun(player);
@@ -65,6 +68,5 @@ public class PacketMakePortals {
             PortalGunItem.setCharge(heldItem, PortalGunItem.getCharge(heldItem) - 1);
             TeleportationTools.makePortalPair(player, selectedBlock, selectedSide, destination);
         });
-        ctx.setPacketHandled(true);
     }
 }

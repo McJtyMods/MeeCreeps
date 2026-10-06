@@ -10,6 +10,6 @@ public class RenderMeeCreeps extends MobRenderer<EntityMeeCreeps, MeeCreepsModel
     }
 
     public ResourceLocation getTextureLocation(EntityMeeCreeps entity) {
-        return new ResourceLocation("meecreeps", "textures/entity/meecreeps.png");
+        return ResourceLocation.fromNamespaceAndPath("meecreeps", "textures/entity/meecreeps.png");
     }
 }

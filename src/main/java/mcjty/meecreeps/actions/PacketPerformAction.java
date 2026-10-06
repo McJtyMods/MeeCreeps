@@ -2,12 +2,16 @@ package mcjty.meecreeps.actions;
 
 import net.minecraft.network.FriendlyByteBuf;
 import mcjty.lib.network.NetworkTools;
-import net.minecraftforge.network.NetworkEvent.Context;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
 
-
-import java.util.function.Supplier;
-
-public class PacketPerformAction {
+public class PacketPerformAction implements CustomPacketPayload {
+    public static final Type<PacketPerformAction> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("meecreeps", "packet_perform_action"));
+    public static final StreamCodec<FriendlyByteBuf, PacketPerformAction> CODEC = StreamCodec.of((buf, packet) -> packet.toBytes(buf), PacketPerformAction::new);
+    @Override
+    public Type<PacketPerformAction> type() { return TYPE; }
 
     private int id;
     private MeeCreepActionType type;
@@ -38,10 +42,9 @@ public class PacketPerformAction {
         this.furtherQuestionId = furtherQuestionId;
     }
 
-    public void handle(Supplier<Context> supplier) {
-        Context ctx = supplier.get();
+    public void handle(IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            if (ctx.getSender() == null)
+            if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer player))
                 return;
             var manager = ServerActionManager.getManager();
             var options = manager.getOptions(id);
@@ -57,8 +60,7 @@ public class PacketPerformAction {
                 return;
             if (furtherQuestionId != null && !factory.getFactory().getFurtherQuestions(world, options.getTargetPos(), options.getTargetSide()).stream().anyMatch(q -> java.util.Objects.equals(q.getLeft(), furtherQuestionId)))
                 return;
-            manager.performAction(ctx.getSender(), id, type, furtherQuestionId);
+            manager.performAction(player, id, type, furtherQuestionId);
         });
-        ctx.setPacketHandled(true);
     }
 }

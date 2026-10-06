@@ -5,7 +5,6 @@ import mcjty.meecreeps.api.IActionFactory;
 import mcjty.meecreeps.api.IActionWorker;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
@@ -19,8 +18,8 @@ public class LightupActionFactory implements IActionFactory {
     @Override
     public boolean isPossible(Level world, BlockPos pos, Direction side) {
         // @todo config for area
-        AABB box = new AABB(pos.offset(-10, -5, -10), pos.offset(10, 5, 10));
-//        AABB box = new AABB(pos.offset(-2, -2, -2), pos.offset(2, 2, 2));
+        AABB box = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(pos.offset(-10, -5, -10)), net.minecraft.world.phys.Vec3.atLowerCornerOf(pos.offset(10, 5, 10)));
+//        AABB box = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(pos.offset(-2, -2, -2)), net.minecraft.world.phys.Vec3.atLowerCornerOf(pos.offset(2, 2, 2)));
         return GeneralTools.traverseBoxTest(box, p -> {
             if (world.isEmptyBlock(p) && world.getBlockState(p.below()).isFaceSturdy(world, p.below(), Direction.UP)) {
                 // Ignore daylight so exposed areas are also prepared for night.

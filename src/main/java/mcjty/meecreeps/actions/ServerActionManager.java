@@ -141,7 +141,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
     public static ServerActionManager getManager() {
         return getData(LevelTools.overworld(), tag -> {
             var data = new ServerActionManager();
-            data.readFromNBT(tag);
+            data.readFromNBT(tag, LevelTools.overworld().registryAccess());
             return data;
         }, ServerActionManager::new, NAME);
     }
@@ -200,7 +200,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
                             snd = "ok2";
                             break;
                     }
-                    SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation(MeeCreeps.MODID, snd));
+                    SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, snd));
                     SoundTools.playSound(player.level(), sound, player.getX(), player.getY(), player.getZ(), ConfigSetup.meeCreepVolume.get(), 1);
                 }
             }
@@ -344,12 +344,12 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
         return player.position().distanceToSqr(meeCreep.position()) > 60 * 60;
     }
 
-    public void readFromNBT(CompoundTag nbt) {
+    public void readFromNBT(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
         ListTag list = nbt.getList("actions", Tag.TAG_COMPOUND);
         options = new ArrayList<>();
         optionMap = new HashMap<>();
         for (int i = 0; i < list.size(); i++) {
-            ActionOptions opt = new ActionOptions(list.getCompound(i));
+            ActionOptions opt = new ActionOptions(list.getCompound(i), registries);
             options.add(opt);
             optionMap.put(opt.getActionId(), opt);
         }
@@ -357,11 +357,11 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
     }
 
     @Override
-    public CompoundTag save(CompoundTag compound) {
+    public CompoundTag save(CompoundTag compound, net.minecraft.core.HolderLookup.Provider registries) {
         ListTag list = new ListTag();
         for (ActionOptions option : options) {
             CompoundTag tc = new CompoundTag();
-            option.writeToNBT(tc);
+            option.writeToNBT(tc, registries);
             list.add(tc);
         }
         compound.put("actions", list);

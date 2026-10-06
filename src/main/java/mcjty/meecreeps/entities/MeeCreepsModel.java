@@ -9,7 +9,7 @@ import net.minecraft.util.Mth;
 
 /** Original Tabula geometry by wiiv, converted to baked model parts. */
 public class MeeCreepsModel extends EntityModel<EntityMeeCreeps> {
-    public static final ModelLayerLocation LAYER = new ModelLayerLocation(new ResourceLocation("meecreeps", "meecreeps"), "main");
+    public static final ModelLayerLocation LAYER = new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath("meecreeps", "meecreeps"), "main");
     private final ModelPart root;
 
     public MeeCreepsModel(ModelPart root) {
@@ -93,7 +93,7 @@ public class MeeCreepsModel extends EntityModel<EntityMeeCreeps> {
     }
 
     @Override
-    public void renderToBuffer(PoseStack pose, VertexConsumer vertices, int light, int overlay, float r, float g, float b, float alpha) {
-        root.render(pose, vertices, light, overlay, r, g, b, alpha);
+    public void renderToBuffer(PoseStack pose, VertexConsumer vertices, int light, int overlay, int color) {
+        root.render(pose, vertices, light, overlay, color);
     }
 }

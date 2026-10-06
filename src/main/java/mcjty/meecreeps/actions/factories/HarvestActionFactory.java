@@ -14,7 +14,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.IPlantable;
 
 import javax.annotation.Nonnull;
 
@@ -27,7 +26,7 @@ public class HarvestActionFactory implements IActionFactory {
         }
 
         // @todo config for harvest area
-        AABB box = new AABB(pos.offset(-10, -5, -10), pos.offset(10, 5, 10));
+        AABB box = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(pos.offset(-10, -5, -10)), net.minecraft.world.phys.Vec3.atLowerCornerOf(pos.offset(10, 5, 10)));
 
         for (double x = box.minX; x <= box.maxX; x++) {
             for (double y = box.minY; y <= box.maxY; y++) {
@@ -37,7 +36,8 @@ public class HarvestActionFactory implements IActionFactory {
                     if ((state.getBlock() == Blocks.FARMLAND || state.getBlock() == Blocks.SOUL_SAND)) {
                         BlockState cropState = world.getBlockState(p.above());
                         Block cropBlock = cropState.getBlock();
-                        boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(p), world, p, Direction.UP, (IPlantable) cropBlock);
+                        boolean hasCrops = (cropBlock instanceof CropBlock || cropBlock instanceof NetherWartBlock)
+                                && cropState.canSurvive(world, p.above());
                         if (hasCrops) {
                             if (cropBlock instanceof CropBlock) {
                                 CropBlock crops = (CropBlock) cropBlock;
@@ -70,7 +70,7 @@ public class HarvestActionFactory implements IActionFactory {
         }
 
         // @todo config for harvest area
-        AABB box = new AABB(pos.offset(-10, -5, -10), pos.offset(10, 5, 10));
+        AABB box = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(pos.offset(-10, -5, -10)), net.minecraft.world.phys.Vec3.atLowerCornerOf(pos.offset(10, 5, 10)));
 
         for (double x = box.minX; x <= box.maxX; x++) {
             for (double y = box.minY; y <= box.maxY; y++) {
@@ -80,7 +80,8 @@ public class HarvestActionFactory implements IActionFactory {
                     if ((state.getBlock() == Blocks.FARMLAND || state.getBlock() == Blocks.SOUL_SAND)) {
                         BlockState cropState = world.getBlockState(p.above());
                         Block cropBlock = cropState.getBlock();
-                        boolean hasCrops = cropBlock instanceof IPlantable && state.getBlock().canSustainPlant(world.getBlockState(p), world, p, Direction.UP, (IPlantable) cropBlock);
+                        boolean hasCrops = (cropBlock instanceof CropBlock || cropBlock instanceof NetherWartBlock)
+                                && cropState.canSurvive(world, p.above());
                         if (hasCrops) {
                             return true;
                         }

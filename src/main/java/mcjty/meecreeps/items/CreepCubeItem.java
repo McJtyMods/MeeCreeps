@@ -14,7 +14,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -24,7 +23,6 @@ import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.List;
 
 public class CreepCubeItem extends Item {
@@ -33,9 +31,8 @@ public class CreepCubeItem extends Item {
         super(new Item.Properties().stacksTo(1));
     }
 
-
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
         for (String line : StringUtils.split(I18n.get("message.meecreeps.tooltip.cube_intro"), "\n"))
             tooltip.add(net.minecraft.network.chat.Component.literal(line));
 
@@ -60,52 +57,48 @@ public class CreepCubeItem extends Item {
     }
 
     public static void setLastAction(ItemStack cube, MeeCreepActionType type, @Nullable String furtherQuestionId) {
-        if (cube.getTag() == null) {
-            cube.setTag(new CompoundTag());
-        }
-        cube.getTag().putString("lastType", type.getId());
-        if (furtherQuestionId != null) {
-            cube.getTag().putString("lastQuestion", furtherQuestionId);
-        }
+        StackData.update(cube, data -> {
+            data.putString("lastType", type.getId());
+            if (furtherQuestionId != null)
+                data.putString("lastQuestion", furtherQuestionId);
+            else
+                data.remove("lastQuestion");
+        });
     }
 
     @Nullable
     public static MeeCreepActionType getLastAction(ItemStack cube) {
-        if (cube.getTag() == null) {
+        if (!StackData.has(cube)) {
             return null;
         }
-        if (!cube.getTag().contains("lastType")) {
+        if (!StackData.get(cube).contains("lastType")) {
             return null;
         }
-        String lastType = cube.getTag().getString("lastType");
+        String lastType = StackData.get(cube).getString("lastType");
         return new MeeCreepActionType(lastType);
     }
 
     @Nullable
     public static String getLastQuestionId(ItemStack cube) {
-        if (cube.getTag() == null) {
+        if (!StackData.has(cube)) {
             return null;
         }
-        if (!cube.getTag().contains("lastQuestion")) {
+        if (!StackData.get(cube).contains("lastQuestion")) {
             return null;
         }
-        return cube.getTag().getString("lastQuestion");
+        return StackData.get(cube).getString("lastQuestion");
     }
 
     public static void setUsages(ItemStack stack, int uses) {
-        if (stack.getTag() == null) {
-            stack.setTag(new CompoundTag());
-        }
-        stack.getTag().putInt("uses", uses);
+        StackData.update(stack, data -> data.putInt("uses", uses));
     }
 
     public static int getUsages(ItemStack stack) {
-        if (stack.getTag() == null) {
+        if (!StackData.has(stack)) {
             return 0;
         }
-        return stack.getTag().getInt("uses");
+        return StackData.get(stack).getInt("uses");
     }
-
 
     @Override
     public int getBarWidth(ItemStack stack) {
@@ -129,7 +122,6 @@ public class CreepCubeItem extends Item {
         }
         return heldItem;
     }
-
 
     @Override
     public InteractionResult onItemUseFirst(ItemStack usedStack, net.minecraft.world.item.context.UseOnContext context) {

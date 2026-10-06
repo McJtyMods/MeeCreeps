@@ -12,7 +12,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.Direction;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -29,7 +28,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
     public AABB getActionBox() {
         if (actionBox == null) {
             // @todo config
-            actionBox = new AABB(options.getTargetPos().offset(-10, -5, -10), options.getTargetPos().offset(10, 5, 10));
+            actionBox = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(-10, -5, -10)), net.minecraft.world.phys.Vec3.atLowerCornerOf(options.getTargetPos().offset(10, 5, 10)));
         }
         return actionBox;
     }
@@ -154,7 +153,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
         IMeeCreep entity = helper.getMeeCreep();
 
         if (supportPosTodo != null) {
-            if (!helper.findItemOnGround(new AABB(entity.getEntity().blockPosition().offset(-3, -3, -3), entity.getEntity().blockPosition().offset(3, 3, 3)),
+            if (!helper.findItemOnGround(new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(entity.getEntity().blockPosition().offset(-3, -3, -3)), net.minecraft.world.phys.Vec3.atLowerCornerOf(entity.getEntity().blockPosition().offset(3, 3, 3))),
                     this::isBuildingBlock, this::buildSupportBlock)) {
                 // We didn't find a suitable item to build support with. If it is time to wrap up
                 // then we will not find any suitable blocks later so we just stop then

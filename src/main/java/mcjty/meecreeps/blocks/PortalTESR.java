@@ -6,7 +6,7 @@ import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.blockentity.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.Direction;
-import net.minecraftforge.client.ForgeRenderTypes;
+import net.neoforged.neoforge.client.NeoForgeRenderTypes;
 
 public class PortalTESR implements BlockEntityRenderer<PortalTileEntity> {
     public PortalTESR(BlockEntityRendererProvider.Context context) {
@@ -32,13 +32,13 @@ public class PortalTESR implements BlockEntityRenderer<PortalTileEntity> {
         // A square quad keeps the circular texture round throughout rotation.
         float halfHeight = 1F;
         // Vanilla's emissive shader still applies directional diffuse shading.
-        var v = buffers.getBuffer(ForgeRenderTypes.getUnlitTranslucent(new ResourceLocation("meecreeps", "textures/effects/portal.png")));
+        var v = buffers.getBuffer(NeoForgeRenderTypes.getUnlitTranslucent(ResourceLocation.fromNamespaceAndPath("meecreeps", "textures/effects/portal.png")));
         var matrix = pose.last().pose();
         var normal = pose.last().normal();
-        v.vertex(matrix, -1, -halfHeight, 0).color(255, 255, 255, 255).uv(0, 1).overlayCoords(overlay).uv2(LightTexture.FULL_BRIGHT).normal(normal, 0, 0, 1).endVertex();
-        v.vertex(matrix, 1, -halfHeight, 0).color(255, 255, 255, 255).uv(1, 1).overlayCoords(overlay).uv2(LightTexture.FULL_BRIGHT).normal(normal, 0, 0, 1).endVertex();
-        v.vertex(matrix, 1, halfHeight, 0).color(255, 255, 255, 255).uv(1, 0).overlayCoords(overlay).uv2(LightTexture.FULL_BRIGHT).normal(normal, 0, 0, 1).endVertex();
-        v.vertex(matrix, -1, halfHeight, 0).color(255, 255, 255, 255).uv(0, 0).overlayCoords(overlay).uv2(LightTexture.FULL_BRIGHT).normal(normal, 0, 0, 1).endVertex();
+        v.addVertex(matrix, -1, -halfHeight, 0).setColor(255, 255, 255, 255).setUv(0, 1).setOverlay(overlay).setLight(LightTexture.FULL_BRIGHT).setNormal(pose.last(), 0, 0, 1);
+        v.addVertex(matrix, 1, -halfHeight, 0).setColor(255, 255, 255, 255).setUv(1, 1).setOverlay(overlay).setLight(LightTexture.FULL_BRIGHT).setNormal(pose.last(), 0, 0, 1);
+        v.addVertex(matrix, 1, halfHeight, 0).setColor(255, 255, 255, 255).setUv(1, 0).setOverlay(overlay).setLight(LightTexture.FULL_BRIGHT).setNormal(pose.last(), 0, 0, 1);
+        v.addVertex(matrix, -1, halfHeight, 0).setColor(255, 255, 255, 255).setUv(0, 0).setOverlay(overlay).setLight(LightTexture.FULL_BRIGHT).setNormal(pose.last(), 0, 0, 1);
         pose.popPose();
     }
 

@@ -1,10 +1,10 @@
 package mcjty.meecreeps;
 
 import mcjty.meecreeps.actions.ServerActionManager;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.BlockPos;
@@ -26,11 +26,9 @@ public class ForgeEventHandlers {
     }
 
     @SubscribeEvent
-    public void tick(TickEvent.ServerTickEvent e) {
-        if (e.phase == TickEvent.Phase.END) {
-            ServerActionManager.getManager().tick();
-            harvests.entrySet().removeIf(entry -> ServerActionManager.getManager().getOptions(entry.getValue().action) == null);
-        }
+    public void tick(ServerTickEvent.Post e) {
+        ServerActionManager.getManager().tick();
+        harvests.entrySet().removeIf(entry -> ServerActionManager.getManager().getOptions(entry.getValue().action) == null);
     }
 
     @SubscribeEvent

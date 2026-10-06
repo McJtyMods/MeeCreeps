@@ -5,7 +5,6 @@ import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.GeneralTools;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
@@ -37,7 +36,7 @@ public class FollowAndLightupActionWorker extends AbstractActionWorker {
     private BlockPos findDarkSpot() {
         Level world = helper.getMeeCreep().getWorld();
         BlockPos position = options.getPlayer().blockPosition();
-        AABB box = new AABB(position.offset(-6, -4, -6), position.offset(6, 4, 6));
+        AABB box = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(position.offset(-6, -4, -6)), net.minecraft.world.phys.Vec3.atLowerCornerOf(position.offset(6, 4, 6)));
         return GeneralTools.traverseBoxFirst(box, p -> {
             if (world.isEmptyBlock(p) && world.getBlockState(p.below()).isFaceSturdy(world, p.below(), Direction.UP)) {
                 // Ignore daylight so exposed areas are also prepared for night.

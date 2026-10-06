@@ -65,6 +65,11 @@ public class GuiMeeCreeps extends Screen {
         return false;
     }
 
+    @Override
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        // Speech dialogs overlay the world without the default screen blur or dimming.
+    }
+
     private void resumeAndClose() {
         resume();
         close();

@@ -12,7 +12,6 @@ import mcjty.meecreeps.actions.workers.WorkerHelper;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.network.MeeCreepsMessages;
 import mcjty.meecreeps.setup.GuiProxy;
-import net.minecraft.world.level.block.Block;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.PathfinderMob;
@@ -47,7 +46,7 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
     private static final EntityDataAccessor<Optional<BlockState>> CARRIED_BLOCK = SynchedEntityData.<Optional<BlockState>>defineId(EntityMeeCreeps.class, EntityDataSerializers.OPTIONAL_BLOCK_STATE);
     private static final EntityDataAccessor<Integer> FACE_VARIATION = SynchedEntityData.<Integer>defineId(EntityMeeCreeps.class, EntityDataSerializers.INT);
 
-    public static final ResourceLocation LOOT = new ResourceLocation(MeeCreeps.MODID, "entities/meecreeps");
+    public static final ResourceLocation LOOT = ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, "entities/meecreeps");
 
     public static final int INVENTORY_SIZE = 4;
 
@@ -101,15 +100,15 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
         int variationFace = level().random.nextInt(9);
         // Avoid the engry face
         while (variationFace == 1) {
             variationFace = level().random.nextInt(9);
         }
-        this.entityData.define(CARRIED_BLOCK, Optional.empty());
-        this.entityData.define(FACE_VARIATION, variationFace);
+        builder.define(CARRIED_BLOCK, Optional.empty());
+        builder.define(FACE_VARIATION, variationFace);
     }
 
     public int getVariationFace() {
@@ -143,7 +142,6 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 //        this.targetTasks.addTask(2, new EntityAINearestAttackableTarget(this, EntityMeeCreeps.class, false));
     }
-
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
@@ -181,8 +179,8 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
 
     @Override
     @Nullable
-    protected ResourceLocation getDefaultLootTable() {
-        return LOOT;
+    protected net.minecraft.resources.ResourceKey<net.minecraft.world.level.storage.loot.LootTable> getDefaultLootTable() {
+        return net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.LOOT_TABLE, LOOT);
     }
 
     public void setHeldBlockState(@Nullable BlockState state) {
@@ -222,7 +220,7 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
             tc.putInt("z", pos.getZ());
             BlockEntity tileEntity = level().getBlockEntity(pos);
             if (tileEntity != null) {
-                tileEntity.load(tc);
+                tileEntity.loadWithComponents(tc, level().registryAccess());
                 tileEntity.setChanged();
                 level().sendBlockUpdated(pos, state, state, 3);
             }
@@ -245,7 +243,7 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
 
                 ItemStack itemstack = this.inventory.get(i);
 
-                if (!itemstack.isEmpty() && itemstack.getItem() == stack.getItem() && ItemStack.isSameItemSameTags(stack, itemstack)) {
+                if (!itemstack.isEmpty() && itemstack.getItem() == stack.getItem() && ItemStack.isSameItemSameComponents(stack, itemstack)) {
                     int newsize = itemstack.getCount() + stack.getCount();
                     int maxSize = itemstack.getMaxStackSize();
 
@@ -275,7 +273,6 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
 
         return stack;
     }
-
 
     @Override
     public NonNullList<ItemStack> getInventory() {
@@ -394,7 +391,7 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
         ListTag list = compound.getList("items", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             if (i < inventory.size()) {
-                inventory.set(i, ItemStack.of(list.getCompound(i)));
+                inventory.set(i, ItemStack.parseOptional(level().registryAccess(), list.getCompound(i)));
             }
         }
         if (compound.contains("worker") && workerTask != null) {
@@ -418,7 +415,7 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
         compound.putInt("face", getVariationFace());
         ListTag list = new ListTag();
         for (ItemStack stack : inventory) {
-            list.add(stack.save(new CompoundTag()));
+            list.add(stack.saveOptional(level().registryAccess()));
         }
         compound.put("items", list);
         if (workerTask != null) {
@@ -459,10 +456,12 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
             ItemStack drop = new ItemStack(carried.getBlock());
             if (!drop.isEmpty()) {
                 if (carriedNBT != null)
-                    drop.getOrCreateTag().put("BlockEntityTag", carriedNBT.copy());
+                    drop.set(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA, net.minecraft.world.item.component.CustomData.of(carriedNBT));
                 var properties = net.minecraft.nbt.NbtUtils.writeBlockState(carried).getCompound("Properties");
                 if (!properties.isEmpty())
-                    drop.getOrCreateTag().put("BlockStateTag", properties);
+                    drop.set(net.minecraft.core.component.DataComponents.BLOCK_STATE,
+                            new net.minecraft.world.item.component.BlockItemStateProperties(properties.getAllKeys().stream()
+                                    .collect(java.util.stream.Collectors.toMap(key -> key, properties::getString))));
                 spawnAtLocation(drop);
             }
             carriedNBT = null;

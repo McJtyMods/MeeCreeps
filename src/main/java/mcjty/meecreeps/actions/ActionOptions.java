@@ -106,7 +106,7 @@ public class ActionOptions implements IActionContext {
         // Drops not needed on client so no persistance
     }
 
-    public ActionOptions(CompoundTag tagCompound) {
+    public ActionOptions(CompoundTag tagCompound, net.minecraft.core.HolderLookup.Provider registries) {
         ListTag list = tagCompound.getList("options", Tag.TAG_STRING);
         actionOptions = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
@@ -125,11 +125,11 @@ public class ActionOptions implements IActionContext {
             CompoundTag tc = list.getCompound(i);
             BlockPos p = BlockPos.of(tc.getLong("p"));
             CompoundTag itemTag = tc.getCompound("i");
-            ItemStack stack = ItemStack.of(itemTag);
+            ItemStack stack = ItemStack.parseOptional(registries, itemTag);
             drops.add(Pair.of(p, stack));
         }
 
-        dimension = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, new net.minecraft.resources.ResourceLocation(tagCompound.getString("dim")));
+        dimension = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, net.minecraft.resources.ResourceLocation.parse(tagCompound.getString("dim")));
         failureCount = tagCompound.getInt("failure");
         targetPos = BlockPos.of(tagCompound.getLong("pos"));
         targetSide = Direction.values()[tagCompound.getByte("targetSide")];
@@ -187,7 +187,7 @@ public class ActionOptions implements IActionContext {
         // Drops not needed on client so no persistance
     }
 
-    public void writeToNBT(CompoundTag tagCompound) {
+    public void writeToNBT(CompoundTag tagCompound, net.minecraft.core.HolderLookup.Provider registries) {
         ListTag list = new ListTag();
         for (MeeCreepActionType option : actionOptions) {
             list.add(StringTag.valueOf(option.getId()));
@@ -204,7 +204,7 @@ public class ActionOptions implements IActionContext {
         for (Pair<BlockPos, ItemStack> pair : drops) {
             CompoundTag tc = new CompoundTag();
             tc.putLong("p", pair.getKey().asLong());
-            tc.put("i", pair.getValue().save(new CompoundTag()));
+            tc.put("i", pair.getValue().saveOptional(registries));
             list.add(tc);
         }
         tagCompound.put("drops", list);
@@ -436,7 +436,7 @@ public class ActionOptions implements IActionContext {
                     snd = "intro4";
                     break;
             }
-            SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation(MeeCreeps.MODID, snd));
+            SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, snd));
             SoundTools.playSound(world, sound, p.getX(), p.getY(), p.getZ(), ConfigSetup.meeCreepVolume.get(), 1);
         }
 

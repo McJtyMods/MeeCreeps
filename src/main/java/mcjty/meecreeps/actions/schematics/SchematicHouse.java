@@ -5,7 +5,7 @@ import mcjty.meecreeps.api.IBuildSchematic;
 import mcjty.meecreeps.api.IDesiredBlock;
 import mcjty.meecreeps.api.IWorkerHelper;
 import net.minecraft.world.level.block.DoorBlock;
-import net.minecraft.world.level.block.GlassBlock;
+import net.minecraft.world.level.block.TransparentBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.Item;
@@ -94,7 +94,7 @@ public class SchematicHouse implements IBuildSchematic {
 
         @Override
         public Predicate<BlockState> getStateMatcher() {
-            return blockState -> blockState.getBlock() instanceof GlassBlock;
+            return blockState -> blockState.getBlock() instanceof TransparentBlock;
         }
     };
 
@@ -193,7 +193,6 @@ public class SchematicHouse implements IBuildSchematic {
             return blockState -> WorkerHelper.isTorch(blockState.getBlock());
         }
     };
-
 
     @Override
     public IDesiredBlock getDesiredBlock(BlockPos relativePos) {

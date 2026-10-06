@@ -8,9 +8,7 @@ import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.entities.EntityProjectile;
-import mcjty.meecreeps.gui.GuiWheel;
 import mcjty.meecreeps.network.MeeCreepsMessages;
-import mcjty.meecreeps.setup.GuiProxy;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.world.item.TooltipFlag;
@@ -31,7 +29,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class PortalGunItem extends Item {
@@ -53,11 +50,10 @@ public class PortalGunItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
         for (String line : StringUtils.split(I18n.get("message.meecreeps.tooltip.portalgun", Integer.toString(getCharge(stack))), "\n"))
             tooltip.add(net.minecraft.network.chat.Component.literal(line));
     }
-
 
     @Override
     public InteractionResult onItemUseFirst(ItemStack usedStack, net.minecraft.world.item.context.UseOnContext context) {
@@ -126,9 +122,6 @@ public class PortalGunItem extends Item {
     public static void addDestination(ItemStack stack, @Nullable TeleportDestination destination, int destinationIndex) {
         if (destinationIndex < 0 || destinationIndex >= 8)
             return;
-        if (stack.getTag() == null) {
-            stack.setTag(new CompoundTag());
-        }
         List<TeleportDestination> destinations = getDestinations(stack);
         destinations.set(destinationIndex, destination);
         setDestinations(stack, destinations);
@@ -146,11 +139,11 @@ public class PortalGunItem extends Item {
                 dests.add(new CompoundTag());
             }
         }
-        stack.getOrCreateTag().put("dests", dests);
+        StackData.update(stack, data -> data.put("dests", dests));
     }
 
     public static int getCurrentDestination(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
+        CompoundTag tag = StackData.get(stack);
         if (tag == null || !tag.contains("destination")) {
             return -1;
         }
@@ -160,20 +153,17 @@ public class PortalGunItem extends Item {
     public static void setCurrentDestination(ItemStack stack, int dest) {
         if (dest < -1 || dest >= 8)
             return;
-        if (!stack.hasTag()) {
-            stack.setTag(new CompoundTag());
-        }
-        stack.getTag().putInt("destination", dest);
+        StackData.update(stack, data -> data.putInt("destination", dest));
     }
 
     public static List<TeleportDestination> getDestinations(ItemStack stack) {
         List<TeleportDestination> destinations = new ArrayList<>();
-        if (!stack.hasTag()) {
+        if (!StackData.has(stack)) {
             for (int i = 0; i < 8; i++) {
                 destinations.add(null);
             }
         } else {
-            CompoundTag tag = stack.getTag();
+            CompoundTag tag = StackData.get(stack);
             ListTag dests = tag.getList("dests", Tag.TAG_COMPOUND);
             for (int i = 0; i < 8; i++) {
                 CompoundTag tc = i < dests.size() ? dests.getCompound(i) : null;
@@ -187,20 +177,15 @@ public class PortalGunItem extends Item {
         return destinations;
     }
 
-    @Override
-    public net.minecraftforge.common.capabilities.ICapabilityProvider initCapabilities(ItemStack stack, CompoundTag nbt) {
-        return new ItemEnergy(stack);
-    }
-
     public static void setCharge(ItemStack stack, int charge) {
         ItemEnergy.setCharge(stack, charge);
     }
 
     public static int getCharge(ItemStack stack) {
-        if (stack.getTag() == null) {
+        if (!StackData.has(stack)) {
             return 0;
         }
-        return stack.getTag().getInt("charge");
+        return StackData.get(stack).getInt("charge");
     }
 
     @Override
@@ -219,7 +204,6 @@ public class PortalGunItem extends Item {
         return (max - stored) / (double) max;
     }
 
-
     @Override
     public boolean hasCraftingRemainingItem(ItemStack stack) {
         return true;
@@ -228,8 +212,12 @@ public class PortalGunItem extends Item {
     @Override
     public ItemStack getCraftingRemainingItem(ItemStack itemStack) {
         ItemStack stack = new ItemStack(Registration.EMPTY_GUN.get());
-        if (itemStack.hasTag())
-            stack.setTag(itemStack.getTag().copy());
+        if (StackData.has(itemStack)) {
+            CompoundTag data = StackData.get(itemStack);
+            data.remove("charge");
+            data.remove("energyRemainder");
+            StackData.set(stack, data);
+        }
         return stack;
     }
 

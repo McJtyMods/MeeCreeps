@@ -11,7 +11,7 @@ public final class MeeCreepsDialogBackground {
     public static final int ROW_HEIGHT = 14;
     private static final int TOP_HEIGHT = 10;
     private static final int BOTTOM_HEIGHT = 15;
-    private static final ResourceLocation TEXTURE = new ResourceLocation(
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(
             MeeCreeps.MODID, "textures/gui/gui_meecreeps_top.png");
 
     private MeeCreepsDialogBackground() {

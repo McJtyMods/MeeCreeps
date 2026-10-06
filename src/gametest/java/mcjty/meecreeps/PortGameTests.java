@@ -12,15 +12,14 @@ import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.gametest.*;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.gametest.*;
 
 import java.util.List;
 
@@ -297,11 +296,11 @@ public class PortGameTests {
     @GameTest(template = "empty")
     public static void energyAndCartridgeRecipes(GameTestHelper test) {
         ItemStack cartridge = new ItemStack(Registration.CARTRIDGE.get());
-        var energy = cartridge.getCapability(ForgeCapabilities.ENERGY).orElseThrow(() -> new GameTestAssertException("No Forge Energy capability"));
+        var energy = java.util.Objects.requireNonNull(cartridge.getCapability(Capabilities.EnergyStorage.ITEM));
         check(energy.receiveEnergy(1250, true) == 1250 && energy.getEnergyStored() == 0, "Simulation changed energy");
         check(energy.receiveEnergy(1250, false) == 1250 && CartridgeItem.getCharge(cartridge) == 1, "Partial charging failed");
-        cartridge = ItemStack.of(cartridge.save(new CompoundTag()));
-        check(cartridge.getCapability(ForgeCapabilities.ENERGY).orElseThrow(IllegalStateException::new).getEnergyStored() == 1250, "Energy failed NBT reload");
+        cartridge = ItemStack.parseOptional(test.getLevel().registryAccess(), (CompoundTag) cartridge.save(test.getLevel().registryAccess()));
+        check(java.util.Objects.requireNonNull(cartridge.getCapability(Capabilities.EnergyStorage.ITEM)).getEnergyStored() == 1250, "Energy failed NBT reload");
         var inv = new TransientCraftingContainer(new AbstractContainerMenu(null, 0) {
             public ItemStack quickMoveStack(Player player, int slot) {
                 return ItemStack.EMPTY;
@@ -316,19 +315,19 @@ public class PortGameTests {
         PortalGunItem.addDestination(emptyGun, destination, 3);
         inv.setItem(0, emptyGun);
         inv.setItem(1, cartridge);
-        var insert = new InsertCartridgeFactory(new ResourceLocation("meecreeps", "insert"), CraftingBookCategory.MISC);
-        check(insert.matches(inv, test.getLevel()), "Insertion recipe didn't match");
-        var gun = insert.assemble(inv, test.getLevel().registryAccess());
+        var insert = new InsertCartridgeFactory(CraftingBookCategory.MISC);
+        check(insert.matches(inv.asCraftInput(), test.getLevel()), "Insertion recipe didn't match");
+        var gun = insert.assemble(inv.asCraftInput(), test.getLevel().registryAccess());
         check(ItemEnergy.stored(gun) == 1250, "Insertion lost partial FE");
         check(PortalGunItem.getDestinations(gun).get(3).getDimension() == Level.NETHER, "Insertion lost destinations");
         inv.clearContent();
         inv.setItem(0, gun);
-        var remove = new RemoveCartridgeFactory(new ResourceLocation("meecreeps", "remove"), CraftingBookCategory.MISC);
-        check(remove.matches(inv, test.getLevel()), "Removal recipe didn't match");
-        check(ItemEnergy.stored(remove.assemble(inv, test.getLevel().registryAccess())) == 1250, "Removal lost partial FE");
-        check(remove.getRemainingItems(inv).get(0).is(Registration.EMPTY_GUN.get()), "Removal didn't return empty gun");
+        var remove = new RemoveCartridgeFactory(CraftingBookCategory.MISC);
+        check(remove.matches(inv.asCraftInput(), test.getLevel()), "Removal recipe didn't match");
+        check(ItemEnergy.stored(remove.assemble(inv.asCraftInput(), test.getLevel().registryAccess())) == 1250, "Removal lost partial FE");
+        check(remove.getRemainingItems(inv.asCraftInput()).get(0).is(Registration.EMPTY_GUN.get()), "Removal didn't return empty gun");
         inv.setItem(1, new ItemStack(Items.DIAMOND));
-        check(!remove.matches(inv, test.getLevel()), "Removal accepted extra items");
+        check(!remove.matches(inv.asCraftInput(), test.getLevel()), "Removal accepted extra items");
         test.succeed();
     }
 
@@ -339,8 +338,8 @@ public class PortGameTests {
         options.setStage(Stage.WORKING);
         options.registerDrops(new BlockPos(1, -30, 2), List.of(new ItemStack(Items.DIAMOND, 3)));
         CompoundTag tag = new CompoundTag();
-        options.writeToNBT(tag);
-        var restored = new ActionOptions(tag);
+        options.writeToNBT(tag, test.getLevel().registryAccess());
+        var restored = new ActionOptions(tag, test.getLevel().registryAccess());
         check(restored.getDimension() == Level.NETHER && restored.getDrops().get(0).getValue().getCount() == 3, "Action NBT lost dimension or drops");
         var buffer = new FriendlyByteBuf(Unpooled.buffer());
         try {
@@ -400,7 +399,7 @@ public class PortGameTests {
         check(world.getBlockEntity(destination) instanceof PortalTileEntity, "Destination portal not created");
         var portal = (PortalTileEntity) world.getBlockEntity(source);
         var restored = new PortalTileEntity(source, world.getBlockState(source));
-        restored.load(portal.saveWithFullMetadata());
+        restored.loadWithComponents(portal.saveWithFullMetadata(world.registryAccess()), world.registryAccess());
         check(restored.getPortalSide() == Direction.UP && restored.getTimeout() > 0, "Portal NBT reload failed");
         portal.setTimeout(2);
         test.runAfterDelay(5, () -> {
@@ -420,15 +419,15 @@ public class PortGameTests {
         helper.setWorker(new mcjty.meecreeps.actions.workers.IdleActionWorker(helper) {
             @Override
             public void tick(boolean wrapUp) {
-                java.util.function.Consumer<net.minecraftforge.event.level.BlockEvent.BreakEvent> deny = e -> {
+                java.util.function.Consumer<net.neoforged.neoforge.event.level.BlockEvent.BreakEvent> deny = e -> {
                     if (e.getPos().equals(pos))
                         e.setCanceled(true);
                 };
-                net.minecraftforge.common.MinecraftForge.EVENT_BUS.addListener(deny);
+                net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(deny);
                 try {
                     check(!helper.harvestAndPickup(pos), "Canceled break was allowed");
                 } finally {
-                    net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(deny);
+                    net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(deny);
                 }
                 check(world.getBlockState(pos).is(Blocks.STONE), "Protected block was removed");
                 check(helper.harvestAndPickup(pos), "Permitted break failed");
@@ -450,7 +449,7 @@ public class PortGameTests {
         chest.setItem(4, new ItemStack(Items.DIAMOND, 7));
         var creep = new EntityMeeCreeps(world);
         creep.setHeldBlockState(world.getBlockState(source));
-        creep.setCarriedNBT(chest.saveWithFullMetadata());
+        creep.setCarriedNBT(chest.saveWithFullMetadata(world.registryAccess()));
         world.removeBlockEntity(source);
         world.removeBlock(source, false);
         creep.placeDownBlock(destination);

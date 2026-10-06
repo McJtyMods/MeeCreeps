@@ -4,10 +4,8 @@ import mcjty.meecreeps.teleport.TeleportDestination;
 import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.Level;
 import mcjty.meecreeps.setup.Registration;
@@ -30,11 +28,6 @@ public class EntityProjectile extends ThrowableItemProjectile {
     @Override
     protected net.minecraft.world.item.Item getDefaultItem() {
         return Registration.PROJECTILE_ITEM.get();
-    }
-
-    @Override
-    public net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.game.ClientGamePacketListener> getAddEntityPacket() {
-        return net.minecraftforge.network.NetworkHooks.getEntitySpawningPacket(this);
     }
 
     public void setDestination(TeleportDestination destination) {

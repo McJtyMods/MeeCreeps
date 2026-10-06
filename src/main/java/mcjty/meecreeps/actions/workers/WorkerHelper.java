@@ -32,11 +32,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
@@ -77,6 +77,7 @@ public class WorkerHelper implements IWorkerHelper {
     private Set<BlockPos> positionsToSkip = new HashSet<>();
 
     private String lastMessage = "";
+    private String[] lastMessageParameters = new String[0];
 
     public WorkerHelper(IActionContext options) {
         this.options = (ActionOptions) options;
@@ -156,7 +157,6 @@ public class WorkerHelper implements IWorkerHelper {
         }
     };
 
-
     private static final IDesiredBlock IGNORE = new IDesiredBlock() {
         @Override
         public String getName() {
@@ -188,7 +188,6 @@ public class WorkerHelper implements IWorkerHelper {
             return blockState -> false;
         }
     };
-
 
     @Override
     public IDesiredBlock getAirBlock() {
@@ -276,7 +275,6 @@ public class WorkerHelper implements IWorkerHelper {
         return todo.get(0);
     }
 
-
     @Override
     public void delayForHardBlocks(BlockPos pos, Consumer<BlockPos> nextJob) {
         Level world = entity.level();
@@ -327,7 +325,6 @@ public class WorkerHelper implements IWorkerHelper {
         }
     }
 
-
     @Override
     public boolean handleBuilding(@Nonnull IBuildSchematic schematic, @Nonnull BuildProgress progress, @Nonnull Set<BlockPos> toSkip) {
         BlockPos relativePos = findSpotToBuild(schematic, progress, toSkip);
@@ -348,6 +345,10 @@ public class WorkerHelper implements IWorkerHelper {
                     putStuffAway();
                 }
             } else {
+                // Supplies are available again, so report a later shortage even
+                // if it concerns the same material as before.
+                lastMessage = "";
+                lastMessageParameters = new String[0];
                 BlockPos buildPos = relativePos.offset(options.getTargetPos());
                 BlockPos navigate = findBestNavigationSpot(buildPos);
                 if (navigate != null) {
@@ -382,14 +383,19 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void showMessage(String message, String... parameters) {
-        if (lastMessage.equals(message)) {
+        if (lastMessage.equals(message) && Arrays.equals(lastMessageParameters, parameters)) {
             return;
         }
-        lastMessage = message;
         ServerPlayer player = getPlayer();
         if (player != null) {
-            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient(message, parameters), player);
+            lastMessage = message;
+            lastMessageParameters = parameters.clone();
+            sendMessageToPlayer(player, message, parameters);
         }
+    }
+
+    protected void sendMessageToPlayer(ServerPlayer player, String message, String... parameters) {
+        MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient(message, parameters), player);
     }
 
     @Override
@@ -705,7 +711,6 @@ public class WorkerHelper implements IWorkerHelper {
         BlockTools.placeStackAt(GeneralTools.getHarvester(world), blockStack, world, pos, null);
     }
 
-
     @Override
     public boolean harvestAndPickup(BlockPos pos) {
         Level world = entity.level();
@@ -724,7 +729,6 @@ public class WorkerHelper implements IWorkerHelper {
         giveDropsToMeeCreeps(drops);
         return true;
     }
-
 
     @Override
     public boolean harvestAndDrop(BlockPos pos) {
@@ -749,7 +753,6 @@ public class WorkerHelper implements IWorkerHelper {
         return true;
     }
 
-
     @Override
     public void pickup(ItemEntity item) {
         ItemStack remaining = entity.addStack(item.getItem().copy());
@@ -770,7 +773,7 @@ public class WorkerHelper implements IWorkerHelper {
             return false;
         }
         BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(world, pos, state, entityPlayer);
-        MinecraftForge.EVENT_BUS.post(event);
+        NeoForge.EVENT_BUS.post(event);
         if (event.isCanceled()) {
             return false;
         }
@@ -905,7 +908,6 @@ public class WorkerHelper implements IWorkerHelper {
                 }
             }
         }
-
 
         return false;
     }
@@ -1049,7 +1051,7 @@ public class WorkerHelper implements IWorkerHelper {
                 showMessage(message, parameters);
             }
             BlockEntity te = entity.level().getBlockEntity(pos);
-            IItemHandler handler = te.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElse(null);
+            IItemHandler handler = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos(), Direction.UP);
             ChestAnimation.open(entity.level(), pos);
             for (ItemStack stack : entity.getInventory()) {
                 if (!stack.isEmpty()) {
@@ -1071,7 +1073,7 @@ public class WorkerHelper implements IWorkerHelper {
             return;
         }
         BlockEntity te = world.getBlockEntity(pos);
-        IItemHandler handler = te.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElse(null);
+        IItemHandler handler = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos(), Direction.UP);
         ChestAnimation.open(world, pos);
         for (int i = 0; i < handler.getSlots(); i++) {
             if (maxAmount <= 0) {
@@ -1103,7 +1105,7 @@ public class WorkerHelper implements IWorkerHelper {
         Map<BlockPos, Float> countMatching = new HashMap<>();
         for (BlockPos pos : inventoryList) {
             BlockEntity te = world.getBlockEntity(pos);
-            IItemHandler handler = te.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElse(null);
+            IItemHandler handler = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos(), Direction.UP);
             int cnt = 0;
             for (int i = 0; i < handler.getSlots(); i++) {
                 ItemStack stack = handler.getStackInSlot(i);
@@ -1140,7 +1142,7 @@ public class WorkerHelper implements IWorkerHelper {
                 (pos, state) -> InventoryTools.isInventory(world, pos),
                 (pos, state) -> {
                     BlockEntity te = world.getBlockEntity(pos);
-                    IItemHandler handler = te.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElse(null);
+                    IItemHandler handler = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos(), Direction.UP);
                     int cnt = 0;
                     for (int i = 0; i < handler.getSlots(); i++) {
                         ItemStack stack = handler.getStackInSlot(i);
@@ -1230,7 +1232,7 @@ public class WorkerHelper implements IWorkerHelper {
                 (pos, state) -> InventoryTools.isInventory(world, pos),
                 (pos, state) -> {
                     BlockEntity te = world.getBlockEntity(pos);
-                    IItemHandler handler = te.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElse(null);
+                    IItemHandler handler = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos(), Direction.UP);
                     // @todo config?
                     if (handler.getSlots() > 8) {
                         int cnt = 0;
@@ -1275,7 +1277,7 @@ public class WorkerHelper implements IWorkerHelper {
 //                (pos, state) -> InventoryTools.isInventory(world, pos),
 //                (pos, state) -> {
 //                    BlockEntity te = world.getBlockEntity(pos);
-//                    IItemHandler handler = te.getCapability(ForgeCapabilities.ITEM_HANDLER, Direction.UP).orElse(null);
+//                    IItemHandler handler = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos(), Direction.UP);
 //                    // @todo config?
 //                    if (handler.getSlots() > 8) {
 //                        int free = 0;

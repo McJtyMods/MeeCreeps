@@ -2,7 +2,7 @@ package mcjty.meecreeps.commands;
 
 import mcjty.meecreeps.actions.ServerActionManager;
 import net.minecraft.commands.Commands;
-import net.minecraftforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 public final class ModCommands {
     public static void register(RegisterCommandsEvent event) {
