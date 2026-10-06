@@ -15,7 +15,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 public class HarvestReplantActionFactory implements IActionFactory {
 
@@ -94,7 +94,7 @@ public class HarvestReplantActionFactory implements IActionFactory {
     }
 
     @Override
-    public IActionWorker createWorker(@Nonnull IWorkerHelper helper) {
+    public IActionWorker createWorker(@NonNull IWorkerHelper helper) {
         return new HarvestReplantActionWorker(helper);
     }
 }

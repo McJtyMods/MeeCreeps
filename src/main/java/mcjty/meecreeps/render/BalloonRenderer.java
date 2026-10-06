@@ -4,7 +4,7 @@ import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.config.ConfigSetup;
 import mcjty.meecreeps.gui.MeeCreepsDialogBackground;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -46,7 +46,7 @@ public final class BalloonRenderer {
     public static void render(RenderGuiEvent.Post e) {
         if (messages.isEmpty())
             return;
-        GuiGraphics g = e.getGuiGraphics();
+        GuiGraphicsExtractor g = e.getGuiGraphics();
         int w = g.guiWidth(), h = g.guiHeight(), boxW = MeeCreepsDialogBackground.WIDTH;
         int bodyRows = messages.size() - 1, boxH = MeeCreepsDialogBackground.height(bodyRows);
         int px = ConfigSetup.messageX.get(), py = ConfigSetup.messageY.get();
@@ -54,7 +54,7 @@ public final class BalloonRenderer {
         int y = py == 0 ? (h - boxH) / 2 : py > 0 ? h * py / 100 : h + h * py / 100 - boxH;
         MeeCreepsDialogBackground.render(g, x, y, bodyRows);
         for (var m : messages) {
-            g.drawString(Minecraft.getInstance().font, m.text, x + 15, y + 7, 0xff000000, false);
+            g.text(Minecraft.getInstance().font, m.text, x + 15, y + 7, 0xff000000, false);
             y += MeeCreepsDialogBackground.ROW_HEIGHT;
         }
     }

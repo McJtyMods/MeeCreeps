@@ -1,9 +1,10 @@
 package mcjty.meecreeps.actions;
 
 import mcjty.meecreeps.setup.Registration;
-import mcjty.lib.varia.SoundTools;
+import mcjty.meecreeps.varia.SoundTools;
 import mcjty.meecreeps.varia.EntityTeleportation;
-import mcjty.lib.worlddata.AbstractWorldData;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.actions.workers.WorkerHelper;
@@ -19,7 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -29,13 +30,21 @@ import mcjty.meecreeps.varia.LevelTools;
 import net.minecraft.nbt.Tag;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.util.*;
 
-public class ServerActionManager extends AbstractWorldData<ServerActionManager> {
+public class ServerActionManager extends SavedData {
 
-    private static final String NAME = "MeeCreepsData";
+    private static final SavedDataType<ServerActionManager> DATA_TYPE = new SavedDataType<>(
+            Identifier.fromNamespaceAndPath(MeeCreeps.MODID, "actions"), ServerActionManager::new,
+            CompoundTag.CODEC.xmap(tag -> {
+                var data = new ServerActionManager();
+                data.readFromNBT(tag, LevelTools.overworld().registryAccess());
+                return data;
+            }, data -> data.save(new CompoundTag(), LevelTools.overworld().registryAccess())));
+
+    public void save() { setDirty(); }
 
     private List<ActionOptions> options = new ArrayList<>();
     private Map<Integer, ActionOptions> optionMap = new HashMap<>();
@@ -68,7 +77,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
             int cnt = 0;
             List<ActionOptions> toKeep = new ArrayList<>();
             for (ActionOptions option : options) {
-                if (!player.getGameProfile().getId().equals(option.getPlayerId())) {
+                if (!player.getGameProfile().id().equals(option.getPlayerId())) {
                     toKeep.add(option);
                 } else {
                     cnt++;
@@ -130,20 +139,16 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
     public int countMeeCreeps(Player player) {
         int cnt = 0;
         for (ActionOptions option : options) {
-            if (Objects.equals(option.getPlayerId(), player.getGameProfile().getId())) {
+            if (Objects.equals(option.getPlayerId(), player.getGameProfile().id())) {
                 cnt++;
             }
         }
         return cnt;
     }
 
-    @Nonnull
+    @NonNull
     public static ServerActionManager getManager() {
-        return getData(LevelTools.overworld(), tag -> {
-            var data = new ServerActionManager();
-            data.readFromNBT(tag, LevelTools.overworld().registryAccess());
-            return data;
-        }, ServerActionManager::new, NAME);
+        return LevelTools.overworld().getDataStorage().computeIfAbsent(DATA_TYPE);
     }
 
     public int createActionOptions(Level world, BlockPos pos, Direction side, @Nullable Player player) {
@@ -200,7 +205,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
                             snd = "ok2";
                             break;
                     }
-                    SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, snd));
+                    SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.getValue(Identifier.fromNamespaceAndPath(MeeCreeps.MODID, snd));
                     SoundTools.playSound(player.level(), sound, player.getX(), player.getY(), player.getZ(), ConfigSetup.meeCreepVolume.get(), 1);
                 }
             }
@@ -309,7 +314,7 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
                 ItemEntity entityItem = new ItemEntity(world, 0, 0, 0, ItemStack.EMPTY);
                 entityItem.setItem(pair.getValue());
                 BlockPos pos = pair.getKey();
-                entityItem.moveTo(pos.getX(), pos.getY(), pos.getZ(), 0, 0);
+                entityItem.snapTo(pos.getX(), pos.getY(), pos.getZ(), 0, 0);
                 world.addFreshEntity(entityItem);
             }
         }
@@ -345,18 +350,17 @@ public class ServerActionManager extends AbstractWorldData<ServerActionManager> 
     }
 
     public void readFromNBT(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
-        ListTag list = nbt.getList("actions", Tag.TAG_COMPOUND);
+        ListTag list = nbt.getListOrEmpty("actions");
         options = new ArrayList<>();
         optionMap = new HashMap<>();
         for (int i = 0; i < list.size(); i++) {
-            ActionOptions opt = new ActionOptions(list.getCompound(i), registries);
+            ActionOptions opt = new ActionOptions(list.getCompoundOrEmpty(i), registries);
             options.add(opt);
             optionMap.put(opt.getActionId(), opt);
         }
-        lastId = nbt.getInt("lastId");
+        lastId = nbt.getIntOr("lastId", 0);
     }
 
-    @Override
     public CompoundTag save(CompoundTag compound, net.minecraft.core.HolderLookup.Provider registries) {
         ListTag list = new ListTag();
         for (ActionOptions option : options) {

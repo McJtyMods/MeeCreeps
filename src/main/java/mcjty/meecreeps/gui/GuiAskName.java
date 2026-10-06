@@ -4,7 +4,7 @@ import mcjty.meecreeps.teleport.*;
 import mcjty.meecreeps.network.MeeCreepsMessages;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.*;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 
 public class GuiAskName extends Screen {
@@ -39,8 +39,8 @@ public class GuiAskName extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics g, int x, int y, float partial) {
-        super.render(g, x, y, partial);
-        g.drawCenteredString(font, title, width / 2, height / 2 - 55, 0xffffffff);
+    public void extractRenderState(GuiGraphicsExtractor g, int x, int y, float partial) {
+        super.extractRenderState(g, x, y, partial);
+        g.centeredText(font, title, width / 2, height / 2 - 55, 0xffffffff);
     }
 }

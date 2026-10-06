@@ -5,8 +5,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 
@@ -44,7 +44,7 @@ public interface IActionFactory {
      * asked to the user and the id is what will be given to the action when it is finally executed
      * This is called client-side!
      */
-    @Nonnull
+    @NonNull
     default List<Pair<String, String>> getFurtherQuestions(Level world, BlockPos pos, Direction side) {
         return Collections.emptyList();
     }
@@ -53,5 +53,5 @@ public interface IActionFactory {
      * Actually create the action. If this is a 'question' factory then
      * this will return null
      */
-    IActionWorker createWorker(@Nonnull IWorkerHelper helper);
+    IActionWorker createWorker(@NonNull IWorkerHelper helper);
 }

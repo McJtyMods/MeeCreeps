@@ -11,7 +11,7 @@ import net.minecraft.world.phys.shapes.*;
 public class PortalBlock extends BaseEntityBlock {
     public static final com.mojang.serialization.MapCodec<PortalBlock> CODEC = simpleCodec(PortalBlock::new);
     public PortalBlock() {
-        this(BlockBehaviour.Properties.of().noCollission().noOcclusion().strength(-1).lightLevel(s -> 7));
+        this(BlockBehaviour.Properties.of().setId(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.BLOCK, net.minecraft.resources.Identifier.fromNamespaceAndPath("meecreeps", "portalblock"))).noCollision().noOcclusion().strength(-1).lightLevel(s -> 7));
     }
     private PortalBlock(BlockBehaviour.Properties properties) { super(properties); }
     @Override
@@ -30,6 +30,6 @@ public class PortalBlock extends BaseEntityBlock {
     }
 
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState s, BlockEntityType<T> type) {
-        return level.isClientSide ? null : createTickerHelper(type, Registration.PORTAL_TILE.get(), (w, p, b, t) -> t.update());
+        return level.isClientSide() ? null : createTickerHelper(type, Registration.PORTAL_TILE.get(), (w, p, b, t) -> t.update());
     }
 }

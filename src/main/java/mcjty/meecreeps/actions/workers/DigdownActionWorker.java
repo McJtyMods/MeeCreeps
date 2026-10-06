@@ -1,6 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.lib.varia.SoundTools;
+import mcjty.meecreeps.varia.SoundTools;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
@@ -56,7 +56,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
         BlockPos p = options.getTargetPos();
         Level world = entity.getWorld();
         BlockState state = world.getBlockState(p);
-        while (p.getY() > world.getMinBuildHeight() && (world.isEmptyBlock(p) || state.getBlock() == Blocks.LADDER)) {
+        while (p.getY() > world.getMinY() && (world.isEmptyBlock(p) || state.getBlock() == Blocks.LADDER)) {
             p = p.below();
             state = world.getBlockState(p);
         }
@@ -68,7 +68,7 @@ public class DigdownActionWorker extends AbstractActionWorker {
         Level world = entity.getWorld();
         BlockPos p = findTopSpotNotDiggedYet();
         BlockState state = world.getBlockState(p);
-        if (p.getY() <= world.getMinBuildHeight() || world.isEmptyBlock(p) || state.getBlock() == Blocks.LADDER) {
+        if (p.getY() <= world.getMinY() || world.isEmptyBlock(p) || state.getBlock() == Blocks.LADDER) {
             helper.taskIsDone();
         } else if (helper.allowedToHarvest(state, world, p, GeneralTools.getHarvester(world))) {
             helper.delayForHardBlocks(p, pp -> {

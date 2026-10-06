@@ -5,27 +5,22 @@ import com.mojang.math.Axis;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 
-public class LayerRenderHeldBlock extends RenderLayer<EntityMeeCreeps, MeeCreepsModel> {
-    private final BlockRenderDispatcher blocks;
+public class LayerRenderHeldBlock extends RenderLayer<MeeCreepsRenderState, MeeCreepsModel> {
 
-    public LayerRenderHeldBlock(RenderLayerParent<EntityMeeCreeps, MeeCreepsModel> parent, BlockRenderDispatcher blocks) {
+    public LayerRenderHeldBlock(RenderLayerParent<MeeCreepsRenderState, MeeCreepsModel> parent) {
         super(parent);
-        this.blocks = blocks;
     }
 
-    public void render(PoseStack pose, MultiBufferSource buffers, int light, EntityMeeCreeps entity, float a, float b, float c, float d, float e, float f) {
-        var state = entity.getHeldBlockState();
-        if (state == null)
-            return;
+    public void submit(PoseStack pose, SubmitNodeCollector collector, int light, MeeCreepsRenderState state, float yaw, float pitch) {
+        if (state.carriedBlock.isEmpty()) return;
         pose.pushPose();
         pose.translate(0, .5, -.5);
         pose.mulPose(Axis.XP.rotationDegrees(20));
         pose.scale(.5F, -.5F, .5F);
         pose.translate(-.5, 0, -.5);
-        blocks.renderSingleBlock(state, pose, buffers, light, OverlayTexture.NO_OVERLAY);
+        state.carriedBlock.submit(pose, collector, light, OverlayTexture.NO_OVERLAY, state.outlineColor);
         pose.popPose();
     }
 }

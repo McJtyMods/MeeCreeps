@@ -1,11 +1,11 @@
 package mcjty.meecreeps.teleport;
 
 import net.minecraft.network.FriendlyByteBuf;
-import mcjty.lib.network.NetworkTools;
+import mcjty.meecreeps.network.NetworkTools;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import mcjty.meecreeps.items.PortalGunItem;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -13,7 +13,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 
 public class PacketMakePortals implements CustomPacketPayload {
-    public static final Type<PacketMakePortals> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("meecreeps", "packet_make_portals"));
+    public static final Type<PacketMakePortals> TYPE = new Type<>(Identifier.fromNamespaceAndPath("meecreeps", "packet_make_portals"));
     public static final StreamCodec<FriendlyByteBuf, PacketMakePortals> CODEC = StreamCodec.of((buf, packet) -> packet.toBytes(buf), PacketMakePortals::new);
     @Override
     public Type<PacketMakePortals> type() { return TYPE; }

@@ -2,7 +2,7 @@ package mcjty.meecreeps.actions.workers;
 
 import mcjty.meecreeps.setup.Registration;
 import mcjty.meecreeps.varia.BlockTools;
-import mcjty.lib.varia.SoundTools;
+import mcjty.meecreeps.varia.SoundTools;
 import mcjty.meecreeps.ForgeEventHandlers;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.*;
@@ -35,12 +35,13 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.item.ItemUtil;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -203,7 +204,7 @@ public class WorkerHelper implements IWorkerHelper {
      * Returns absolute position
      */
     @Override
-    public BlockPos findSpotToFlatten(@Nonnull IBuildSchematic schematic) {
+    public BlockPos findSpotToFlatten(@NonNull IBuildSchematic schematic) {
         BlockPos tpos = options.getTargetPos();
         BlockPos minPos = schematic.getMinPos();
         BlockPos maxPos = schematic.getMaxPos();
@@ -241,7 +242,7 @@ public class WorkerHelper implements IWorkerHelper {
      * Return the relative spot to build
      */
     @Override
-    public BlockPos findSpotToBuild(@Nonnull IBuildSchematic schematic, @Nonnull BuildProgress progress, @Nonnull Set<BlockPos> toSkip) {
+    public BlockPos findSpotToBuild(@NonNull IBuildSchematic schematic, @NonNull BuildProgress progress, @NonNull Set<BlockPos> toSkip) {
         BlockPos tpos = options.getTargetPos();
         BlockPos minPos = schematic.getMinPos();
         BlockPos maxPos = schematic.getMaxPos();
@@ -299,7 +300,7 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
-    public boolean handleFlatten(@Nonnull IBuildSchematic schematic) {
+    public boolean handleFlatten(@NonNull IBuildSchematic schematic) {
         BlockPos flatSpot = findSpotToFlatten(schematic);
         if (flatSpot == null) {
             return false;
@@ -326,7 +327,7 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
-    public boolean handleBuilding(@Nonnull IBuildSchematic schematic, @Nonnull BuildProgress progress, @Nonnull Set<BlockPos> toSkip) {
+    public boolean handleBuilding(@NonNull IBuildSchematic schematic, @NonNull BuildProgress progress, @NonNull Set<BlockPos> toSkip) {
         BlockPos relativePos = findSpotToBuild(schematic, progress, toSkip);
         if (relativePos != null) {
             IDesiredBlock desired = schematic.getDesiredBlock(relativePos);
@@ -371,11 +372,11 @@ public class WorkerHelper implements IWorkerHelper {
     }
 
     @Override
-    public void giveDropsToMeeCreeps(@Nonnull List<ItemStack> drops) {
+    public void giveDropsToMeeCreeps(@NonNull List<ItemStack> drops) {
         for (ItemStack stack : drops) {
             ItemStack remaining = entity.addStack(stack);
             if (!remaining.isEmpty()) {
-                itemsToPickup.add(entity.spawnAtLocation(remaining, 0.0f));
+                itemsToPickup.add(entity.spawnAtLocation((net.minecraft.server.level.ServerLevel) entity.level(), remaining, 0.0f));
                 needsToPutAway = true;
             }
         }
@@ -553,7 +554,7 @@ public class WorkerHelper implements IWorkerHelper {
             if (!drop.isEmpty()) {
                 ItemStack remaining = entity.addStack(drop);
                 if (!remaining.isEmpty()) {
-                    entity.spawnAtLocation(remaining, 0.0f);
+                    entity.spawnAtLocation((net.minecraft.server.level.ServerLevel) entity.level(), remaining, 0.0f);
                     needsToPutAway = true;
                 }
             }
@@ -673,7 +674,7 @@ public class WorkerHelper implements IWorkerHelper {
             if (!blockStack.isEmpty()) {
                 ItemStack remaining = entity.addStack(blockStack);
                 if (!remaining.isEmpty()) {
-                    itemsToPickup.add(entity.spawnAtLocation(remaining, 0.0f));
+                    itemsToPickup.add(entity.spawnAtLocation((net.minecraft.server.level.ServerLevel) entity.level(), remaining, 0.0f));
                 }
             }
         }
@@ -748,7 +749,7 @@ public class WorkerHelper implements IWorkerHelper {
         block.playerWillDestroy(world, pos, state, GeneralTools.getHarvester(world));
         entity.level().removeBlock(pos, false);
         for (ItemStack stack : drops) {
-            entity.spawnAtLocation(stack, 0.0f);
+            entity.spawnAtLocation((net.minecraft.server.level.ServerLevel) entity.level(), stack, 0.0f);
         }
         return true;
     }
@@ -772,7 +773,7 @@ public class WorkerHelper implements IWorkerHelper {
         if (!state.canEntityDestroy(world, pos, entityPlayer)) {
             return false;
         }
-        BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(world, pos, state, entityPlayer);
+        net.neoforged.neoforge.event.level.block.BreakBlockEvent event = new net.neoforged.neoforge.event.level.block.BreakBlockEvent(world, pos, state, entityPlayer);
         NeoForge.EVENT_BUS.post(event);
         if (event.isCanceled()) {
             return false;
@@ -805,7 +806,7 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void dropAndPutAwayLater(ItemStack stack) {
-        ItemEntity entityItem = entity.getEntity().spawnAtLocation(stack, 0.0f);
+        ItemEntity entityItem = entity.getEntity().spawnAtLocation((net.minecraft.server.level.ServerLevel) entity.level(), stack, 0.0f);
         itemsToPickup.add(entityItem);
         putStuffAway();
     }
@@ -815,7 +816,7 @@ public class WorkerHelper implements IWorkerHelper {
         return findSuitablePositionNearPlayer(this.entity, options.getPlayer(), distance);
     }
 
-    public static BlockPos findSuitablePositionNearPlayer(@Nonnull EntityMeeCreeps meeCreep, @Nonnull Player player, double distance) {
+    public static BlockPos findSuitablePositionNearPlayer(@NonNull EntityMeeCreeps meeCreep, @NonNull Player player, double distance) {
         Vec3 playerPos = player.position();
         Vec3 entityPos = meeCreep.position();
 
@@ -933,7 +934,7 @@ public class WorkerHelper implements IWorkerHelper {
             }
             player.containerMenu.broadcastChanges();
             for (ItemStack stack : remaining) {
-                entity.spawnAtLocation(stack, 0.0f);
+                entity.spawnAtLocation((net.minecraft.server.level.ServerLevel) entity.level(), stack, 0.0f);
             }
             entity.getInventory().clear();
         }
@@ -1051,13 +1052,13 @@ public class WorkerHelper implements IWorkerHelper {
                 showMessage(message, parameters);
             }
             BlockEntity te = entity.level().getBlockEntity(pos);
-            IItemHandler handler = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos(), Direction.UP);
+            ResourceHandler<ItemResource> handler = InventoryTools.getHandler(te.getLevel(), te.getBlockPos());
             ChestAnimation.open(entity.level(), pos);
             for (ItemStack stack : entity.getInventory()) {
                 if (!stack.isEmpty()) {
-                    ItemStack remaining = ItemHandlerHelper.insertItem(handler, stack, false);
+                    ItemStack remaining = ItemUtil.insertItemReturnRemaining(handler, stack, false, null);
                     if (!remaining.isEmpty()) {
-                        entity.spawnAtLocation(remaining, 0.0f);
+                        entity.spawnAtLocation((net.minecraft.server.level.ServerLevel) entity.level(), remaining, 0.0f);
                     }
                 }
             }
@@ -1073,23 +1074,23 @@ public class WorkerHelper implements IWorkerHelper {
             return;
         }
         BlockEntity te = world.getBlockEntity(pos);
-        IItemHandler handler = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos(), Direction.UP);
+        ResourceHandler<ItemResource> handler = InventoryTools.getHandler(te.getLevel(), te.getBlockPos());
         ChestAnimation.open(world, pos);
-        for (int i = 0; i < handler.getSlots(); i++) {
+        for (int i = 0; i < handler.size(); i++) {
             if (maxAmount <= 0) {
                 return;
             }
-            ItemStack stack = handler.getStackInSlot(i);
+            ItemStack stack = ItemUtil.getStack(handler, i);
             if (stack == null) {
                 // There are still bad mods!
                 String badBlock = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(world.getBlockState(pos).getBlock()).toString();
                 MeeCreeps.setup.getLogger().warn("Block " + badBlock + " is returning null for handler.getStackInSlot()! That's a bug!");
             } else if (!stack.isEmpty() && matcher.test(stack)) {
-                ItemStack extracted = handler.extractItem(i, Math.min(maxAmount, stack.getCount()), false);
+                ItemStack extracted = InventoryTools.extract(handler, i, Math.min(maxAmount, stack.getCount()));
                 ItemStack remaining = entity.addStack(extracted);
                 maxAmount -= extracted.getCount() - remaining.getCount();
                 if (!remaining.isEmpty()) {
-                    handler.insertItem(i, remaining, false);
+                    ItemUtil.insertItemReturnRemaining(handler, i, remaining, false, null);
                 }
             }
         }
@@ -1105,10 +1106,10 @@ public class WorkerHelper implements IWorkerHelper {
         Map<BlockPos, Float> countMatching = new HashMap<>();
         for (BlockPos pos : inventoryList) {
             BlockEntity te = world.getBlockEntity(pos);
-            IItemHandler handler = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos(), Direction.UP);
+            ResourceHandler<ItemResource> handler = InventoryTools.getHandler(te.getLevel(), te.getBlockPos());
             int cnt = 0;
-            for (int i = 0; i < handler.getSlots(); i++) {
-                ItemStack stack = handler.getStackInSlot(i);
+            for (int i = 0; i < handler.size(); i++) {
+                ItemStack stack = ItemUtil.getStack(handler, i);
                 if (stack == null) {
                     // There are still bad mods!
                     String badBlock = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(world.getBlockState(pos).getBlock()).toString();
@@ -1142,10 +1143,10 @@ public class WorkerHelper implements IWorkerHelper {
                 (pos, state) -> InventoryTools.isInventory(world, pos),
                 (pos, state) -> {
                     BlockEntity te = world.getBlockEntity(pos);
-                    IItemHandler handler = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos(), Direction.UP);
+                    ResourceHandler<ItemResource> handler = InventoryTools.getHandler(te.getLevel(), te.getBlockPos());
                     int cnt = 0;
-                    for (int i = 0; i < handler.getSlots(); i++) {
-                        ItemStack stack = handler.getStackInSlot(i);
+                    for (int i = 0; i < handler.size(); i++) {
+                        ItemStack stack = ItemUtil.getStack(handler, i);
                         if (stack == null) {
                             // There are still bad mods!
                             String badBlock = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(world.getBlockState(pos).getBlock()).toString();
@@ -1232,13 +1233,13 @@ public class WorkerHelper implements IWorkerHelper {
                 (pos, state) -> InventoryTools.isInventory(world, pos),
                 (pos, state) -> {
                     BlockEntity te = world.getBlockEntity(pos);
-                    IItemHandler handler = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos(), Direction.UP);
+                    ResourceHandler<ItemResource> handler = InventoryTools.getHandler(te.getLevel(), te.getBlockPos());
                     // @todo config?
-                    if (handler.getSlots() > 8) {
+                    if (handler.size() > 8) {
                         int cnt = 0;
                         int free = 0;
-                        for (int i = 0; i < handler.getSlots(); i++) {
-                            ItemStack stack = handler.getStackInSlot(i);
+                        for (int i = 0; i < handler.size(); i++) {
+                            ItemStack stack = ItemUtil.getStack(handler, i);
                             if (stack == null) {
                                 // There are still bad mods!
                                 String badBlock = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(world.getBlockState(pos).getBlock()).toString();
@@ -1246,10 +1247,10 @@ public class WorkerHelper implements IWorkerHelper {
                             } else if (!stack.isEmpty()) {
                                 if (matcher.test(stack)) {
                                     cnt += stack.getCount();
-                                    free += handler.getSlotLimit(i) - stack.getCount();
+                                    free += handler.getCapacityAsInt(i, handler.getResource(i)) - stack.getCount();
                                 }
                             } else {
-                                free += handler.getSlotLimit(i);
+                                free += handler.getCapacityAsInt(i, handler.getResource(i));
                             }
                         }
                         if (cnt >= 0) {
@@ -1277,14 +1278,14 @@ public class WorkerHelper implements IWorkerHelper {
 //                (pos, state) -> InventoryTools.isInventory(world, pos),
 //                (pos, state) -> {
 //                    BlockEntity te = world.getBlockEntity(pos);
-//                    IItemHandler handler = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos(), Direction.UP);
+//                    ResourceHandler<ItemResource> handler = InventoryTools.getHandler(te.getLevel(), te.getBlockPos());
 //                    // @todo config?
-//                    if (handler.getSlots() > 8) {
+//                    if (handler.size() > 8) {
 //                        int free = 0;
-//                        for (int i = 0 ; i < handler.getSlots() ; i++) {
-//                            ItemStack stack = handler.getStackInSlot(i);
+//                        for (int i = 0 ; i < handler.size() ; i++) {
+//                            ItemStack stack = ItemUtil.getStack(handler, i);
 //                            if (stack.isEmpty()) {
-//                                free += handler.getSlotLimit(i);
+//                                free += handler.getCapacityAsInt(i, handler.getResource(i));
 //                            }
 //                        }
 //                        inventories.add(pos);
@@ -1384,7 +1385,7 @@ public class WorkerHelper implements IWorkerHelper {
     public void readFromNBT(CompoundTag tag) {
         worker.readFromNBT(tag);
         if (tag.contains("materialChest")) {
-            materialChest = BlockPos.of(tag.getLong("materialChest"));
+            materialChest = BlockPos.of(tag.getLongOr("materialChest", 0L));
         }
     }
 

@@ -10,7 +10,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 
 import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.InterModProcessEvent;
 import mcjty.meecreeps.api.IMeeCreepsApi;
 
@@ -26,7 +25,6 @@ public class MeeCreeps {
         api.registerFactories();
         ConfigSetup.init();
         Registration.register(bus);
-        bus.addListener(this::commonSetup);
         bus.addListener(MeeCreepsMessages::registerMessages);
         bus.addListener(this::imc);
         bus.addListener(this::enqueueImc);
@@ -36,17 +34,9 @@ public class MeeCreeps {
         container.registerConfig(ModConfig.Type.CLIENT, ConfigSetup.CLIENT_CONFIG);
     }
 
-    private void commonSetup(FMLCommonSetupEvent event) {
-        event.enqueueWork(() -> {
-            CommandHandler.registerCommands();
-        });
-    }
-
     private void enqueueImc(net.neoforged.fml.event.lifecycle.InterModEnqueueEvent event) {
         if (net.neoforged.fml.ModList.get().isLoaded("theoneprobe"))
             net.neoforged.fml.InterModComms.sendTo("theoneprobe", "getTheOneProbe", () -> new mcjty.meecreeps.compat.TopCompatibility());
-        if (net.neoforged.fml.ModList.get().isLoaded("interactionwheel"))
-            net.neoforged.fml.InterModComms.sendTo("interactionwheel", "getInteractionWheel", () -> new mcjty.meecreeps.compat.WheelCompatibility());
     }
 
     @SuppressWarnings("unchecked")

@@ -3,8 +3,8 @@ package mcjty.meecreeps.api;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.phys.AABB;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This task does the actual work
@@ -36,7 +36,7 @@ public interface IActionWorker {
      * Return a box where the IWorkerHelper can look for stuff (like inventories and items on the ground).
      * This must be provided.
      */
-    @Nonnull
+    @NonNull
     AABB getSearchBox();
 
     /**

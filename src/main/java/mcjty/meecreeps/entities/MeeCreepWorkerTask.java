@@ -83,7 +83,7 @@ public class MeeCreepWorkerTask extends Goal {
     }
 
     public void readFromNBT(CompoundTag tag) {
-        if (!meeCreep.getWorld().isClientSide) {
+        if (!meeCreep.getWorld().isClientSide()) {
             ServerActionManager manager = ServerActionManager.getManager();
             int actionId = meeCreep.getActionId();
             if (actionId != 0) {

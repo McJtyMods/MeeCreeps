@@ -1,8 +1,7 @@
 package mcjty.meecreeps.items;
 
 import mcjty.meecreeps.setup.Registration;
-import mcjty.lib.network.PacketSendServerCommand;
-import mcjty.lib.typed.TypedMap;
+import mcjty.meecreeps.network.PacketServerCommand;
 import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
@@ -18,7 +17,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -27,14 +25,14 @@ import net.minecraft.world.level.Level;
 import net.minecraft.nbt.Tag;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PortalGunItem extends Item {
 
     public PortalGunItem() {
-        super(new Item.Properties().stacksTo(1));
+        super(new Item.Properties().setId(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.ITEM, net.minecraft.resources.Identifier.fromNamespaceAndPath("meecreeps", "portalgun"))).stacksTo(1));
     }
 
     public static ItemStack getGun(Player player) {
@@ -50,9 +48,9 @@ public class PortalGunItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display, java.util.function.Consumer<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
         for (String line : StringUtils.split(I18n.get("message.meecreeps.tooltip.portalgun", Integer.toString(getCharge(stack))), "\n"))
-            tooltip.add(net.minecraft.network.chat.Component.literal(line));
+            tooltip.accept(net.minecraft.network.chat.Component.literal(line));
     }
 
     @Override
@@ -64,13 +62,13 @@ public class PortalGunItem extends Item {
         InteractionHand hand = context.getHand();
         if (player == null)
             return InteractionResult.PASS;
-        if (world.isClientSide) {
+        if (world.isClientSide()) {
             if (world.getBlockState(pos.relative(side)).getBlock() == Registration.PORTAL.get()) {
-                MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL, TypedMap.builder().put(CommandHandler.PARAM_POS, pos.relative(side)).build()));
+                MeeCreepsMessages.INSTANCE.sendToServer(new PacketServerCommand(CommandHandler.CMD_CANCEL_PORTAL, pos.relative(side)));
                 return InteractionResult.SUCCESS;
             }
             if (side != Direction.UP && side != Direction.DOWN && world.getBlockState(pos.relative(side).below()).getBlock() == Registration.PORTAL.get()) {
-                MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL, TypedMap.builder().put(CommandHandler.PARAM_POS, pos.relative(side).below()).build()));
+                MeeCreepsMessages.INSTANCE.sendToServer(new PacketServerCommand(CommandHandler.CMD_CANCEL_PORTAL, pos.relative(side).below()));
                 return InteractionResult.SUCCESS;
             }
 
@@ -147,7 +145,7 @@ public class PortalGunItem extends Item {
         if (tag == null || !tag.contains("destination")) {
             return -1;
         }
-        return tag.getInt("destination");
+        return tag.getIntOr("destination", 0);
     }
 
     public static void setCurrentDestination(ItemStack stack, int dest) {
@@ -164,9 +162,9 @@ public class PortalGunItem extends Item {
             }
         } else {
             CompoundTag tag = StackData.get(stack);
-            ListTag dests = tag.getList("dests", Tag.TAG_COMPOUND);
+            ListTag dests = tag.getListOrEmpty("dests");
             for (int i = 0; i < 8; i++) {
-                CompoundTag tc = i < dests.size() ? dests.getCompound(i) : null;
+                CompoundTag tc = i < dests.size() ? dests.getCompoundOrEmpty(i) : null;
                 if (tc != null && tc.contains("dim")) {
                     destinations.add(new TeleportDestination(tc));
                 } else {
@@ -185,7 +183,7 @@ public class PortalGunItem extends Item {
         if (!StackData.has(stack)) {
             return 0;
         }
-        return StackData.get(stack).getInt("charge");
+        return StackData.get(stack).getIntOr("charge", 0);
     }
 
     @Override
@@ -204,12 +202,10 @@ public class PortalGunItem extends Item {
         return (max - stored) / (double) max;
     }
 
-    @Override
     public boolean hasCraftingRemainingItem(ItemStack stack) {
         return true;
     }
 
-    @Override
     public ItemStack getCraftingRemainingItem(ItemStack itemStack) {
         ItemStack stack = new ItemStack(Registration.EMPTY_GUN.get());
         if (StackData.has(itemStack)) {
@@ -227,12 +223,12 @@ public class PortalGunItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
-        if (!world.isClientSide) {
+    public InteractionResult use(Level world, Player player, InteractionHand hand) {
+        if (!world.isClientSide()) {
             if (!player.isShiftKeyDown()) {
                 throwProjectile(player, hand, world);
             }
         }
-        return new InteractionResultHolder<>(InteractionResult.SUCCESS, player.getItemInHand(hand));
+        return InteractionResult.SUCCESS;
     }
 }

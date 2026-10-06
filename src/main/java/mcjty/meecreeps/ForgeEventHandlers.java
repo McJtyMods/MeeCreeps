@@ -33,7 +33,7 @@ public class ForgeEventHandlers {
 
     @SubscribeEvent
     public void drop(EntityJoinLevelEvent e) {
-        if (e.getLevel().isClientSide || !(e.getEntity() instanceof ItemEntity item))
+        if (e.getLevel().isClientSide() || !(e.getEntity() instanceof ItemEntity item))
             return;
         var tracked = harvests.get(new HarvestKey(e.getLevel().dimension(), item.blockPosition()));
         if (tracked == null || tracked.expires < e.getLevel().getGameTime())

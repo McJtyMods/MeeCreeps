@@ -4,15 +4,16 @@ import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.*;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 
 /** Original Tabula geometry by wiiv, converted to baked model parts. */
-public class MeeCreepsModel extends EntityModel<EntityMeeCreeps> {
-    public static final ModelLayerLocation LAYER = new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath("meecreeps", "meecreeps"), "main");
+public class MeeCreepsModel extends EntityModel<MeeCreepsRenderState> {
+    public static final ModelLayerLocation LAYER = new ModelLayerLocation(Identifier.fromNamespaceAndPath("meecreeps", "meecreeps"), "main");
     private final ModelPart root;
 
     public MeeCreepsModel(ModelPart root) {
+        super(root);
         this.root = root;
     }
 
@@ -70,12 +71,14 @@ public class MeeCreepsModel extends EntityModel<EntityMeeCreeps> {
     }
 
     @Override
-    public void setupAnim(EntityMeeCreeps e, float swing, float amount, float age, float yaw, float pitch) {
+    public void setupAnim(MeeCreepsRenderState e) {
+        super.setupAnim(e);
+        float swing = e.walkAnimationPos, amount = e.walkAnimationSpeed, yaw = e.yRot, pitch = e.xRot;
         root.getAllParts().forEach(ModelPart::resetPose);
         for (int i = 0; i < 9; i++) {
             ModelPart face = root.getChild("face" + i), hair = root.getChild("hair" + i);
-            face.visible = i == e.getVariationFace();
-            hair.visible = i == e.getVariationHair();
+            face.visible = i == e.face;
+            hair.visible = i == e.hair;
             face.xRot = hair.xRot = pitch * Mth.DEG_TO_RAD;
             face.yRot = hair.yRot = yaw * Mth.DEG_TO_RAD;
         }
@@ -85,15 +88,11 @@ public class MeeCreepsModel extends EntityModel<EntityMeeCreeps> {
         root.getChild("bipedRightLeg").xRot = left.xRot;
         root.getChild("bipedLeftLeg").xRot = right.xRot;
         root.getChild("bipedRightLeg").y = root.getChild("bipedLeftLeg").y = 8;
-        if (e.getHeldBlockState() != null) {
+        if (!e.carriedBlock.isEmpty()) {
             right.xRot = left.xRot = -.5F;
             right.zRot = .05F;
             left.zRot = -.05F;
         }
     }
 
-    @Override
-    public void renderToBuffer(PoseStack pose, VertexConsumer vertices, int light, int overlay, int color) {
-        root.render(pose, vertices, light, overlay, color);
-    }
 }

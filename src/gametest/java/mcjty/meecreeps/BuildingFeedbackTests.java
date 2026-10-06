@@ -10,15 +10,12 @@ import mcjty.meecreeps.api.IBuildSchematic;
 import mcjty.meecreeps.entities.EntityMeeCreeps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -26,10 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-@GameTestHolder("meecreeps")
-@PrefixGameTestTemplate(false)
 public class BuildingFeedbackTests {
-    @GameTest(template = "empty")
     public static void houseReportsEachMaterialShortage(GameTestHelper test) {
         var level = test.getLevel();
         BlockPos target = test.absolutePos(new BlockPos(3, 1, 3));

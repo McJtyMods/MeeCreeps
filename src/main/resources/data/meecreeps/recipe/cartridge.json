@@ -9,11 +9,7 @@
   ],
   "type": "minecraft:crafting_shaped",
   "key": {
-    "G": {
-      "item": "minecraft:glass"
-    },
-    "n": {
-      "item": "minecraft:gold_nugget"
-    }
+    "G": "minecraft:glass",
+    "n": "minecraft:gold_nugget"
   }
 }

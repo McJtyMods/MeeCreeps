@@ -16,13 +16,13 @@ import java.util.List;
 public final class BlockTools {
     public static List<ItemStack> getDrops(Level world, BlockPos pos, BlockState state) {
         var player = GeneralTools.getHarvester(world);
-        player.moveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 0, 0);
+        player.snapTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 0, 0);
         return Block.getDrops(state, (ServerLevel) world, pos, world.getBlockEntity(pos), player, player.getMainHandItem());
     }
 
     public static BlockState placeStackAt(Player player, ItemStack stack, Level world, BlockPos pos, Direction side) {
         Direction face = side == null ? Direction.UP : side;
-        player.moveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 0, 0);
+        player.snapTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5, 0, 0);
         if (stack.getItem() instanceof BlockItem item) {
             // Torches should try the floor first, then nearby walls. Keep the target fixed
             // so a stale placement request cannot place another torch in a neighbouring cell.

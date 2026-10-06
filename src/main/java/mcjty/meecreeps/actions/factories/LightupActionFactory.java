@@ -11,7 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 public class LightupActionFactory implements IActionFactory {
 
@@ -38,7 +38,7 @@ public class LightupActionFactory implements IActionFactory {
     }
 
     @Override
-    public IActionWorker createWorker(@Nonnull IWorkerHelper helper) {
+    public IActionWorker createWorker(@NonNull IWorkerHelper helper) {
         return new LightupActionWorker(helper);
     }
 }

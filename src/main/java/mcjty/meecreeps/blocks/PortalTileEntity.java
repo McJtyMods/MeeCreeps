@@ -2,7 +2,7 @@ package mcjty.meecreeps.blocks;
 
 import mcjty.meecreeps.setup.Registration;
 import mcjty.meecreeps.varia.LevelTools;
-import mcjty.lib.varia.SoundTools;
+import mcjty.meecreeps.varia.SoundTools;
 import mcjty.meecreeps.varia.EntityTeleportation;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.config.ConfigSetup;
@@ -17,7 +17,7 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.Direction;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
@@ -29,7 +29,7 @@ import java.util.*;
 public class PortalTileEntity extends BlockEntity {
 
     public PortalTileEntity(BlockPos pos, BlockState state) {
-        super(Registration.PORTAL_TILE.get(), pos, state);
+        super(mcjty.meecreeps.setup.Registration.PORTAL_TILE.get(), pos, state);
     }
 
     private int timeout;
@@ -42,7 +42,7 @@ public class PortalTileEntity extends BlockEntity {
     private Set<UUID> blackListed = new HashSet<>();        // Entities can only go through the portal one time
 
     public void update() {
-        if (level != null && !level.isClientSide && other != null && portalSide != null) {
+        if (level != null && !level.isClientSide() && other != null && portalSide != null) {
             tickTime();
             if (timeout <= 0) {
                 killPortal();
@@ -52,7 +52,7 @@ public class PortalTileEntity extends BlockEntity {
 
             if ((!soundStart) && timeout > ConfigSetup.portalTimeout.get() - 10) {
                 soundStart = true;
-                SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, "portal"));
+                SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.getValue(Identifier.fromNamespaceAndPath(MeeCreeps.MODID, "portal"));
                 // @todo config
                 SoundTools.playSound(level, sound, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), 1, 1);
             }
@@ -60,7 +60,7 @@ public class PortalTileEntity extends BlockEntity {
             if ((!soundEnd) && timeout < 10) {
                 soundEnd = true;
                 if (ConfigSetup.teleportVolume.get() > 0.01f) {
-                    SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, "portal"));
+                    SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.getValue(Identifier.fromNamespaceAndPath(MeeCreeps.MODID, "portal"));
                     SoundTools.playSound(level, sound, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), ConfigSetup.teleportVolume.get(), 1);
                 }
             }
@@ -83,7 +83,7 @@ public class PortalTileEntity extends BlockEntity {
 
                         if (entity instanceof Player) {
                             if (ConfigSetup.teleportVolume.get() > 0.01f) {
-                                SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, "teleport"));
+                                SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.getValue(Identifier.fromNamespaceAndPath(MeeCreeps.MODID, "teleport"));
                                 SoundTools.playSound(otherPortal.getLevel(), sound, otherX, otherY, otherZ, ConfigSetup.teleportVolume.get(), 1);
                             }
                         }
@@ -101,12 +101,6 @@ public class PortalTileEntity extends BlockEntity {
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
-    }
-
-    @Override
-    public void onDataPacket(Connection connection, ClientboundBlockEntityDataPacket packet, net.minecraft.core.HolderLookup.Provider registries) {
-        if (packet.getTag() != null)
-            loadWithComponents(packet.getTag(), registries);
     }
 
     private AABB getTeleportBox() {
@@ -212,22 +206,32 @@ public class PortalTileEntity extends BlockEntity {
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        timeout = tag.getInt("timeout");
-        start = tag.getInt("start");
-        portalSide = Direction.from3DDataValue(tag.getByte("portalSide"));
-        other = tag.contains("other") ? new TeleportDestination(tag.getCompound("other")) : null;
-        blackListed.clear();
-        ListTag list = tag.getList("bl", Tag.TAG_COMPOUND);
-        for (int i = 0; i < list.size(); i++)
-            blackListed.add(list.getCompound(i).getUUID("id"));
-        box = null;
+    protected void loadAdditional(net.minecraft.world.level.storage.ValueInput input) {
+        super.loadAdditional(input);
+        loadAdditional(input.read("meecreeps", CompoundTag.CODEC).orElseGet(CompoundTag::new), level == null ? net.minecraft.core.RegistryAccess.EMPTY : level.registryAccess());
     }
 
     @Override
+    protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput output) {
+        super.saveAdditional(output);
+        CompoundTag data = new CompoundTag();
+        saveAdditional(data, level == null ? net.minecraft.core.RegistryAccess.EMPTY : level.registryAccess());
+        output.store("meecreeps", CompoundTag.CODEC, data);
+    }
+
+    protected void loadAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+        timeout = tag.getIntOr("timeout", 0);
+        start = tag.getIntOr("start", 0);
+        portalSide = Direction.from3DDataValue(tag.getByteOr("portalSide", (byte) 0));
+        other = tag.contains("other") ? new TeleportDestination(tag.getCompoundOrEmpty("other")) : null;
+        blackListed.clear();
+        ListTag list = tag.getListOrEmpty("bl");
+        for (int i = 0; i < list.size(); i++)
+            blackListed.add(list.getCompoundOrEmpty(i).read("id", net.minecraft.core.UUIDUtil.CODEC).orElse(null));
+        box = null;
+    }
+
     protected void saveAdditional(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
         tag.putInt("timeout", timeout);
         tag.putInt("start", ConfigSetup.portalTimeout.get() - timeout);
         tag.putByte("portalSide", (byte) (portalSide == null ? Direction.UP.ordinal() : portalSide.ordinal()));
@@ -236,7 +240,7 @@ public class PortalTileEntity extends BlockEntity {
         ListTag list = new ListTag();
         for (UUID id : blackListed) {
             CompoundTag t = new CompoundTag();
-            t.putUUID("id", id);
+            t.store("id", net.minecraft.core.UUIDUtil.CODEC, id);
             list.add(t);
         }
         tag.put("bl", list);

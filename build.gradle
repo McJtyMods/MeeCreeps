@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.github.mcjty'
 base { archivesName = 'meecreeps' }
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 sourceSets {
     gametest {
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
@@ -21,7 +21,7 @@ neoForge {
         gameTestServer {
             type = 'gameTestServer'
             gameDirectory = project.file('run-gametest')
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'meecreeps'
+            programArgument '--test'; programArgument 'meecreeps:*'
             sourceSet = sourceSets.gametest
         }
     }
@@ -31,18 +31,14 @@ neoForge {
 }
 repositories {
     maven { url = 'https://maven.k-4u.nl' }
-    maven { url = 'https://api.modrinth.com/maven' }
 }
 dependencies {
-    implementation("com.github.mcjty:mcjtylib:${mcjtylib_version}") { transitive = false }
     compileOnly("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
-    compileOnly "maven.modrinth:interaction-wheel:${interactionwheel_version}"
     if (project.hasProperty('withOptionalMods')) {
         runtimeOnly("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
-        runtimeOnly "maven.modrinth:interaction-wheel:${interactionwheel_version}"
     }
 }
-tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.compilerArgs += ['-Xmaxerrs', '1000'] }
 processResources {
     inputs.property 'version', project.version
     filesMatching('META-INF/neoforge.mods.toml') { expand version: project.version }

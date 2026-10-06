@@ -11,7 +11,7 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import java.util.UUID;
 import java.util.function.*;
 

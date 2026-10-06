@@ -1,8 +1,8 @@
 package mcjty.meecreeps.actions;
 
 import net.minecraft.network.FriendlyByteBuf;
-import mcjty.lib.network.NetworkTools;
-import mcjty.lib.varia.SoundTools;
+import mcjty.meecreeps.network.NetworkTools;
+import mcjty.meecreeps.varia.SoundTools;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.api.IActionContext;
 import mcjty.meecreeps.config.ConfigSetup;
@@ -17,7 +17,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -25,8 +25,8 @@ import mcjty.meecreeps.varia.LevelTools;
 import net.minecraft.nbt.Tag;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -107,49 +107,49 @@ public class ActionOptions implements IActionContext {
     }
 
     public ActionOptions(CompoundTag tagCompound, net.minecraft.core.HolderLookup.Provider registries) {
-        ListTag list = tagCompound.getList("options", Tag.TAG_STRING);
+        ListTag list = tagCompound.getListOrEmpty("options");
         actionOptions = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
-            actionOptions.add(new MeeCreepActionType(list.getString(i)));
+            actionOptions.add(new MeeCreepActionType(list.getStringOr(i, "")));
         }
 
-        list = tagCompound.getList("maybe", Tag.TAG_STRING);
+        list = tagCompound.getListOrEmpty("maybe");
         maybeActionOptions = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
-            maybeActionOptions.add(new MeeCreepActionType(list.getString(i)));
+            maybeActionOptions.add(new MeeCreepActionType(list.getStringOr(i, "")));
         }
 
-        list = tagCompound.getList("drops", Tag.TAG_COMPOUND);
+        list = tagCompound.getListOrEmpty("drops");
         drops = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
-            CompoundTag tc = list.getCompound(i);
-            BlockPos p = BlockPos.of(tc.getLong("p"));
-            CompoundTag itemTag = tc.getCompound("i");
-            ItemStack stack = ItemStack.parseOptional(registries, itemTag);
+            CompoundTag tc = list.getCompoundOrEmpty(i);
+            BlockPos p = BlockPos.of(tc.getLongOr("p", 0L));
+            CompoundTag itemTag = tc.getCompoundOrEmpty("i");
+            ItemStack stack = mcjty.meecreeps.varia.ItemSerialization.load(registries, itemTag);
             drops.add(Pair.of(p, stack));
         }
 
-        dimension = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, net.minecraft.resources.ResourceLocation.parse(tagCompound.getString("dim")));
-        failureCount = tagCompound.getInt("failure");
-        targetPos = BlockPos.of(tagCompound.getLong("pos"));
-        targetSide = Direction.values()[tagCompound.getByte("targetSide")];
-        if (tagCompound.hasUUID("player")) {
-            playerId = tagCompound.getUUID("player");
+        dimension = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, net.minecraft.resources.Identifier.parse(tagCompound.getStringOr("dim", "")));
+        failureCount = tagCompound.getIntOr("failure", 0);
+        targetPos = BlockPos.of(tagCompound.getLongOr("pos", 0L));
+        targetSide = Direction.values()[tagCompound.getByteOr("targetSide", (byte) 0)];
+        if (tagCompound.read("player", net.minecraft.core.UUIDUtil.CODEC).isPresent()) {
+            playerId = tagCompound.read("player", net.minecraft.core.UUIDUtil.CODEC).orElse(null);
         } else {
             playerId = null;
         }
-        actionId = tagCompound.getInt("actionId");
-        timeout = tagCompound.getInt("timeout");
-        stage = Stage.getByCode(tagCompound.getString("stage"));
+        actionId = tagCompound.getIntOr("actionId", 0);
+        timeout = tagCompound.getIntOr("timeout", 0);
+        stage = Stage.getByCode(tagCompound.getStringOr("stage", ""));
         if (tagCompound.contains("task")) {
-            task = new MeeCreepActionType(tagCompound.getString("task"));
+            task = new MeeCreepActionType(tagCompound.getStringOr("task", ""));
         }
         if (tagCompound.contains("fqid")) {
-            furtherQuestionId = tagCompound.getString("fqid");
+            furtherQuestionId = tagCompound.getStringOr("fqid", "");
         } else {
             furtherQuestionId = null;
         }
-        paused = tagCompound.getBoolean("paused");
+        paused = tagCompound.getBooleanOr("paused", false);
     }
 
     public void writeToBuf(FriendlyByteBuf buf) {
@@ -204,17 +204,17 @@ public class ActionOptions implements IActionContext {
         for (Pair<BlockPos, ItemStack> pair : drops) {
             CompoundTag tc = new CompoundTag();
             tc.putLong("p", pair.getKey().asLong());
-            tc.put("i", pair.getValue().saveOptional(registries));
+            tc.put("i", mcjty.meecreeps.varia.ItemSerialization.save(registries, pair.getValue()));
             list.add(tc);
         }
         tagCompound.put("drops", list);
 
-        tagCompound.putString("dim", dimension.location().toString());
+        tagCompound.putString("dim", dimension.identifier().toString());
         tagCompound.putInt("failure", failureCount);
         tagCompound.putLong("pos", targetPos.asLong());
         tagCompound.putByte("targetSide", (byte) targetSide.ordinal());
         if (playerId != null) {
-            tagCompound.putUUID("player", playerId);
+            tagCompound.store("player", net.minecraft.core.UUIDUtil.CODEC, playerId);
         }
         tagCompound.putInt("actionId", actionId);
         tagCompound.putInt("timeout", timeout);
@@ -228,7 +228,7 @@ public class ActionOptions implements IActionContext {
         tagCompound.putBoolean("paused", paused);
     }
 
-    public void registerDrops(BlockPos pos, @Nonnull List<ItemStack> drops) {
+    public void registerDrops(BlockPos pos, @NonNull List<ItemStack> drops) {
         for (ItemStack drop : drops) {
             // Drops can be empty because they can be 'consumed' by the entity
             if (!drop.isEmpty()) {
@@ -416,7 +416,7 @@ public class ActionOptions implements IActionContext {
             return false;
         }
         EntityMeeCreeps entity = new EntityMeeCreeps(world);
-        entity.moveTo(p.getX() + .5, p.getY(), p.getZ() + .5, 0, 0);
+        entity.snapTo(p.getX() + .5, p.getY(), p.getZ() + .5, 0, 0);
         entity.setActionId(actionId);
         world.addFreshEntity(entity);
 
@@ -436,7 +436,7 @@ public class ActionOptions implements IActionContext {
                     snd = "intro4";
                     break;
             }
-            SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, snd));
+            SoundEvent sound = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.getValue(Identifier.fromNamespaceAndPath(MeeCreeps.MODID, snd));
             SoundTools.playSound(world, sound, p.getX(), p.getY(), p.getZ(), ConfigSetup.meeCreepVolume.get(), 1);
         }
 

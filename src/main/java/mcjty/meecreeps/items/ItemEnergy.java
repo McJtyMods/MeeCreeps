@@ -3,10 +3,9 @@ package mcjty.meecreeps.items;
 import mcjty.meecreeps.config.ConfigSetup;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.neoforge.energy.IEnergyStorage;
 
 /** Energy lives in stack data components so recipes and inventory sync preserve it. */
-public final class ItemEnergy implements IEnergyStorage {
+public final class ItemEnergy {
     private final ItemStack stack;
     public static final int ENERGY_PER_CHARGE = 1000;
 
@@ -17,7 +16,7 @@ public final class ItemEnergy implements IEnergyStorage {
     public static int stored(ItemStack stack) {
         if (!StackData.has(stack))
             return 0;
-        return Math.max(0, StackData.get(stack).getInt("charge") * ENERGY_PER_CHARGE + StackData.get(stack).getInt("energyRemainder"));
+        return Math.max(0, StackData.get(stack).getIntOr("charge", 0) * ENERGY_PER_CHARGE + StackData.get(stack).getIntOr("energyRemainder", 0));
     }
 
     public static void setCharge(ItemStack stack, int charge) {

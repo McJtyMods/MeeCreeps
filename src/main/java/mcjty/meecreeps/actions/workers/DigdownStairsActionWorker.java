@@ -1,6 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.lib.varia.SoundTools;
+import mcjty.meecreeps.varia.SoundTools;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
@@ -184,11 +184,11 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         IMeeCreep entity = helper.getMeeCreep();
         if (timeToWrapUp) {
             if (numStairs > 0) {
-                entity.getEntity().spawnAtLocation(new ItemStack(Blocks.STONE_STAIRS, numStairs), 0.0f);
+                entity.getEntity().spawnAtLocation((net.minecraft.server.level.ServerLevel) entity.getWorld(), new ItemStack(Blocks.STONE_STAIRS, numStairs), 0.0f);
                 numStairs = 0;
             }
             if (numCobble > 0) {
-                entity.getEntity().spawnAtLocation(new ItemStack(Blocks.COBBLESTONE, numCobble), 0.0f);
+                entity.getEntity().spawnAtLocation((net.minecraft.server.level.ServerLevel) entity.getWorld(), new ItemStack(Blocks.COBBLESTONE, numCobble), 0.0f);
                 numCobble = 0;
             }
             helper.done();
@@ -198,7 +198,7 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
         Direction facing = getDirection();
 
         BlockPos p = helper.getContext().getTargetPos().above().relative(facing, this.offset).below(this.offset + 1);
-        if (p.getY() < entity.getWorld().getMinBuildHeight() + 6) {
+        if (p.getY() < entity.getWorld().getMinY() + 6) {
             helper.taskIsDone();
             return;
         }
@@ -447,10 +447,10 @@ public class DigdownStairsActionWorker extends AbstractActionWorker {
 
     @Override
     public void readFromNBT(CompoundTag tag) {
-        offset = tag.getInt("offset");
-        blockidx = tag.getInt("blockidx");
-        numStairs = tag.getInt("stairs");
-        numCobble = tag.getInt("cobble");
+        offset = tag.getIntOr("offset", 0);
+        blockidx = tag.getIntOr("blockidx", 0);
+        numStairs = tag.getIntOr("stairs", 0);
+        numCobble = tag.getIntOr("cobble", 0);
     }
 
     @Override

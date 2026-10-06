@@ -1,14 +1,14 @@
 package mcjty.meecreeps.actions;
 
 import net.minecraft.network.FriendlyByteBuf;
-import mcjty.lib.network.NetworkTools;
+import mcjty.meecreeps.network.NetworkTools;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class PacketShowBalloonToClient implements CustomPacketPayload {
-    public static final Type<PacketShowBalloonToClient> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("meecreeps", "packet_show_balloon_to_client"));
+    public static final Type<PacketShowBalloonToClient> TYPE = new Type<>(Identifier.fromNamespaceAndPath("meecreeps", "packet_show_balloon_to_client"));
     public static final StreamCodec<FriendlyByteBuf, PacketShowBalloonToClient> CODEC = StreamCodec.of((buf, packet) -> packet.toBytes(buf), PacketShowBalloonToClient::new);
     @Override
     public Type<PacketShowBalloonToClient> type() { return TYPE; }

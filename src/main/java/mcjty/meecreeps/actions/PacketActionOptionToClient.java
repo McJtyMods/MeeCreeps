@@ -4,10 +4,10 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class PacketActionOptionToClient implements CustomPacketPayload {
-    public static final Type<PacketActionOptionToClient> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("meecreeps", "packet_action_option_to_client"));
+    public static final Type<PacketActionOptionToClient> TYPE = new Type<>(Identifier.fromNamespaceAndPath("meecreeps", "packet_action_option_to_client"));
     public static final StreamCodec<FriendlyByteBuf, PacketActionOptionToClient> CODEC = StreamCodec.of((buf, packet) -> packet.toBytes(buf), PacketActionOptionToClient::new);
     @Override
     public Type<PacketActionOptionToClient> type() { return TYPE; }

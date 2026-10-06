@@ -9,7 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -74,8 +74,8 @@ public class MakePlatformActionWorker extends AbstractActionWorker {
 
     @Override
     public void readFromNBT(CompoundTag tag) {
-        progress.setHeight(tag.getInt("stage"));
-        progress.setPass(tag.getInt("pass"));
+        progress.setHeight(tag.getIntOr("stage", 0));
+        progress.setPass(tag.getIntOr("pass", 0));
     }
 
     @Override

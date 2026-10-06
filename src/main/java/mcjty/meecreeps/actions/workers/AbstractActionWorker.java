@@ -6,7 +6,7 @@ import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.api.PreferedChest;
 import net.minecraft.world.phys.AABB;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 public abstract class AbstractActionWorker implements IActionWorker {
 
@@ -25,7 +25,7 @@ public abstract class AbstractActionWorker implements IActionWorker {
         this.options = helper.getContext();
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public AABB getSearchBox() {
         if (searchBox == null) {

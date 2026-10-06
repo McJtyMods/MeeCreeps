@@ -23,19 +23,16 @@ import net.neoforged.neoforge.gametest.*;
 
 import java.util.List;
 
-@GameTestHolder("meecreeps")
-@PrefixGameTestTemplate(false)
 public class PortGameTests {
     private static void check(boolean condition, String message) {
         if (!condition)
-            throw new GameTestAssertException(message);
+            throw new GameTestAssertException(net.minecraft.network.chat.Component.literal(message), 0);
     }
 
-    @GameTest(template = "empty", timeoutTicks = 200)
     public static void lightingIgnoresDaylight(GameTestHelper test) {
         var world = test.getLevel();
-        world.setDayTime(6000);
-        world.setWeatherParameters(6000, 0, false, false);
+        world.clockManager().setTotalTicks(world.dimensionType().defaultClock().orElseThrow(), 6000);
+        world.getServer().setWeatherParameters(6000, 0, false, false);
         world.updateSkyBrightness();
         BlockPos target = test.absolutePos(new BlockPos(3, 80, 3));
         for (BlockPos pos : BlockPos.betweenClosed(target.offset(-10, -6, -10), target.offset(10, 5, 10))) {
@@ -94,7 +91,6 @@ public class PortGameTests {
         }).thenSucceed();
     }
 
-    @GameTest(template = "empty", timeoutTicks = 40)
     public static void groundTorchPlacement(GameTestHelper test) {
         var world = test.getLevel();
         BlockPos target = test.absolutePos(new BlockPos(3, 1, 3));
@@ -112,7 +108,6 @@ public class PortGameTests {
         });
     }
 
-    @GameTest(template = "empty")
     public static void wallTorchesCompleteHouseRequirement(GameTestHelper test) {
         var world = test.getLevel();
         var options = new ActionOptions(List.of(), List.of(), BlockPos.ZERO, Direction.UP, world.dimension(), null, 0);
@@ -137,7 +132,6 @@ public class PortGameTests {
         test.succeed();
     }
 
-    @GameTest(template = "empty")
     public static void torchPlacementDoesNotShiftOccupiedTarget(GameTestHelper test) {
         var world = test.getLevel();
         BlockPos target = test.absolutePos(new BlockPos(3, 1, 3));
@@ -170,28 +164,24 @@ public class PortGameTests {
         };
     }
 
-    @GameTest(template = "empty", timeoutTicks = 120)
     public static void buildingClearsOccupiedTarget(GameTestHelper test) {
         checkBuildingMovesAside(test, false, false);
     }
 
-    @GameTest(template = "empty", timeoutTicks = 120)
     public static void buildingMovesAsideUnderLowCeiling(GameTestHelper test) {
         checkBuildingMovesAside(test, true, false);
     }
 
-    @GameTest(template = "empty", timeoutTicks = 120)
     public static void buildingClearsPartialBodyOverlap(GameTestHelper test) {
         checkBuildingMovesAside(test, true, true);
     }
 
-    @GameTest(template = "empty", timeoutTicks = 120)
     public static void buildingJumpsOnNarrowPillar(GameTestHelper test) {
         var world = test.getLevel();
         BlockPos target = test.absolutePos(new BlockPos(3, 5, 3));
         world.setBlock(target.below(), Blocks.STONE.defaultBlockState(), 3);
         var creep = new EntityMeeCreeps(world);
-        creep.moveTo(target.getX() + .5, target.getY(), target.getZ() + .5, 0, 0);
+        creep.snapTo(target.getX() + .5, target.getY(), target.getZ() + .5, 0, 0);
         creep.setOnGround(true);
         creep.addStack(new ItemStack(Items.STONE, 2));
         world.addFreshEntity(creep);
@@ -232,7 +222,7 @@ public class PortGameTests {
             }
         }
         var creep = new EntityMeeCreeps(world);
-        creep.moveTo(target.getX() + (partialOverlap ? 1.1 : .5), target.getY(), target.getZ() + .5, 0, 0);
+        creep.snapTo(target.getX() + (partialOverlap ? 1.1 : .5), target.getY(), target.getZ() + .5, 0, 0);
         creep.addStack(new ItemStack(Items.STONE, 2));
         world.addFreshEntity(creep);
         var options = new ActionOptions(List.of(), List.of(), target, Direction.UP, world.dimension(), null, 0);
@@ -264,15 +254,14 @@ public class PortGameTests {
         });
     }
 
-    @GameTest(template = "empty")
     public static void failedBuildingPreservesMaterials(GameTestHelper test) {
         var world = test.getLevel();
         BlockPos target = test.absolutePos(new BlockPos(3, 1, 3));
         var blocker = new EntityMeeCreeps(world);
-        blocker.moveTo(target.getX() + .5, target.getY(), target.getZ() + .5, 0, 0);
+        blocker.snapTo(target.getX() + .5, target.getY(), target.getZ() + .5, 0, 0);
         world.addFreshEntity(blocker);
         var creep = new EntityMeeCreeps(world);
-        creep.moveTo(target.getX() + 3, target.getY(), target.getZ() + .5, 0, 0);
+        creep.snapTo(target.getX() + 3, target.getY(), target.getZ() + .5, 0, 0);
         creep.addStack(new ItemStack(Items.STONE, 2));
         var options = new ActionOptions(List.of(), List.of(), target, Direction.UP, world.dimension(), null, 0);
         var helper = new mcjty.meecreeps.actions.workers.WorkerHelper(options);
@@ -293,14 +282,21 @@ public class PortGameTests {
         test.succeed();
     }
 
-    @GameTest(template = "empty")
     public static void energyAndCartridgeRecipes(GameTestHelper test) {
         ItemStack cartridge = new ItemStack(Registration.CARTRIDGE.get());
-        var energy = java.util.Objects.requireNonNull(cartridge.getCapability(Capabilities.EnergyStorage.ITEM));
-        check(energy.receiveEnergy(1250, true) == 1250 && energy.getEnergyStored() == 0, "Simulation changed energy");
-        check(energy.receiveEnergy(1250, false) == 1250 && CartridgeItem.getCharge(cartridge) == 1, "Partial charging failed");
-        cartridge = ItemStack.parseOptional(test.getLevel().registryAccess(), (CompoundTag) cartridge.save(test.getLevel().registryAccess()));
-        check(java.util.Objects.requireNonNull(cartridge.getCapability(Capabilities.EnergyStorage.ITEM)).getEnergyStored() == 1250, "Energy failed NBT reload");
+        var access = net.neoforged.neoforge.transfer.access.ItemAccess.forStack(cartridge);
+        var energy = java.util.Objects.requireNonNull(access.getCapability(Capabilities.Energy.ITEM));
+        try (var tx = net.neoforged.neoforge.transfer.transaction.Transaction.openRoot()) {
+            check(energy.insert(1250, tx) == 1250, "Simulation accepted wrong amount");
+        }
+        check(energy.getAmountAsLong() == 0, "Aborted transaction changed energy");
+        try (var tx = net.neoforged.neoforge.transfer.transaction.Transaction.openRoot()) {
+            check(energy.insert(1250, tx) == 1250, "Charging accepted wrong amount");
+            tx.commit();
+        }
+        check(CartridgeItem.getCharge(cartridge) == 1, "Partial charging failed");
+        cartridge = mcjty.meecreeps.varia.ItemSerialization.load(test.getLevel().registryAccess(), mcjty.meecreeps.varia.ItemSerialization.save(test.getLevel().registryAccess(), cartridge));
+        check(java.util.Objects.requireNonNull(net.neoforged.neoforge.transfer.access.ItemAccess.forStack(cartridge).getCapability(Capabilities.Energy.ITEM)).getAmountAsLong() == 1250, "Energy failed NBT reload");
         var inv = new TransientCraftingContainer(new AbstractContainerMenu(null, 0) {
             public ItemStack quickMoveStack(Player player, int slot) {
                 return ItemStack.EMPTY;
@@ -315,23 +311,22 @@ public class PortGameTests {
         PortalGunItem.addDestination(emptyGun, destination, 3);
         inv.setItem(0, emptyGun);
         inv.setItem(1, cartridge);
-        var insert = new InsertCartridgeFactory(CraftingBookCategory.MISC);
+        var insert = new InsertCartridgeFactory();
         check(insert.matches(inv.asCraftInput(), test.getLevel()), "Insertion recipe didn't match");
-        var gun = insert.assemble(inv.asCraftInput(), test.getLevel().registryAccess());
+        var gun = insert.assemble(inv.asCraftInput());
         check(ItemEnergy.stored(gun) == 1250, "Insertion lost partial FE");
         check(PortalGunItem.getDestinations(gun).get(3).getDimension() == Level.NETHER, "Insertion lost destinations");
         inv.clearContent();
         inv.setItem(0, gun);
-        var remove = new RemoveCartridgeFactory(CraftingBookCategory.MISC);
+        var remove = new RemoveCartridgeFactory();
         check(remove.matches(inv.asCraftInput(), test.getLevel()), "Removal recipe didn't match");
-        check(ItemEnergy.stored(remove.assemble(inv.asCraftInput(), test.getLevel().registryAccess())) == 1250, "Removal lost partial FE");
+        check(ItemEnergy.stored(remove.assemble(inv.asCraftInput())) == 1250, "Removal lost partial FE");
         check(remove.getRemainingItems(inv.asCraftInput()).get(0).is(Registration.EMPTY_GUN.get()), "Removal didn't return empty gun");
         inv.setItem(1, new ItemStack(Items.DIAMOND));
         check(!remove.matches(inv.asCraftInput(), test.getLevel()), "Removal accepted extra items");
         test.succeed();
     }
 
-    @GameTest(template = "empty")
     public static void actionsAndEntityPersistence(GameTestHelper test) {
         var options = new ActionOptions(List.of(new MeeCreepActionType("meecreeps.idle")), List.of(), new BlockPos(4, -40, 7), Direction.DOWN, Level.NETHER, null, 42);
         options.setTask(new MeeCreepActionType("meecreeps.idle"), null);
@@ -362,7 +357,6 @@ public class PortGameTests {
         test.succeed();
     }
 
-    @GameTest(template = "empty")
     public static void wallPortalsKeepAimedHeight(GameTestHelper test) {
         var world = test.getLevel();
         BlockPos aimed = test.absolutePos(new BlockPos(3, 2, 3));
@@ -388,7 +382,6 @@ public class PortGameTests {
         test.succeed();
     }
 
-    @GameTest(template = "empty", timeoutTicks = 60)
     public static void portalPairExpires(GameTestHelper test) {
         var world = test.getLevel();
         BlockPos source = test.absolutePos(new BlockPos(1, 1, 1)), destination = test.absolutePos(new BlockPos(5, 1, 5));
@@ -399,7 +392,7 @@ public class PortGameTests {
         check(world.getBlockEntity(destination) instanceof PortalTileEntity, "Destination portal not created");
         var portal = (PortalTileEntity) world.getBlockEntity(source);
         var restored = new PortalTileEntity(source, world.getBlockState(source));
-        restored.loadWithComponents(portal.saveWithFullMetadata(world.registryAccess()), world.registryAccess());
+        restored.loadWithComponents(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, world.registryAccess(), portal.saveWithFullMetadata(world.registryAccess())));
         check(restored.getPortalSide() == Direction.UP && restored.getTimeout() > 0, "Portal NBT reload failed");
         portal.setTimeout(2);
         test.runAfterDelay(5, () -> {
@@ -408,7 +401,6 @@ public class PortGameTests {
         });
     }
 
-    @GameTest(template = "empty")
     public static void harvestingHonorsProtection(GameTestHelper test) {
         var world = test.getLevel();
         var pos = test.absolutePos(new BlockPos(2, 1, 2));
@@ -419,7 +411,7 @@ public class PortGameTests {
         helper.setWorker(new mcjty.meecreeps.actions.workers.IdleActionWorker(helper) {
             @Override
             public void tick(boolean wrapUp) {
-                java.util.function.Consumer<net.neoforged.neoforge.event.level.BlockEvent.BreakEvent> deny = e -> {
+                java.util.function.Consumer<net.neoforged.neoforge.event.level.block.BreakBlockEvent> deny = e -> {
                     if (e.getPos().equals(pos))
                         e.setCanceled(true);
                 };
@@ -440,7 +432,6 @@ public class PortGameTests {
         test.succeed();
     }
 
-    @GameTest(template = "empty")
     public static void movingBlockPreservesInventory(GameTestHelper test) {
         var world = test.getLevel();
         BlockPos source = test.absolutePos(new BlockPos(2, 1, 2)), destination = test.absolutePos(new BlockPos(5, 1, 5));

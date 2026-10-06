@@ -1,8 +1,6 @@
 package mcjty.meecreeps.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import mcjty.lib.network.PacketSendServerCommand;
-import mcjty.lib.typed.TypedMap;
+import mcjty.meecreeps.network.PacketServerCommand;
 import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.items.PortalGunItem;
@@ -11,12 +9,12 @@ import mcjty.meecreeps.teleport.PacketMakePortals;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import mcjty.meecreeps.teleport.TeleportationTools;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -25,8 +23,8 @@ import java.util.List;
 public class GuiWheel extends Screen {
     private static final int SIZE = 160;
     private static final int SLOT_OFFSET = 4;
-    private static final ResourceLocation WHEEL = ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, "textures/gui/wheel.png");
-    private static final ResourceLocation HIGHLIGHT = ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, "textures/gui/wheel_hilight.png");
+    private static final Identifier WHEEL = Identifier.fromNamespaceAndPath(MeeCreeps.MODID, "textures/gui/wheel.png");
+    private static final Identifier HIGHLIGHT = Identifier.fromNamespaceAndPath(MeeCreeps.MODID, "textures/gui/wheel_hilight.png");
     // Position of each 63x63 segment in the original highlight atlas, clockwise from the top.
     private static final int[][] SEGMENT_POSITIONS = {
             {78, 0}, {107, 22}, {107, 78}, {78, 108},
@@ -47,7 +45,7 @@ public class GuiWheel extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
         // Keep the world and HUD clear beneath this transparent overlay.
     }
 
@@ -71,12 +69,13 @@ public class GuiWheel extends Screen {
     }
 
     private void command(String cmd, int index) {
-        MeeCreepsMessages.INSTANCE.sendToServer(new PacketSendServerCommand(MeeCreeps.MODID, cmd,
-                TypedMap.builder().put(CommandHandler.PARAM_ID, index).build()));
+        MeeCreepsMessages.INSTANCE.sendToServer(new PacketServerCommand(cmd, index));
     }
 
     @Override
-    public boolean mouseClicked(double x, double y, int button) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double x = event.x(), y = event.y();
+        int button = event.button();
         int index = section(x, y);
         if (index < 0) {
             onClose();
@@ -98,37 +97,37 @@ public class GuiWheel extends Screen {
         } else if (selectedBlock != null) {
             BlockPos pos = TeleportationTools.findBestPosition(minecraft.level, selectedBlock, selectedSide);
             if (pos != null) {
-                minecraft.setScreen(new GuiAskName(index, new TeleportDestination("", minecraft.level.dimension(), pos, selectedSide)));
+                minecraft.gui.setScreen(new GuiAskName(index, new TeleportDestination("", minecraft.level.dimension(), pos, selectedSide)));
             }
         }
         return true;
     }
 
     @Override
-    public boolean keyPressed(int key, int scan, int modifiers) {
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        int key = event.key();
         if ((key == GLFW.GLFW_KEY_DELETE || key == GLFW.GLFW_KEY_BACKSPACE) && selected >= 0) {
             command(CommandHandler.CMD_DELETE_DESTINATION, selected);
             return true;
         }
-        return super.keyPressed(key, scan, modifiers);
+        return super.keyPressed(event);
     }
 
-    private void drawSelectedSection(GuiGraphics graphics, int slot, int textureRow) {
+    private void drawSelectedSection(GuiGraphicsExtractor graphics, int slot, int textureRow) {
         int segment = Math.floorMod(slot - SLOT_OFFSET, 8);
         int[] pos = SEGMENT_POSITIONS[segment];
-        graphics.blit(HIGHLIGHT, left() + pos[0], top() + pos[1],
-                (segment % 4) * 64, textureRow + (segment / 4) * 64, 63, 63);
+        graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, HIGHLIGHT, left() + pos[0], top() + pos[1],
+                (segment % 4) * 64, textureRow + (segment / 4) * 64, 63, 63, 256, 256);
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         selected = section(mouseX, mouseY);
         var gun = PortalGunItem.getGun(minecraft.player);
         var destinations = PortalGunItem.getDestinations(gun);
 
         // Keep the world visible through the wheel's transparent center, as in 1.12.2.
-        RenderSystem.enableBlend();
-        graphics.blit(WHEEL, left(), top(), 0, 0, SIZE, SIZE);
+        graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, WHEEL, left(), top(), 0, 0, SIZE, SIZE, 256, 256);
         if (selected >= 0) {
             drawSelectedSection(graphics, selected, 0);
         }
@@ -136,7 +135,6 @@ public class GuiWheel extends Screen {
         if (current >= 0 && current < 8 && destinations.get(current) != null) {
             drawSelectedSection(graphics, current, 128);
         }
-        RenderSystem.disableBlend();
 
         for (int slot = 0; slot < 8; slot++) {
             var destination = destinations.get(slot);
@@ -147,9 +145,9 @@ public class GuiWheel extends Screen {
             double angle = segment * Math.PI / 4 - Math.PI / 2 + Math.PI / 8;
             int x = (int) (left() + 80 + 60 * Math.cos(angle));
             int y = (int) (top() + 80 + 60 * Math.sin(angle));
-            graphics.drawCenteredString(font, destination.getName(), x, y - font.lineHeight / 2, 0xffffffff);
+            graphics.centeredText(font, destination.getName(), x, y - font.lineHeight / 2, 0xffffffff);
         }
-        super.render(graphics, mouseX, mouseY, partial);
+        super.extractRenderState(graphics, mouseX, mouseY, partial);
 
         if (selected >= 0) {
             var destination = destinations.get(selected);
@@ -165,7 +163,7 @@ public class GuiWheel extends Screen {
                     int distance = (int) Math.sqrt(pos.distSqr(minecraft.player.blockPosition()));
                     description = Component.literal(coordinates + " (" + distance + " blocks)");
                 } else {
-                    description = Component.literal(coordinates + " (dim " + destination.getDimension().location() + ")");
+                    description = Component.literal(coordinates + " (dim " + destination.getDimension().identifier() + ")");
                 }
                 tooltip.add(hint("Click: ", "to set this destination as current"));
                 if (selectedBlock != null) {
@@ -173,8 +171,8 @@ public class GuiWheel extends Screen {
                 }
                 tooltip.add(hint("Del: ", "to remove this destination"));
             }
-            graphics.drawCenteredString(font, description, left() + SIZE / 2, top() + SIZE + 5, 0xffffffff);
-            graphics.renderComponentTooltip(font, tooltip, mouseX, mouseY);
+            graphics.centeredText(font, description, left() + SIZE / 2, top() + SIZE + 5, 0xffffffff);
+            graphics.setTooltipForNextFrame(font, tooltip, java.util.Optional.empty(), mouseX, mouseY);
         }
     }
 

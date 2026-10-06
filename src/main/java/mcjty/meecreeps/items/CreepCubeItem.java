@@ -22,28 +22,28 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import java.util.List;
 
 public class CreepCubeItem extends Item {
 
     public CreepCubeItem() {
-        super(new Item.Properties().stacksTo(1));
+        super(new Item.Properties().setId(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.ITEM, net.minecraft.resources.Identifier.fromNamespaceAndPath("meecreeps", "creepcube"))).stacksTo(1));
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display, java.util.function.Consumer<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
         for (String line : StringUtils.split(I18n.get("message.meecreeps.tooltip.cube_intro"), "\n"))
-            tooltip.add(net.minecraft.network.chat.Component.literal(line));
+            tooltip.accept(net.minecraft.network.chat.Component.literal(line));
 
         MeeCreepActionType lastAction = getLastAction(stack);
         if (lastAction != null && MeeCreeps.api.getFactory(lastAction) != null) {
             MeeCreepsApi.Factory factory = MeeCreeps.api.getFactory(lastAction);
-            tooltip.add(net.minecraft.network.chat.Component.translatable(factory.getMessage()).withStyle(ChatFormatting.YELLOW));
+            tooltip.accept(net.minecraft.network.chat.Component.translatable(factory.getMessage()).withStyle(ChatFormatting.YELLOW));
         }
         if (isLimited()) {
             for (String line : StringUtils.split(I18n.get("message.meecreeps.tooltip.cube_uses", Integer.toString(ConfigSetup.meeCreepBoxMaxUsage.get() - getUsages(stack))), "\n"))
-                tooltip.add(net.minecraft.network.chat.Component.literal(line));
+                tooltip.accept(net.minecraft.network.chat.Component.literal(line));
         }
     }
 
@@ -74,7 +74,7 @@ public class CreepCubeItem extends Item {
         if (!StackData.get(cube).contains("lastType")) {
             return null;
         }
-        String lastType = StackData.get(cube).getString("lastType");
+        String lastType = StackData.get(cube).getStringOr("lastType", "");
         return new MeeCreepActionType(lastType);
     }
 
@@ -86,7 +86,7 @@ public class CreepCubeItem extends Item {
         if (!StackData.get(cube).contains("lastQuestion")) {
             return null;
         }
-        return StackData.get(cube).getString("lastQuestion");
+        return StackData.get(cube).getStringOr("lastQuestion", "");
     }
 
     public static void setUsages(ItemStack stack, int uses) {
@@ -97,7 +97,7 @@ public class CreepCubeItem extends Item {
         if (!StackData.has(stack)) {
             return 0;
         }
-        return StackData.get(stack).getInt("uses");
+        return StackData.get(stack).getIntOr("uses", 0);
     }
 
     @Override
@@ -132,7 +132,7 @@ public class CreepCubeItem extends Item {
         InteractionHand hand = context.getHand();
         if (player == null)
             return InteractionResult.PASS;
-        if (world.isClientSide) {
+        if (world.isClientSide()) {
             return InteractionResult.SUCCESS;
         }
 

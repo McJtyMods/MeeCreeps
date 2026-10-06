@@ -19,16 +19,16 @@ public class TeleportDestination {
     }
 
     public TeleportDestination(CompoundTag tc) {
-        name = tc.getString("name");
-        dimension = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, net.minecraft.resources.ResourceLocation.parse(tc.getString("dim")));
-        pos = new BlockPos(tc.getInt("x"), tc.getInt("y"), tc.getInt("z"));
-        side = Direction.values()[tc.getByte("side")];
+        name = tc.getStringOr("name", "");
+        dimension = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, net.minecraft.resources.Identifier.parse(tc.getStringOr("dim", "")));
+        pos = new BlockPos(tc.getIntOr("x", 0), tc.getIntOr("y", 0), tc.getIntOr("z", 0));
+        side = Direction.values()[tc.getByteOr("side", (byte) 0)];
     }
 
     public CompoundTag getCompound() {
         CompoundTag tc = new CompoundTag();
         tc.putString("name", getName());
-        tc.putString("dim", getDimension().location().toString());
+        tc.putString("dim", getDimension().identifier().toString());
         tc.putByte("side", (byte) getSide().ordinal());
         tc.putInt("x", getPos().getX());
         tc.putInt("y", getPos().getY());

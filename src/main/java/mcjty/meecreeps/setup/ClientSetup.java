@@ -12,7 +12,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.*;
 
-@EventBusSubscriber(modid = MeeCreeps.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = MeeCreeps.MODID, value = Dist.CLIENT)
 public final class ClientSetup {
     @SubscribeEvent
     public static void renderers(EntityRenderersEvent.RegisterRenderers e) {
@@ -34,6 +34,6 @@ public final class ClientSetup {
     public static void openWheel(BlockPos pos, Direction side) {
         GuiWheel.selectedBlock = pos;
         GuiWheel.selectedSide = side;
-        Minecraft.getInstance().setScreen(new GuiWheel());
+        Minecraft.getInstance().gui.setScreen(new GuiWheel());
     }
 }

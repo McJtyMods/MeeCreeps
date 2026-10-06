@@ -1,14 +1,14 @@
 package mcjty.meecreeps.actions;
 
 import net.minecraft.network.FriendlyByteBuf;
-import mcjty.lib.network.NetworkTools;
+import mcjty.meecreeps.network.NetworkTools;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class PacketPerformAction implements CustomPacketPayload {
-    public static final Type<PacketPerformAction> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("meecreeps", "packet_perform_action"));
+    public static final Type<PacketPerformAction> TYPE = new Type<>(Identifier.fromNamespaceAndPath("meecreeps", "packet_perform_action"));
     public static final StreamCodec<FriendlyByteBuf, PacketPerformAction> CODEC = StreamCodec.of((buf, packet) -> packet.toBytes(buf), PacketPerformAction::new);
     @Override
     public Type<PacketPerformAction> type() { return TYPE; }

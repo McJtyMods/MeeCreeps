@@ -30,7 +30,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.*;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.*;
 import net.minecraft.world.*;
 import net.minecraft.world.damagesource.DamageSource;
@@ -38,7 +38,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.nbt.Tag;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import java.util.function.Predicate;
 
 public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
@@ -46,7 +46,7 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
     private static final EntityDataAccessor<Optional<BlockState>> CARRIED_BLOCK = SynchedEntityData.<Optional<BlockState>>defineId(EntityMeeCreeps.class, EntityDataSerializers.OPTIONAL_BLOCK_STATE);
     private static final EntityDataAccessor<Integer> FACE_VARIATION = SynchedEntityData.<Integer>defineId(EntityMeeCreeps.class, EntityDataSerializers.INT);
 
-    public static final ResourceLocation LOOT = ResourceLocation.fromNamespaceAndPath(MeeCreeps.MODID, "entities/meecreeps");
+    public static final Identifier LOOT = Identifier.fromNamespaceAndPath(MeeCreeps.MODID, "entities/meecreeps");
 
     public static final int INVENTORY_SIZE = 4;
 
@@ -60,22 +60,22 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
 
     public EntityMeeCreeps(net.minecraft.world.entity.EntityType<? extends EntityMeeCreeps> type, Level worldIn) {
         super(type, worldIn);
-        variationHair = worldIn.random.nextInt(9);
+        variationHair = worldIn.getRandom().nextInt(9);
         setPersistenceRequired();
     }
 
     public EntityMeeCreeps(Level world) {
-        this(Registration.CREEP.get(), world);
+        this(mcjty.meecreeps.setup.Registration.CREEP.get(), world);
     }
 
     @Override
-    public boolean isInvulnerableTo(DamageSource source) {
+    public boolean isInvulnerableTo(net.minecraft.server.level.ServerLevel server, DamageSource source) {
         return source.is(net.minecraft.world.damagesource.DamageTypes.CACTUS)
                 || source.is(net.minecraft.world.damagesource.DamageTypes.DROWN)
                 || source.is(net.minecraft.world.damagesource.DamageTypes.FALL)
                 || source.is(net.minecraft.world.damagesource.DamageTypes.IN_WALL)
                 || source.is(net.minecraft.world.damagesource.DamageTypes.CRAMMING)
-                || super.isInvulnerableTo(source);
+                || super.isInvulnerableTo(server, source);
     }
 
     @Override
@@ -102,10 +102,10 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
-        int variationFace = level().random.nextInt(9);
+        int variationFace = level().getRandom().nextInt(9);
         // Avoid the engry face
         while (variationFace == 1) {
-            variationFace = level().random.nextInt(9);
+            variationFace = level().getRandom().nextInt(9);
         }
         builder.define(CARRIED_BLOCK, Optional.empty());
         builder.define(FACE_VARIATION, variationFace);
@@ -145,7 +145,7 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
-        if (player.level().isClientSide) {
+        if (player.level().isClientSide()) {
             return InteractionResult.SUCCESS;
         } else {
             ServerActionManager manager = ServerActionManager.getManager();
@@ -163,7 +163,7 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
     @Override
     public void tick() {
         super.tick();
-        if (!level().isClientSide) {
+        if (!level().isClientSide()) {
             ServerActionManager manager = ServerActionManager.getManager();
             if (actionId != 0) {
                 ActionOptions options = manager.getOptions(actionId);
@@ -175,12 +175,6 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
                 }
             }
         }
-    }
-
-    @Override
-    @Nullable
-    protected net.minecraft.resources.ResourceKey<net.minecraft.world.level.storage.loot.LootTable> getDefaultLootTable() {
-        return net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.LOOT_TABLE, LOOT);
     }
 
     public void setHeldBlockState(@Nullable BlockState state) {
@@ -207,7 +201,7 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
         if (state == null) {
             return;
         }
-        if (state.getBlock() == Registration.CUBE.get()) {
+        if (state.getBlock() == mcjty.meecreeps.setup.Registration.CUBE.get()) {
             return;
         }
 
@@ -220,7 +214,7 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
             tc.putInt("z", pos.getZ());
             BlockEntity tileEntity = level().getBlockEntity(pos);
             if (tileEntity != null) {
-                tileEntity.loadWithComponents(tc, level().registryAccess());
+                tileEntity.loadWithComponents(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, level().registryAccess(), tc));
                 tileEntity.setChanged();
                 level().sendBlockUpdated(pos, state, state, 3);
             }
@@ -355,7 +349,7 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
         for (int i = 0; i < inventory.size(); i++) {
             ItemStack stack = inventory.get(i);
             if (!stack.isEmpty()) {
-                spawnAtLocation(stack, 0.0f);
+                spawnAtLocation((net.minecraft.server.level.ServerLevel) level(), stack, 0.0f);
             }
             inventory.set(i, ItemStack.EMPTY);
         }
@@ -385,37 +379,47 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag compound) {
-        super.readAdditionalSaveData(compound);
-        actionId = compound.getInt("actionId");
-        ListTag list = compound.getList("items", Tag.TAG_COMPOUND);
-        for (int i = 0; i < list.size(); i++) {
-            if (i < inventory.size()) {
-                inventory.set(i, ItemStack.parseOptional(level().registryAccess(), list.getCompound(i)));
-            }
-        }
-        if (compound.contains("worker") && workerTask != null) {
-            workerTask.readFromNBT(compound.getCompound("worker"));
-        }
-
-        setHeldBlockState(compound.contains("carried", Tag.TAG_COMPOUND)
-                ? net.minecraft.nbt.NbtUtils.readBlockState(level().holderLookup(net.minecraft.core.registries.Registries.BLOCK), compound.getCompound("carried")) : null);
-        variationHair = compound.getInt("hair");
-        setVariationFace(compound.getInt("face"));
-        if (compound.contains("carriedNBT")) {
-            carriedNBT = compound.getCompound("carriedNBT");
-        }
+    public void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput input) {
+        super.readAdditionalSaveData(input);
+        readAdditionalSaveData(input.read("meecreeps", CompoundTag.CODEC).orElseGet(CompoundTag::new));
     }
 
     @Override
+    public void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        CompoundTag data = new CompoundTag();
+        addAdditionalSaveData(data);
+        output.store("meecreeps", CompoundTag.CODEC, data);
+    }
+
+    public void readAdditionalSaveData(CompoundTag compound) {
+        actionId = compound.getIntOr("actionId", 0);
+        ListTag list = compound.getListOrEmpty("items");
+        for (int i = 0; i < list.size(); i++) {
+            if (i < inventory.size()) {
+                inventory.set(i, mcjty.meecreeps.varia.ItemSerialization.load(level().registryAccess(), list.getCompoundOrEmpty(i)));
+            }
+        }
+        if (compound.contains("worker") && workerTask != null) {
+            workerTask.readFromNBT(compound.getCompoundOrEmpty("worker"));
+        }
+
+        setHeldBlockState(compound.contains("carried")
+                ? net.minecraft.nbt.NbtUtils.readBlockState(level().holderLookup(net.minecraft.core.registries.Registries.BLOCK), compound.getCompoundOrEmpty("carried")) : null);
+        variationHair = compound.getIntOr("hair", 0);
+        setVariationFace(compound.getIntOr("face", 0));
+        if (compound.contains("carriedNBT")) {
+            carriedNBT = compound.getCompoundOrEmpty("carriedNBT");
+        }
+    }
+
     public void addAdditionalSaveData(CompoundTag compound) {
-        super.addAdditionalSaveData(compound);
         compound.putInt("actionId", actionId);
         compound.putInt("hair", variationHair);
         compound.putInt("face", getVariationFace());
         ListTag list = new ListTag();
         for (ItemStack stack : inventory) {
-            list.add(stack.saveOptional(level().registryAccess()));
+            list.add(mcjty.meecreeps.varia.ItemSerialization.save(level().registryAccess(), stack));
         }
         compound.put("items", list);
         if (workerTask != null) {
@@ -452,17 +456,18 @@ public class EntityMeeCreeps extends PathfinderMob implements IMeeCreep {
         dropInventory();
         placeDownBlock(blockPosition());
         BlockState carried = getHeldBlockState();
-        if (carried != null && carried.getBlock() != Registration.CUBE.get()) {
+        if (carried != null && carried.getBlock() != mcjty.meecreeps.setup.Registration.CUBE.get()) {
             ItemStack drop = new ItemStack(carried.getBlock());
             if (!drop.isEmpty()) {
                 if (carriedNBT != null)
-                    drop.set(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA, net.minecraft.world.item.component.CustomData.of(carriedNBT));
-                var properties = net.minecraft.nbt.NbtUtils.writeBlockState(carried).getCompound("Properties");
+                    net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE.get(net.minecraft.resources.Identifier.parse(carriedNBT.getStringOr("id", "minecraft:chest"))).ifPresent(type ->
+                        drop.set(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA, net.minecraft.world.item.component.TypedEntityData.of(type.value(), carriedNBT)));
+                var properties = net.minecraft.nbt.NbtUtils.writeBlockState(carried).getCompoundOrEmpty("Properties");
                 if (!properties.isEmpty())
                     drop.set(net.minecraft.core.component.DataComponents.BLOCK_STATE,
-                            new net.minecraft.world.item.component.BlockItemStateProperties(properties.getAllKeys().stream()
-                                    .collect(java.util.stream.Collectors.toMap(key -> key, properties::getString))));
-                spawnAtLocation(drop);
+                            new net.minecraft.world.item.component.BlockItemStateProperties(properties.keySet().stream()
+                                    .collect(java.util.stream.Collectors.toMap(key -> key, key -> properties.getStringOr(key, "")))));
+                spawnAtLocation((net.minecraft.server.level.ServerLevel) level(), drop);
             }
             carriedNBT = null;
             setHeldBlockState(null);

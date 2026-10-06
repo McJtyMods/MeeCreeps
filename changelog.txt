@@ -1,3 +1,10 @@
+26.2-4.0.0
+    - Ported to Minecraft 26.2 with NeoForge and Java 25
+    - Disabled Interaction Wheel integration; built-in portal destination screen remains available
+    - Updated The One Probe integration to its 26.2 release
+    - Removed McJtyLib dependency; commands, networking, sounds, and world data are handled internally
+    - Updated rendering, persistence, recipes, item definitions, and transactional energy/inventory APIs
+
 3.0.0 (Minecraft 1.21.1 / NeoForge):
 - Ported to Java 21, NeoForge, and ModDevGradle.
 - Migrated item data, energy capabilities, networking, entity rendering, saved inventories, and cross-dimension teleportation to Minecraft 1.21.1 APIs.

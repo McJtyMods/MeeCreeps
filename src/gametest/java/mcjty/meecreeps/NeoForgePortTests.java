@@ -12,7 +12,6 @@ import mcjty.meecreeps.teleport.TeleportDestination;
 import mcjty.meecreeps.varia.EntityTeleportation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
@@ -22,15 +21,10 @@ import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
 
-@GameTestHolder("meecreeps")
-@PrefixGameTestTemplate(false)
 public class NeoForgePortTests {
-    @GameTest(template = "empty")
     public static void componentsCopySyncAndRecipeRemainders(GameTestHelper test) {
         var registries = test.getLevel().registryAccess();
         ItemStack gun = new ItemStack(Registration.GUN.get());
@@ -50,13 +44,13 @@ public class NeoForgePortTests {
         } finally {
             buf.release();
         }
-        var remove = new RemoveCartridgeFactory(CraftingBookCategory.MISC);
+        var remove = new RemoveCartridgeFactory();
         var input = CraftingInput.of(1, 1, List.of(gun));
         ItemStack remainder = remove.getRemainingItems(input).getFirst();
         test.assertTrue(ItemEnergy.stored(remainder) == 0, "Empty gun retained removed cartridge energy");
-        var insert = new InsertCartridgeFactory(CraftingBookCategory.MISC);
+        var insert = new InsertCartridgeFactory();
         ItemStack assembled = insert.assemble(CraftingInput.of(2, 1,
-                List.of(remainder, new ItemStack(Registration.CARTRIDGE.get()))), registries);
+                List.of(remainder, new ItemStack(Registration.CARTRIDGE.get()))));
         test.assertTrue(ItemEnergy.stored(assembled) == 0, "Empty cartridge inherited stale energy");
         test.assertTrue(PortalGunItem.getDestinations(assembled).get(2) != null, "Empty gun lost destinations");
         ItemStack cube = new ItemStack(Registration.CUBE_ITEM.get());
@@ -66,7 +60,6 @@ public class NeoForgePortTests {
         test.succeed();
     }
 
-    @GameTest(template = "empty")
     public static void harvestingAndReplantingUseBlockItemSeeds(GameTestHelper test) {
         var world = test.getLevel();
         BlockPos chest = test.absolutePos(new BlockPos(1, 1, 1));
@@ -101,12 +94,11 @@ public class NeoForgePortTests {
         test.succeed();
     }
 
-    @GameTest(template = "empty")
     public static void dimensionTransitionPreservesCarriedItems(GameTestHelper test) {
         var world = test.getLevel();
         var target = world.getServer().getLevel(Level.NETHER);
         var creep = new EntityMeeCreeps(world);
-        creep.moveTo(test.absoluteVec(new net.minecraft.world.phys.Vec3(3.5, 1, 3.5)));
+        creep.snapTo(test.absoluteVec(new net.minecraft.world.phys.Vec3(3.5, 1, 3.5)));
         creep.addStack(new ItemStack(Items.DIAMOND, 3));
         world.addFreshEntity(creep);
         var moved = EntityTeleportation.teleportEntity(creep, target, 0.5, 100, 0.5, Direction.EAST);
@@ -119,4 +111,43 @@ public class NeoForgePortTests {
         teleported.discard();
         test.succeed();
     }
+    public static void commandPayloadPreservesFieldsAndChecksOwnership(GameTestHelper test) {
+        var buf = new net.minecraft.network.FriendlyByteBuf(Unpooled.buffer());
+        var position = new BlockPos(2, 70, 4);
+        try {
+            var packet = new mcjty.meecreeps.network.PacketServerCommand(CommandHandler.CMD_CANCEL_PORTAL, position);
+            mcjty.meecreeps.network.PacketServerCommand.CODEC.encode(buf, packet);
+            test.assertTrue(packet.equals(mcjty.meecreeps.network.PacketServerCommand.CODEC.decode(buf)), "Command lost portal position");
+            packet = new mcjty.meecreeps.network.PacketServerCommand(CommandHandler.CMD_SET_CURRENT, 2);
+            mcjty.meecreeps.network.PacketServerCommand.CODEC.encode(buf, packet);
+            test.assertTrue(packet.equals(mcjty.meecreeps.network.PacketServerCommand.CODEC.decode(buf)), "Command lost destination index");
+        } finally {
+            buf.release();
+        }
+        var world = test.getLevel();
+        var owner = new net.minecraft.server.level.ServerPlayer(world.getServer(), world,
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "Owner"),
+                net.minecraft.server.level.ClientInformation.createDefault());
+        var stranger = new net.minecraft.server.level.ServerPlayer(world.getServer(), world,
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "Stranger"),
+                net.minecraft.server.level.ClientInformation.createDefault());
+        var manager = ServerActionManager.getManager();
+        int id = manager.createActionOptions(world, test.absolutePos(BlockPos.ZERO), Direction.UP, owner);
+        var options = manager.getOptions(id);
+        options.setPaused(true);
+        CommandHandler.handle(stranger, CommandHandler.CMD_RESUME_ACTION, id, null);
+        test.assertTrue(options.isPaused(), "Another player resumed the owner's task");
+        CommandHandler.handle(owner, CommandHandler.CMD_RESUME_ACTION, id, null);
+        test.assertTrue(!options.isPaused(), "Owner could not resume task");
+        var gun = new ItemStack(Registration.GUN.get());
+        owner.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, gun);
+        PortalGunItem.addDestination(gun, new TeleportDestination("Home", world.dimension(), position, Direction.NORTH), 2);
+        CommandHandler.handle(owner, CommandHandler.CMD_DELETE_DESTINATION, 8, null);
+        test.assertTrue(PortalGunItem.getDestinations(gun).get(2) != null, "Invalid slot changed destinations");
+        CommandHandler.handle(owner, CommandHandler.CMD_DELETE_DESTINATION, 2, null);
+        test.assertTrue(PortalGunItem.getDestinations(gun).get(2) == null, "Owner could not delete destination");
+        CommandHandler.handle(owner, CommandHandler.CMD_CANCEL_ACTION, id, null);
+        test.succeed();
+    }
+
 }

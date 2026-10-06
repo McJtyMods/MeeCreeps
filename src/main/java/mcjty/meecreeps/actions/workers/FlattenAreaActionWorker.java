@@ -5,7 +5,7 @@ import mcjty.meecreeps.api.IWorkerHelper;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

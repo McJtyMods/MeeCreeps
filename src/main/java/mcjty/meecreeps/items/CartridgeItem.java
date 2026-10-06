@@ -10,7 +10,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -23,13 +22,13 @@ import java.util.List;
 public class CartridgeItem extends Item {
 
     public CartridgeItem() {
-        super(new Item.Properties().stacksTo(1));
+        super(new Item.Properties().setId(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.ITEM, net.minecraft.resources.Identifier.fromNamespaceAndPath("meecreeps", "cartridge"))).stacksTo(1));
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display, java.util.function.Consumer<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
         for (String line : StringUtils.split(I18n.get("message.meecreeps.tooltip.cartridge_item", Integer.toString(getCharge(stack))), "\n"))
-            tooltip.add(net.minecraft.network.chat.Component.literal(line));
+            tooltip.accept(net.minecraft.network.chat.Component.literal(line));
     }
 
     public static void setCharge(ItemStack stack, int charge) {
@@ -40,7 +39,7 @@ public class CartridgeItem extends Item {
         if (!StackData.has(stack)) {
             return 0;
         }
-        return StackData.get(stack).getInt("charge");
+        return StackData.get(stack).getIntOr("charge", 0);
     }
 
     @Override
@@ -68,18 +67,18 @@ public class CartridgeItem extends Item {
         InteractionHand hand = context.getHand();
         if (player == null)
             return InteractionResult.PASS;
-        if (!world.isClientSide) {
+        if (!world.isClientSide()) {
             chargeCartridge(player, world, pos, hand);
         }
         return InteractionResult.SUCCESS;
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
-        if (!world.isClientSide) {
+    public InteractionResult use(Level world, Player player, InteractionHand hand) {
+        if (!world.isClientSide()) {
             chargeCartridge(player, world, player.blockPosition(), hand);
         }
-        return new InteractionResultHolder<>(InteractionResult.SUCCESS, player.getItemInHand(hand));
+        return InteractionResult.SUCCESS;
     }
 
     private void chargeCartridge(Player player, Level world, BlockPos pos, InteractionHand hand) {

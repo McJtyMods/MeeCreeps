@@ -10,7 +10,7 @@ public class ClientActionManager {
 
     public static void showActionOptions(ActionOptions options, int guiid) {
         lastOptions = options;
-        Minecraft.getInstance().setScreen(new GuiMeeCreeps(guiid));
+        Minecraft.getInstance().gui.setScreen(new GuiMeeCreeps(guiid));
     }
 
     public static void showProblem(String message, String... parameters) {

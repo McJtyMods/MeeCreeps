@@ -1,6 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.lib.varia.Counter;
+import java.util.HashMap;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.config.ConfigSetup;
@@ -21,7 +21,7 @@ import java.util.*;
 public class ChopTreeActionWorker extends AbstractActionWorker {
 
     protected List<BlockPos> blocks = new ArrayList<>();
-    protected Counter<BlockPos> leavesToTick = new Counter<>();
+    protected HashMap<BlockPos, Integer> leavesToTick = new HashMap<>();
 
     public ChopTreeActionWorker(IWorkerHelper helper) {
         super(helper);
@@ -136,7 +136,7 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
     private void decayLeaves() {
         IMeeCreep entity = helper.getMeeCreep();
         Level world = entity.getWorld();
-        Counter<BlockPos> newmap = new Counter<>();
+        HashMap<BlockPos, Integer> newmap = new HashMap<>();
         for (Map.Entry<BlockPos, Integer> entry : leavesToTick.entrySet()) {
             BlockPos pos = entry.getKey();
             if (!world.isEmptyBlock(pos)) {
@@ -177,17 +177,17 @@ public class ChopTreeActionWorker extends AbstractActionWorker {
 
     @Override
     public void readFromNBT(CompoundTag tag) {
-        ListTag list = tag.getList("blocks", Tag.TAG_LONG);
+        ListTag list = tag.getListOrEmpty("blocks");
         blocks.clear();
         for (int i = 0; i < list.size(); i++) {
-            blocks.add(BlockPos.of(((LongTag) list.get(i)).getAsLong()));
+            blocks.add(BlockPos.of(((LongTag) list.get(i)).longValue()));
         }
-        list = tag.getList("leaves", Tag.TAG_COMPOUND);
+        list = tag.getListOrEmpty("leaves");
         leavesToTick.clear();
         for (int i = 0; i < list.size(); i++) {
-            CompoundTag tc = list.getCompound(i);
-            BlockPos pos = BlockPos.of(tc.getLong("p"));
-            int counter = tc.getInt("c");
+            CompoundTag tc = list.getCompoundOrEmpty(i);
+            BlockPos pos = BlockPos.of(tc.getLongOr("p", 0L));
+            int counter = tc.getIntOr("c", 0);
             leavesToTick.put(pos, counter);
         }
     }

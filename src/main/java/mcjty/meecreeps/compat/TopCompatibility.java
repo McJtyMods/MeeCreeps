@@ -19,7 +19,7 @@ public class TopCompatibility implements Function<ITheOneProbe, Void> {
             }
 
             public void addProbeEntityInfo(ProbeMode mode, IProbeInfo info, Player player, Level world, Entity entity, IProbeHitEntityData data) {
-                if (world.isClientSide || !(entity instanceof EntityMeeCreeps creep))
+                if (world.isClientSide() || !(entity instanceof EntityMeeCreeps creep))
                     return;
                 var options = ServerActionManager.getManager().getOptions(creep.getActionId());
                 if (options != null && options.getTask() != null) {

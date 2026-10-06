@@ -1,6 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.lib.varia.SoundTools;
+import mcjty.meecreeps.varia.SoundTools;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.varia.GeneralTools;
@@ -319,8 +319,8 @@ public class DigTunnelActionWorker extends AbstractActionWorker {
 
     @Override
     public void readFromNBT(CompoundTag tag) {
-        offset = tag.getInt("offset");
-        blockidx = tag.getInt("blockidx");
+        offset = tag.getIntOr("offset", 0);
+        blockidx = tag.getIntOr("blockidx", 0);
     }
 
     @Override

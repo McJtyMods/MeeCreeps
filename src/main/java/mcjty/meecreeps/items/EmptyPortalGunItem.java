@@ -6,7 +6,6 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -19,13 +18,13 @@ import java.util.List;
 public class EmptyPortalGunItem extends Item {
 
     public EmptyPortalGunItem() {
-        super(new Item.Properties().stacksTo(1));
+        super(new Item.Properties().setId(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.ITEM, net.minecraft.resources.Identifier.fromNamespaceAndPath("meecreeps", "emptyportalgun"))).stacksTo(1));
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display, java.util.function.Consumer<net.minecraft.network.chat.Component> tooltip, TooltipFlag flagIn) {
         for (String line : StringUtils.split(I18n.get("message.meecreeps.tooltip.emptyportalgun"), "\n"))
-            tooltip.add(net.minecraft.network.chat.Component.literal(line));
+            tooltip.accept(net.minecraft.network.chat.Component.literal(line));
     }
 
     @Override
@@ -37,7 +36,7 @@ public class EmptyPortalGunItem extends Item {
         InteractionHand hand = context.getHand();
         if (player == null)
             return InteractionResult.PASS;
-        if (world.isClientSide) {
+        if (world.isClientSide()) {
             ClientActionManager.showProblem("message.meecreeps.missing_cartridge");
             return InteractionResult.SUCCESS;
         }
@@ -51,11 +50,11 @@ public class EmptyPortalGunItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
-        if (world.isClientSide) {
+    public InteractionResult use(Level world, Player player, InteractionHand hand) {
+        if (world.isClientSide()) {
 //            BlockPos pos = player.blockPosition();
             ClientActionManager.showProblem("message.meecreeps.missing_cartridge");
         }
-        return new InteractionResultHolder<>(InteractionResult.SUCCESS, player.getItemInHand(hand));
+        return InteractionResult.SUCCESS;
     }
 }

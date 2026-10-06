@@ -7,7 +7,6 @@ import mcjty.meecreeps.entities.EntityMeeCreeps;
 import mcjty.meecreeps.varia.ChestAnimation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -16,13 +15,9 @@ import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
 
-@GameTestHolder("meecreeps")
-@PrefixGameTestTemplate(false)
 public class ChestAnimationTests {
     // The dedicated server does not normally tick lids; tick the same controller
     // the client uses to verify that the server block events open and close it.
@@ -30,7 +25,6 @@ public class ChestAnimationTests {
         ChestBlockEntity.lidAnimateTick(chest.getLevel(), chest.getBlockPos(), chest.getBlockState(), chest);
     }
 
-    @GameTest(template = "empty", timeoutTicks = 60)
     public static void depositsAndWithdrawalsAnimate(GameTestHelper test) {
         var level = test.getLevel();
         BlockPos pos = test.absolutePos(new BlockPos(3, 1, 3));
@@ -81,7 +75,6 @@ public class ChestAnimationTests {
         });
     }
 
-    @GameTest(template = "empty", timeoutTicks = 50)
     public static void doubleChestRefreshesAndCloses(GameTestHelper test) {
         var level = test.getLevel();
         BlockPos pos = test.absolutePos(new BlockPos(3, 1, 3));
@@ -109,7 +102,6 @@ public class ChestAnimationTests {
         });
     }
 
-    @GameTest(template = "empty", timeoutTicks = 40)
     public static void expiryPreservesPlayerOpening(GameTestHelper test) {
         var level = test.getLevel();
         BlockPos pos = test.absolutePos(new BlockPos(3, 1, 3));

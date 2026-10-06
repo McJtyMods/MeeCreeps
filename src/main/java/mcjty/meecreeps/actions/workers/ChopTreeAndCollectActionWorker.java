@@ -1,6 +1,6 @@
 package mcjty.meecreeps.actions.workers;
 
-import mcjty.lib.varia.Counter;
+import java.util.HashMap;
 import mcjty.meecreeps.api.IMeeCreep;
 import mcjty.meecreeps.api.IWorkerHelper;
 import mcjty.meecreeps.api.PreferedChest;
@@ -71,7 +71,7 @@ public class ChopTreeAndCollectActionWorker extends ChopTreeActionWorker {
     private void decayLeaves() {
         IMeeCreep entity = helper.getMeeCreep();
         Level world = entity.getWorld();
-        Counter<BlockPos> newmap = new Counter<>();
+        HashMap<BlockPos, Integer> newmap = new HashMap<>();
         for (Map.Entry<BlockPos, Integer> entry : leavesToTick.entrySet()) {
             BlockPos pos = entry.getKey();
             if (!world.isEmptyBlock(pos)) {

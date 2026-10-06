@@ -8,7 +8,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 public class AngryActionFactory implements IActionFactory {
 
@@ -24,7 +24,7 @@ public class AngryActionFactory implements IActionFactory {
     }
 
     @Override
-    public IActionWorker createWorker(@Nonnull IWorkerHelper helper) {
+    public IActionWorker createWorker(@NonNull IWorkerHelper helper) {
         return new AngryActionWorker(helper);
     }
 }

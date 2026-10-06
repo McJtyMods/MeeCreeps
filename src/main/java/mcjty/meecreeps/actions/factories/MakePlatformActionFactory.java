@@ -10,8 +10,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +33,7 @@ public class MakePlatformActionFactory implements IActionFactory {
         return "message.meecreeps.action.platform_size";
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public List<Pair<String, String>> getFurtherQuestions(Level world, BlockPos pos, Direction side) {
         List<Pair<String, String>> result = new ArrayList<>();
@@ -45,7 +45,7 @@ public class MakePlatformActionFactory implements IActionFactory {
 
     @Nullable
     @Override
-    public IActionWorker createWorker(@Nonnull IWorkerHelper helper) {
+    public IActionWorker createWorker(@NonNull IWorkerHelper helper) {
         return new MakePlatformActionWorker(helper);
     }
 }

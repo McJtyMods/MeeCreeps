@@ -9,8 +9,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -63,7 +63,7 @@ public interface IWorkerHelper {
      * Given a schematic, find the closest block that needs flattening. The position returned
      * is an absolute position and not a relative one!
      */
-    BlockPos findSpotToFlatten(@Nonnull IBuildSchematic schematic);
+    BlockPos findSpotToFlatten(@NonNull IBuildSchematic schematic);
 
     /**
      * Given a schematic find the closest block on the current height level that we have to build.
@@ -72,7 +72,7 @@ public interface IWorkerHelper {
      * The toSkip set contains relative positions that were skipped due to lack of optional blocks. This set
      * will be modified if another such block is found
      */
-    BlockPos findSpotToBuild(@Nonnull IBuildSchematic schematic, @Nonnull BuildProgress progress, @Nonnull Set<BlockPos> toSkip);
+    BlockPos findSpotToBuild(@NonNull IBuildSchematic schematic, @NonNull BuildProgress progress, @NonNull Set<BlockPos> toSkip);
 
     /**
      * Add an artifical delay before harvesting a block (if needed).
@@ -88,7 +88,7 @@ public interface IWorkerHelper {
      * Otherwise it will return false in which case you can stop work or continue to another task.
      * The destroyed blocks are left on the ground
      */
-    boolean handleFlatten(@Nonnull IBuildSchematic schematic);
+    boolean handleFlatten(@NonNull IBuildSchematic schematic);
 
     /**
      * Conveniance method to handle building automatically. This will call findSpotToBuild() to find the next
@@ -97,7 +97,7 @@ public interface IWorkerHelper {
      * This function will try to find building blocks from the ground or a nearby chest. If it cannot find
      * a (non optional) block it will wait.
      */
-    boolean handleBuilding(@Nonnull IBuildSchematic schematic, @Nonnull BuildProgress progress, @Nonnull Set<BlockPos> toSkip);
+    boolean handleBuilding(@NonNull IBuildSchematic schematic, @NonNull BuildProgress progress, @NonNull Set<BlockPos> toSkip);
 
     /**
      * Place an itemstack at the specific location. This does not test that the stack is valid for
@@ -154,7 +154,7 @@ public interface IWorkerHelper {
      * Give the list of items to the meecreeps. If the meecreeps cannot hold them they are
      * dropped and the meecreeps will try to fetch them later
      */
-    void giveDropsToMeeCreeps(@Nonnull List<ItemStack> drops);
+    void giveDropsToMeeCreeps(@NonNull List<ItemStack> drops);
 
     /**
      * Register a block for harvesting. When this block is later harvested (by the MeeCreep or during
