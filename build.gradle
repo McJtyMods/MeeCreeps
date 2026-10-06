@@ -22,6 +22,11 @@ apply from: 'gradletools.gradle'
 group = 'com.github.mcjty'
 base { archivesName = 'meecreeps-fabric' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+tasks.named('updateDaemonJvm') {
+    languageVersion = JavaLanguageVersion.of(25)
+    // Use an installed JDK; this project does not configure JDK download repositories.
+    toolchainPlatforms = []
+}
 repos()
 jars()
 

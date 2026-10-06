@@ -4,7 +4,7 @@ MeeCreeps for Minecraft 26.2 with Fabric Loader 0.19.3 or later. Requires Java 2
 
 The One Probe integration is temporarily disabled. Its source is preserved under `src/disabled/java` for a future Fabric release. Interaction Wheel integration remains disabled; the built-in portal destination screen is available. McJtyLib is not required.
 
-Set `JAVA_HOME` to Java 25, then build with `./gradlew build`. Install `build/libs/meecreeps-fabric-26.2-4.0.0.jar`, Fabric API, and Forge Config API Port in your Minecraft 26.2 Fabric instance. The project uses Fabric Loom 1.17.17 and Gradle 9.5.1.
+Install a Java 25 JDK, then build with `./gradlew build`. The checked-in Gradle daemon criteria select Java 25 even when the shell defaults to Java 17. Set `JAVA_HOME` to your Java 25 JDK if Gradle cannot discover it. Install `build/libs/meecreeps-fabric-26.2-4.0.0.jar`, Fabric API, and Forge Config API Port in your Minecraft 26.2 Fabric instance. The project uses Fabric Loom 1.17.17 and Gradle 9.5.1.
 
 Run a development client with `./gradlew runClient` or a dedicated server with `./gradlew runServer`. Development worlds use `run-fabric` and `run-server-fabric`.
 
