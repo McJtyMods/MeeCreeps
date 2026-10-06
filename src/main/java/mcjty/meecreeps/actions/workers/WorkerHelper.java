@@ -77,6 +77,7 @@ public class WorkerHelper implements IWorkerHelper {
     private Set<BlockPos> positionsToSkip = new HashSet<>();
 
     private String lastMessage = "";
+    private String[] lastMessageParameters = new String[0];
 
     public WorkerHelper(IActionContext options) {
         this.options = (ActionOptions) options;
@@ -348,6 +349,10 @@ public class WorkerHelper implements IWorkerHelper {
                     putStuffAway();
                 }
             } else {
+                // Supplies are available again, so report a later shortage even
+                // if it concerns the same material as before.
+                lastMessage = "";
+                lastMessageParameters = new String[0];
                 BlockPos buildPos = relativePos.offset(options.getTargetPos());
                 BlockPos navigate = findBestNavigationSpot(buildPos);
                 if (navigate != null) {
@@ -382,14 +387,19 @@ public class WorkerHelper implements IWorkerHelper {
 
     @Override
     public void showMessage(String message, String... parameters) {
-        if (lastMessage.equals(message)) {
+        if (lastMessage.equals(message) && Arrays.equals(lastMessageParameters, parameters)) {
             return;
         }
-        lastMessage = message;
         ServerPlayer player = getPlayer();
         if (player != null) {
-            MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient(message, parameters), player);
+            lastMessage = message;
+            lastMessageParameters = parameters.clone();
+            sendMessageToPlayer(player, message, parameters);
         }
+    }
+
+    protected void sendMessageToPlayer(ServerPlayer player, String message, String... parameters) {
+        MeeCreepsMessages.INSTANCE.sendTo(new PacketShowBalloonToClient(message, parameters), player);
     }
 
     @Override
