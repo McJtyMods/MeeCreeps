@@ -1,11 +1,33 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.firstdark.dev/releases' }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath 'com.hypherionmc.modutils:modpublisher:2.2.1'
+    }
+}
+
 plugins {
     id 'java-library'
+    id 'eclipse'
     id 'maven-publish'
     id 'net.fabricmc.fabric-loom' version '1.17.17'
 }
+
+apply plugin: 'com.hypherionmc.modutils.modpublisher'
+apply from: 'gradletools.gradle'
+
 group = 'com.github.mcjty'
 base { archivesName = 'meecreeps-fabric' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+repos()
+jars()
+
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+}
 repositories {
     maven { url = 'https://raw.githubusercontent.com/Fuzss/modresources/main/maven/' }
     maven { url = 'https://maven.fabricmc.net' }
@@ -21,9 +43,30 @@ loom {
     runs {
         client { client(); runDir 'run-fabric' }
         server { server(); runDir 'run-server-fabric'; programArg '--nogui' }
+        if (rootProject.findProject(':workspace') == null || project.name == 'workspace' || project.hasProperty('enable_individual_runs')) {
+            datagen {
+                server()
+                name 'Fabric Data Generation'
+                vmArg '-Dfabric-api.datagen'
+                vmArg '-Dfabric-api.datagen.output-dir=' + file('src/generated/resources').absolutePath
+                vmArg '-Dfabric-api.datagen.modid=' + project.mod_id
+                runDir 'run-data'
+            }
+        }
     }
 }
 fabricApi { configureTests { createSourceSet = true; modId = 'meecreeps-test'; enableGameTests = true; enableClientGameTests = false } }
+if (rootProject.findProject(':workspace') != null && project.name != 'workspace' && !project.hasProperty('enable_individual_runs')) {
+    // Loom registers default run tasks eagerly; disable them as well as removing IDE configurations.
+    ['runClient', 'runServer', 'runClientRenderDoc'].each { taskName ->
+        tasks.named(taskName) { enabled = false }
+    }
+    loom.runs.remove(loom.runs.getByName('client'))
+    loom.runs.remove(loom.runs.getByName('server'))
+}
+
+modpublisher([], ['fabric-api', 'forge-config-api-port'], [], ['fabric-api', 'forge-config-api-port'], [])
+
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.compilerArgs += ['-Xmaxerrs', '1000'] }
 processResources {
     inputs.property 'version', project.version

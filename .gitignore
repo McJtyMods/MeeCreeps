@@ -1,13 +1,14 @@
 /bin/
 /build
 /run
-.idea
+/.idea/
 .project
 .gradle
 .settings
 .classpath
 /run-server/
 /run-gametest/
+/run-data/
 /run-client/
 
 /run-fabric/
