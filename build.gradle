@@ -1,18 +1,46 @@
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
+        maven { url = 'https://maven.parchmentmc.org' }
+        maven { url = 'https://plugins.gradle.org/m2/' }
+        maven { url = 'https://maven.firstdark.dev/releases' }
         mavenCentral()
         gradlePluginPortal()
     }
-    dependencies { classpath 'net.minecraftforge.gradle:ForgeGradle:5.1.77' }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:5.1.77'
+        classpath 'org.parchmentmc:librarian:1.+'
+        classpath 'com.hypherionmc.modutils:modpublisher:2.0.4'
+    }
 }
+apply plugin: 'com.hypherionmc.modutils.modpublisher'
 apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'java'
+apply plugin: 'org.parchmentmc.librarian.forgegradle'
+apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+if (project.file('../gradletools.gradle').exists()) {
+    apply from: '../gradletools.gradle'
+} else {
+    apply from: 'https://raw.githubusercontent.com/McJtyMods/MultiWorkspace/1.20_tech/gradletools.gradle'
+}
 
 group = 'com.github.mcjty'
 archivesBaseName = 'meecreeps'
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+repos()
+runs('meecreeps')
+jars('meecreeps')
+
+// The shared run setup assumes an access transformer; this mod has none.
+if (!file('src/main/resources/META-INF/accesstransformer.cfg').exists()) {
+    minecraft.accessTransformers.setFrom([])
+    jar.manifest.attributes.remove('FMLAT')
+}
+
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+}
 sourceSets {
     gametest {
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
@@ -20,43 +48,52 @@ sourceSets {
     }
 }
 minecraft {
-    mappings channel: 'official', version: minecraft_version
     runs {
         gameTestServer {
             workingDirectory project.file('run-gametest')
             property 'forge.enabledGameTestNamespaces', 'meecreeps'
             mods { meecreeps { source sourceSets.main; source sourceSets.gametest } }
         }
-        client {
-            workingDirectory project.file('run')
-            mods { meecreeps { source sourceSets.main } }
-        }
-        server {
-            workingDirectory project.file('run-server')
-            args '--nogui'
-            mods { meecreeps { source sourceSets.main } }
+        // Match the shared helper's suppression of individual workspace runs.
+        if (rootProject.findProject(':workspace') == null || project.name == 'workspace' || project.hasProperty('enable_individual_runs')) {
+            server {
+                workingDirectory project.file('run-server')
+                args '--nogui'
+            }
         }
     }
 }
 repositories {
-    maven { url = 'https://modmaven.dev' }
     maven { url = 'https://api.modrinth.com/maven' }
     maven { url = 'https://maven.k-4u.nl' }
 }
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    implementation fg.deobf("com.github.mcjty:mcjtylib:${mcjtylib_version}") { transitive = false }
+    mc()
+    mcjtylib()
     if (project.hasProperty('interactionWheelJar')) {
         compileOnly files(project.property('interactionWheelJar'))
+    } else if (findProject(':InteractionWheel') != null) {
+        compileOnly(project(':InteractionWheel')) { transitive = false }
     } else {
         compileOnly fg.deobf("maven.modrinth:interaction-wheel:${interactionwheel_version}")
     }
-    compileOnly fg.deobf("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
+    if (findProject(':TheOneProbe') != null) {
+        compileOnly(project(':TheOneProbe')) { transitive = false }
+    } else {
+        compileOnly fg.deobf("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
+    }
     if (project.hasProperty('withOptionalMods')) {
-        runtimeOnly fg.deobf("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
-        runtimeOnly fg.deobf("maven.modrinth:interaction-wheel:${interactionwheel_version}")
+        top()
+        if (findProject(':InteractionWheel') != null) {
+            runtimeOnly(project(':InteractionWheel')) { transitive = false }
+        } else {
+            runtimeOnly fg.deobf("maven.modrinth:interaction-wheel:${interactionwheel_version}")
+        }
     }
 }
+
+modpublisher(['the-one-probe', 'interaction-wheel'], ['mcjtylib'], ['the-one-probe', 'BOLRqEGC'], ['mcjtylib'], [])
+
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 processResources {
     inputs.property 'version', project.version
