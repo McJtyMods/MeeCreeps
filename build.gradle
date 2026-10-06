@@ -1,12 +1,44 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.firstdark.dev/releases' }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath 'com.hypherionmc.modutils:modpublisher:2.2.1'
+    }
+}
+
 plugins {
     id 'java-library'
+    id 'eclipse'
     id 'maven-publish'
     id 'net.neoforged.moddev' version '2.0.146'
 }
 
+apply plugin: 'com.hypherionmc.modutils.modpublisher'
+
+// Keep this port's dependency versions when the shared helper sets workspace defaults.
+def dependencyVersions = ['minecraft_version', 'neo_version', 'mcjtylib_version', 'top_version'].collectEntries {
+    [(it): project.property(it)]
+}
+if (project.file('../gradletools.gradle').exists()) {
+    apply from: '../gradletools.gradle'
+} else {
+    apply from: 'https://raw.githubusercontent.com/McJtyMods/MultiWorkspace/1.21_neo/gradletools.gradle'
+}
+dependencyVersions.each { name, value -> project.ext.set(name, value) }
+
 group = 'com.github.mcjty'
 base { archivesName = 'meecreeps' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+repos()
+jars()
+
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+}
 sourceSets {
     gametest {
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
@@ -16,8 +48,15 @@ sourceSets {
 neoForge {
     version = project.neo_version
     runs {
-        client { client(); gameDirectory = project.file('run') }
-        server { server(); gameDirectory = project.file('run-server'); programArgument '--nogui' }
+        if (rootProject.findProject(':workspace') == null || project.name == 'workspace' || project.hasProperty('enable_individual_runs')) {
+            client { client(); gameDirectory = project.file('run') }
+            server { server(); gameDirectory = project.file('run-server'); programArgument '--nogui' }
+            data {
+                data()
+                gameDirectory = project.file('run-data')
+                programArguments.addAll '--mod', 'meecreeps', '--all', '--output', file('src/generated/resources').absolutePath, '--existing', file('src/main/resources').absolutePath
+            }
+        }
         gameTestServer {
             type = 'gameTestServer'
             gameDirectory = project.file('run-gametest')
@@ -30,18 +69,34 @@ neoForge {
     }
 }
 repositories {
-    maven { url = 'https://maven.k-4u.nl' }
     maven { url = 'https://api.modrinth.com/maven' }
 }
 dependencies {
-    implementation("com.github.mcjty:mcjtylib:${mcjtylib_version}") { transitive = false }
-    compileOnly("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
-    compileOnly "maven.modrinth:interaction-wheel:${interactionwheel_version}"
+    mcjtylib()
+    if (findProject(':TheOneProbe') != null) {
+        compileOnly(project(':TheOneProbe')) { transitive = false }
+    } else {
+        compileOnly("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
+    }
+    if (project.hasProperty('interactionWheelJar')) {
+        compileOnly files(project.property('interactionWheelJar'))
+    } else if (findProject(':InteractionWheel') != null) {
+        compileOnly(project(':InteractionWheel')) { transitive = false }
+    } else {
+        compileOnly "maven.modrinth:interaction-wheel:${interactionwheel_version}"
+    }
     if (project.hasProperty('withOptionalMods')) {
-        runtimeOnly("mcjty.theoneprobe:theoneprobe:${top_version}") { transitive = false }
-        runtimeOnly "maven.modrinth:interaction-wheel:${interactionwheel_version}"
+        top()
+        if (findProject(':InteractionWheel') != null) {
+            runtimeOnly(project(':InteractionWheel')) { transitive = false }
+        } else {
+            runtimeOnly "maven.modrinth:interaction-wheel:${interactionwheel_version}"
+        }
     }
 }
+
+modpublisher(['the-one-probe', 'interaction-wheel'], ['mcjtylib'], ['the-one-probe', 'BOLRqEGC'], ['mcjtylib'], [])
+
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 processResources {
     inputs.property 'version', project.version

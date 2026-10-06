@@ -6,6 +6,8 @@ Set `JAVA_HOME` to a Java 21 JDK, then build with `./gradlew build`. The install
 
 Run development clients with `./gradlew runClient`, or `./gradlew runClient -PwithOptionalMods` to include TOP and Interaction Wheel. Use `./gradlew runServer` for a dedicated development server.
 
+The build uses the shared `1.21_neo` workspace helpers, preferring `../gradletools.gradle` when available. Workspace projects supply McJtyLib, TOP, and Interaction Wheel when present; `-PinteractionWheelJar=/path/to/interaction-wheel.jar` overrides the compile-time Interaction Wheel dependency. Use `./gradlew publishMod` to publish the beta release with `CURSEFORGE_TOKEN` and/or `MODRINTH_TOKEN` set. Publishing declares McJtyLib as required and TOP and Interaction Wheel as optional.
+
 Run the 21 NeoForge integration tests with `python3 scripts/run-gametests.py` or `./gradlew runGameTestServer`. Add `-PwithOptionalMods` to test with both optional integrations. They check energy simulation, persistence and component synchronization, cartridge recipes and remainders, action networking and entity saves, portal expiry and aimed height, cross-dimension teleportation, protected harvesting, crop replanting, moving a chest with its inventory, chest animation, lighting, and building around obstructed positions. Test sources and structures are excluded from the release jar.
 
 The tested optional releases are The One Probe `1.21_neo-12.0.8-10` and Interaction Wheel `1.20-4.0.0`. Despite its version label, this Interaction Wheel release supports Minecraft 1.21.1 with NeoForge.
