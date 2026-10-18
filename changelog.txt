@@ -1,4 +1,7 @@
-3.0.0 (Minecraft 1.21.1 / NeoForge):
+3.0.1:
+- Fix dependency for McJtyLib
+
+3.0.0:
 - Ported to Java 21, NeoForge, and ModDevGradle.
 - Migrated item data, energy capabilities, networking, entity rendering, saved inventories, and cross-dimension teleportation to Minecraft 1.21.1 APIs.
 - Updated recipes, loot tables, and optional integrations for NeoForge.

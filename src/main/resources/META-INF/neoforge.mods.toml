@@ -22,7 +22,7 @@ side="BOTH"
 [[dependencies.meecreeps]]
 modId="mcjtylib"
 type="required"
-versionRange="[1.21-9.0.21.20,)"
+versionRange="[1.21-9.0.21,)"
 ordering="AFTER"
 side="BOTH"
 [[dependencies.meecreeps]]
