@@ -1,9 +1,8 @@
 package mcjty.meecreeps.input;
 
-import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.KeyMapping;
 
 public final class KeyBindings {
-    public static final KeyMapping REPEAT = new KeyMapping("key.meecreeps.repeat", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, KeyMapping.Category.register(net.minecraft.resources.Identifier.fromNamespaceAndPath("meecreeps", "meecreeps")));
+    public static final KeyMapping REPEAT = new KeyMapping("key.meecreeps.repeat", InputConstants.KEY_B, KeyMapping.Category.register(net.minecraft.resources.Identifier.fromNamespaceAndPath("meecreeps", "meecreeps")));
 }

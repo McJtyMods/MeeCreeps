@@ -2,12 +2,12 @@
   "pack": {
     "description": "MeeCreeps resources",
     "min_format": [
-      88,
-      0
+      97,
+      1
     ],
     "max_format": [
-      107,
-      1
+      121,
+      0
     ]
   }
 }

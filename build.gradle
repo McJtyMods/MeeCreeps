@@ -13,7 +13,7 @@ plugins {
     id 'java-library'
     id 'eclipse'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.146'
+    id 'net.neoforged.moddev' version '2.0.147'
 }
 
 apply plugin: 'com.hypherionmc.modutils.modpublisher'

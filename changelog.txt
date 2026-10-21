@@ -1,3 +1,6 @@
+26.3-5.0.0
+    - Ported to Minecraft 26.3 with NeoForge and Java 25
+
 26.2-4.0.0
     - Ported to Minecraft 26.2 with NeoForge and Java 25
     - Disabled Interaction Wheel integration; built-in portal destination screen remains available

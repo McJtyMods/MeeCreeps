@@ -30,7 +30,7 @@ public class MeeCreeps {
         bus.addListener(this::enqueueImc);
         NeoForge.EVENT_BUS.register(new ForgeEventHandlers());
         NeoForge.EVENT_BUS.addListener(mcjty.meecreeps.commands.ModCommands::register);
-        container.registerConfig(ModConfig.Type.COMMON, ConfigSetup.SERVER_CONFIG);
+        container.registerConfig(ModConfig.Type.LOCAL, ConfigSetup.SERVER_CONFIG, "meecreeps-common.toml");
         container.registerConfig(ModConfig.Type.CLIENT, ConfigSetup.CLIENT_CONFIG);
     }
 

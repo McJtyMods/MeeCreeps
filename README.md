@@ -1,8 +1,8 @@
 # MeeCreeps
 
-MeeCreeps for Minecraft 26.2 and NeoForge 26.2.0.75 or later. Requires Java 25. The One Probe is optional; the tested release is `26.2_neo-15.0.1-2`. Interaction Wheel integration is disabled because it is unavailable for 26.2. McJtyLib is no longer required: the mod handles its own networking, sounds, and saved tasks.
+MeeCreeps for Minecraft 26.3 and NeoForge 26.3.0.83 or later. Requires Java 25. The One Probe is optional. Interaction Wheel integration is disabled. McJtyLib is no longer required: the mod handles its own networking, sounds, and saved tasks.
 
-Set `JAVA_HOME` to a Java 25 **JDK**, then build with `./gradlew build`. Install `build/libs/meecreeps-26.2-4.0.0.jar` in your Minecraft 26.2 NeoForge instance. The project uses ModDevGradle and Gradle 9.2.1.
+Set `JAVA_HOME` to a Java 25 **JDK**, then build with `./gradlew build`. Install `build/libs/meecreeps-26.3-5.0.0.jar` in your Minecraft 26.3 NeoForge instance. The project uses ModDevGradle and Gradle 9.2.1.
 
 Run a development client with `./gradlew runClient`, or add `-PwithOptionalMods` to include The One Probe. Use `./gradlew runServer` for a dedicated development server.
 
@@ -14,4 +14,4 @@ Portal guns and cartridges accept NeoForge energy: 1,000 FE equals one portal ch
 
 Commands: `/meecreeps list` (operator), `/meecreeps clear` (your tasks), and `/meecreeps clear all` (operator). Legacy `/creep_list`, `/creep_clear`, and `/creep_test` command names are available.
 
-This port uses data components for item charge, destinations, and cube history, registry-aware item serialization for carried inventories and saved tasks, and the 26.2 render-state APIs for entities, portals, and GUIs. Existing MeeCreeps worlds from older Minecraft versions have not been migration-tested; use a new 26.2 world and the generated TOML configuration files.
+This port uses data components for item charge, destinations, and cube history, registry-aware item serialization for carried inventories and saved tasks, and the 26.3 render-state APIs for entities, portals, and GUIs. Existing MeeCreeps worlds from older Minecraft versions have not been migration-tested; use a new 26.3 world and the generated TOML configuration files.

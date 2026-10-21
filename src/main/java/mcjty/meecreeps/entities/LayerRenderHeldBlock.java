@@ -17,7 +17,7 @@ public class LayerRenderHeldBlock extends RenderLayer<MeeCreepsRenderState, MeeC
         if (state.carriedBlock.isEmpty()) return;
         pose.pushPose();
         pose.translate(0, .5, -.5);
-        pose.mulPose(Axis.XP.rotationDegrees(20));
+        pose.rotate(Axis.XP.rotationDegrees(20));
         pose.scale(.5F, -.5F, .5F);
         pose.translate(-.5, 0, -.5);
         state.carriedBlock.submit(pose, collector, light, OverlayTexture.NO_OVERLAY, state.outlineColor);

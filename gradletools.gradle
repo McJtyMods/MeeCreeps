@@ -1,4 +1,4 @@
-// Local build helpers for MeeCreeps on Minecraft 26.2 (Java 25).
+// Local build helpers for MeeCreeps on Minecraft 26.3 (Java 25).
 // Dependency versions are supplied by gradle.properties.
 project.ext.set("mod_authors", "McJty")
 

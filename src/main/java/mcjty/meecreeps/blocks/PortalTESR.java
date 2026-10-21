@@ -35,16 +35,16 @@ public class PortalTESR implements BlockEntityRenderer<PortalTileEntity, PortalT
         // lies opposite portalSide. Keep the surface just clear of that face.
         pose.translate(.5 - side.getStepX() * .49, .5 - side.getStepY() * .49, .5 - side.getStepZ() * .49);
         if (side.getAxis().isHorizontal()) {
-            pose.mulPose(Axis.YP.rotationDegrees(-side.toYRot()));
+            pose.rotate(Axis.YP.rotationDegrees(-side.toYRot()));
         } else {
-            pose.mulPose(Axis.XP.rotationDegrees(side == Direction.UP ? 90 : -90));
+            pose.rotate(Axis.XP.rotationDegrees(side == Direction.UP ? 90 : -90));
         }
         pose.scale(state.scale, state.scale, state.scale);
-        pose.mulPose(Axis.ZP.rotationDegrees(state.time * 2));
+        pose.rotate(Axis.ZP.rotationDegrees(state.time * 2));
         // A square quad keeps the circular texture round throughout rotation.
         float halfHeight = 1F;
         // Vanilla's emissive shader still applies directional diffuse shading.
-        collector.submitCustomGeometry(pose, NeoForgeRenderTypes.getUnlitTranslucent(Identifier.fromNamespaceAndPath("meecreeps", "textures/effects/portal.png")), (snapshot, v) -> {
+        collector.submitCustomGeometry(pose, NeoForgeRenderTypes.getEntityUnlitTranslucent(Identifier.fromNamespaceAndPath("meecreeps", "textures/effects/portal.png")), (snapshot, v) -> {
             var matrix = snapshot.pose();
             v.addVertex(matrix, -1, -halfHeight, 0).setColor(255, 255, 255, 255).setUv(0, 1).setOverlay(0).setLight(15728880).setNormal(snapshot, 0, 0, 1);
             v.addVertex(matrix, 1, -halfHeight, 0).setColor(255, 255, 255, 255).setUv(1, 1).setOverlay(0).setLight(15728880).setNormal(snapshot, 0, 0, 1);
