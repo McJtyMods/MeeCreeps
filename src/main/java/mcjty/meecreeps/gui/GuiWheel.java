@@ -1,10 +1,13 @@
 package mcjty.meecreeps.gui;
 
-import mcjty.meecreeps.network.PacketServerCommand;
+import com.mojang.blaze3d.platform.InputConstants;
+import java.util.ArrayList;
+import java.util.List;
 import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.items.PortalGunItem;
 import mcjty.meecreeps.network.MeeCreepsMessages;
+import mcjty.meecreeps.network.PacketServerCommand;
 import mcjty.meecreeps.teleport.PacketMakePortals;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import mcjty.meecreeps.teleport.TeleportationTools;
@@ -15,10 +18,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class GuiWheel extends Screen {
     private static final int SIZE = 160;
@@ -88,7 +87,7 @@ public class GuiWheel extends Screen {
         }
         var dest = PortalGunItem.getDestinations(gun).get(index);
         if (dest != null) {
-            if (button == 1 && selectedBlock != null) {
+            if (button == InputConstants.MOUSE_BUTTON_RIGHT && selectedBlock != null) {
                 MeeCreepsMessages.INSTANCE.sendToServer(new PacketMakePortals(selectedBlock, selectedSide, dest));
             } else {
                 command(CommandHandler.CMD_SET_CURRENT, index);
@@ -106,7 +105,7 @@ public class GuiWheel extends Screen {
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
         int key = event.key();
-        if ((key == GLFW.GLFW_KEY_DELETE || key == GLFW.GLFW_KEY_BACKSPACE) && selected >= 0) {
+        if ((key == InputConstants.KEY_DELETE || key == InputConstants.KEY_BACKSPACE) && selected >= 0) {
             command(CommandHandler.CMD_DELETE_DESTINATION, selected);
             return true;
         }

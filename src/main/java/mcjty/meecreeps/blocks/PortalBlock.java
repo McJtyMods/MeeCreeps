@@ -9,13 +9,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.shapes.*;
 
 public class PortalBlock extends BaseEntityBlock {
-    public static final com.mojang.serialization.MapCodec<PortalBlock> CODEC = simpleCodec(PortalBlock::new);
     public PortalBlock() {
         this(BlockBehaviour.Properties.of().setId(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.BLOCK, net.minecraft.resources.Identifier.fromNamespaceAndPath("meecreeps", "portalblock"))).noCollision().noOcclusion().strength(-1).lightLevel(s -> 7));
     }
     private PortalBlock(BlockBehaviour.Properties properties) { super(properties); }
-    @Override
-    protected com.mojang.serialization.MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
 
     public RenderShape getRenderShape(BlockState state) {
         return RenderShape.INVISIBLE;

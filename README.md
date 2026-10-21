@@ -1,10 +1,10 @@
 # MeeCreeps
 
-MeeCreeps for Minecraft 26.2 with Fabric Loader 0.19.3 or later. Requires Java 25, Fabric API 0.155.2+26.2 or later, and Forge Config API Port 26.2.1 or later (Fabric edition). Team Reborn Energy 5.0.0 is bundled in the mod jar.
+MeeCreeps for Minecraft 26.3 with Fabric Loader 0.19.5 or later. Requires Java 25, Fabric API 0.164.0+26.3 or later, and Forge Config API Port 26.3.1 or later (Fabric edition). Team Reborn Energy 5.0.0 is bundled in the mod jar.
 
 The One Probe integration is temporarily disabled. Its source is preserved under `src/disabled/java` for a future Fabric release. Interaction Wheel integration remains disabled; the built-in portal destination screen is available. McJtyLib is not required.
 
-Install a Java 25 JDK, then build with `./gradlew build`. The checked-in Gradle daemon criteria select Java 25 even when the shell defaults to Java 17. Set `JAVA_HOME` to your Java 25 JDK if Gradle cannot discover it. Install `build/libs/meecreeps-fabric-26.2-4.0.0.jar`, Fabric API, and Forge Config API Port in your Minecraft 26.2 Fabric instance. The project uses Fabric Loom 1.17.17 and Gradle 9.5.1.
+Install a Java 25 JDK, then build with `./gradlew build`. The checked-in Gradle daemon criteria select Java 25 even when the shell defaults to Java 17. Set `JAVA_HOME` to your Java 25 JDK if Gradle cannot discover it. Install `build/libs/meecreeps-fabric-26.3-5.0.0.jar`, Fabric API, and Forge Config API Port in your Minecraft 26.3 Fabric instance. The project uses Fabric Loom 1.17.21 and Gradle 9.6.0.
 
 Run a development client with `./gradlew runClient` or a dedicated server with `./gradlew runServer`. Development worlds use `run-fabric` and `run-server-fabric`.
 
@@ -16,6 +16,6 @@ Portal guns and cartridges accept Fabric energy through Team Reborn Energy: 1,00
 
 Commands: `/meecreeps list` (operator), `/meecreeps clear` (your tasks), and `/meecreeps clear all` (operator). Legacy `/creep_list`, `/creep_clear`, and `/creep_test` command names are available.
 
-The mod uses data components for item charge, destinations, and cube history, registry-aware item serialization for carried inventories and saved tasks, and the 26.2 render-state APIs for entities, portals, and GUIs. Fabric callbacks handle lifecycle, interaction, networking, and protected block breaking. The public API is available as `MeeCreeps.api` for other mods to register action factories during initialization.
+The mod uses data components for item charge, destinations, and cube history, registry-aware item serialization for carried inventories and saved tasks, and the 26.3 render-state APIs for entities, portals, and GUIs. Fabric callbacks handle lifecycle, interaction, networking, and protected block breaking. The public API is available as `MeeCreeps.api` for other mods to register action factories during initialization.
 
-Existing worlds from older Minecraft versions or NeoForge have not been migration-tested. Use a new 26.2 world and the generated TOML configuration files.
+Existing worlds from older Minecraft versions or NeoForge have not been migration-tested. Use a new 26.3 world and the generated TOML configuration files.

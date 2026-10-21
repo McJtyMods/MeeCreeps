@@ -13,7 +13,7 @@ plugins {
     id 'java-library'
     id 'eclipse'
     id 'maven-publish'
-    id 'net.fabricmc.fabric-loom' version '1.17.17'
+    id 'net.fabricmc.fabric-loom' version '1.17.21'
 }
 
 apply plugin: 'com.hypherionmc.modutils.modpublisher'
@@ -41,7 +41,7 @@ dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
-    implementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.2.1"
+    implementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.3.1"
     implementation include("teamreborn:energy:5.0.0")
 }
 loom {

@@ -1,5 +1,6 @@
 package mcjty.meecreeps.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import mcjty.meecreeps.network.PacketServerCommand;
 import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.MeeCreeps;
@@ -111,7 +112,7 @@ public class GuiMeeCreeps extends Screen {
     public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
         double mouseX = event.x(), mouseY = event.y();
         int button = event.button();
-        if (button == 0 && mouseX >= guiLeft && mouseX <= guiLeft + WIDTH) {
+        if (button == InputConstants.MOUSE_BUTTON_LEFT && mouseX >= guiLeft && mouseX <= guiLeft + WIDTH) {
             getQuestions();
             int row = (int) Math.floor((mouseY - guiTop - 21) / OPTION_DISTANCE);
             if (row >= 0 && row < questions.size())
