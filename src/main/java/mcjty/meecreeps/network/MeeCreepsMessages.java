@@ -16,7 +16,6 @@ public final class MeeCreepsMessages {
         registrar.playToServer(PacketMakePortals.TYPE, PacketMakePortals.CODEC, (packet, ctx) -> packet.handle(ctx));
         registrar.playToClient(PacketActionOptionToClient.TYPE, PacketActionOptionToClient.CODEC, (packet, ctx) -> packet.handle(ctx));
         registrar.playToClient(PacketShowBalloonToClient.TYPE, PacketShowBalloonToClient.CODEC, (packet, ctx) -> packet.handle(ctx));
-        registrar.playToServer(PacketServerCommand.TYPE, PacketServerCommand.CODEC, (packet, ctx) -> packet.handle(ctx));
     }
     public void sendTo(CustomPacketPayload packet, ServerPlayer player) {
         PacketDistributor.sendToPlayer(player, packet);

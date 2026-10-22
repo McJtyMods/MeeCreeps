@@ -1,7 +1,8 @@
 package mcjty.meecreeps.items;
 
 import mcjty.meecreeps.setup.Registration;
-import mcjty.meecreeps.network.PacketServerCommand;
+import mcjty.lib.network.PacketSendServerCommand;
+import mcjty.lib.typed.TypedMap;
 import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.actions.PacketShowBalloonToClient;
@@ -64,11 +65,13 @@ public class PortalGunItem extends Item {
             return InteractionResult.PASS;
         if (world.isClientSide()) {
             if (world.getBlockState(pos.relative(side)).getBlock() == Registration.PORTAL.get()) {
-                MeeCreepsMessages.INSTANCE.sendToServer(new PacketServerCommand(CommandHandler.CMD_CANCEL_PORTAL, pos.relative(side)));
+                MeeCreepsMessages.INSTANCE.sendToServer(PacketSendServerCommand.create(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL,
+                        TypedMap.builder().put(CommandHandler.PARAM_POS, pos.relative(side)).build()));
                 return InteractionResult.SUCCESS;
             }
             if (side != Direction.UP && side != Direction.DOWN && world.getBlockState(pos.relative(side).below()).getBlock() == Registration.PORTAL.get()) {
-                MeeCreepsMessages.INSTANCE.sendToServer(new PacketServerCommand(CommandHandler.CMD_CANCEL_PORTAL, pos.relative(side).below()));
+                MeeCreepsMessages.INSTANCE.sendToServer(PacketSendServerCommand.create(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL,
+                        TypedMap.builder().put(CommandHandler.PARAM_POS, pos.relative(side).below()).build()));
                 return InteractionResult.SUCCESS;
             }
 

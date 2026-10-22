@@ -17,7 +17,11 @@ plugins {
 }
 
 apply plugin: 'com.hypherionmc.modutils.modpublisher'
-apply from: 'gradletools.gradle'
+if (project.file('../gradletools.gradle').exists()) {
+    apply from: '../gradletools.gradle'
+} else {
+    apply from: 'https://raw.githubusercontent.com/McJtyMods/MultiWorkspace/26.2_neo/gradletools.gradle'
+}
 
 group = 'com.github.mcjty'
 base { archivesName = 'meecreeps' }
@@ -63,16 +67,12 @@ neoForge {
     }
 }
 dependencies {
-    def topDependency = findProject(':TheOneProbe') != null
-            ? project(':TheOneProbe')
-            : "mcjty.theoneprobe:theoneprobe:${top_version}"
-    compileOnly(topDependency) { transitive = false }
-    if (project.hasProperty('withOptionalMods')) {
-        runtimeOnly(topDependency) { transitive = false }
-    }
+    mcjtylib()
+    top()
+    jei()
 }
 
-modpublisher(['the-one-probe'], [], ['the-one-probe'], [], [])
+modpublisher(['the-one-probe'], ['mcjtylib'], ['the-one-probe'], ['mcjtylib'], [])
 
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.compilerArgs += ['-Xmaxerrs', '1000'] }
 processResources {

@@ -34,8 +34,12 @@ public final class Registration {
     public static final DeferredHolder<EntityType<?>, EntityType<EntityMeeCreeps>> CREEP = ENTITIES.register("meecreeps", () -> EntityType.Builder.<EntityMeeCreeps>of(EntityMeeCreeps::new, MobCategory.CREATURE).sized(.6F, 1.95F).clientTrackingRange(10).build(net.minecraft.resources.ResourceKey.create(Registries.ENTITY_TYPE, Identifier.parse("meecreeps:meecreeps"))));
     public static final DeferredHolder<EntityType<?>, EntityType<EntityProjectile>> PROJECTILE = ENTITIES.register("projectile", () -> EntityType.Builder.<EntityProjectile>of(EntityProjectile::new, MobCategory.MISC).sized(.25F, .25F).clientTrackingRange(8).updateInterval(1).build(net.minecraft.resources.ResourceKey.create(Registries.ENTITY_TYPE, Identifier.parse("meecreeps:projectile"))));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PortalTileEntity>> PORTAL_TILE = TILES.register("portalblock", () -> new BlockEntityType<>(PortalTileEntity::new, PORTAL.get()));
-    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<InsertCartridgeFactory>> INSERT = RECIPES.register("insert_cartridge_factory", () -> new RecipeSerializer<>(com.mojang.serialization.MapCodec.unit(InsertCartridgeFactory::new), net.minecraft.network.codec.StreamCodec.unit(new InsertCartridgeFactory())));
-    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<RemoveCartridgeFactory>> REMOVE = RECIPES.register("remove_cartridge_factory", () -> new RecipeSerializer<>(com.mojang.serialization.MapCodec.unit(RemoveCartridgeFactory::new), net.minecraft.network.codec.StreamCodec.unit(new RemoveCartridgeFactory())));
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<InsertCartridgeFactory>> INSERT = RECIPES.register("insert_cartridge_factory", () -> new RecipeSerializer<>(
+            com.mojang.serialization.MapCodec.unit(InsertCartridgeFactory::new),
+            net.minecraft.network.codec.StreamCodec.of((buf, recipe) -> {}, buf -> new InsertCartridgeFactory())));
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<RemoveCartridgeFactory>> REMOVE = RECIPES.register("remove_cartridge_factory", () -> new RecipeSerializer<>(
+            com.mojang.serialization.MapCodec.unit(RemoveCartridgeFactory::new),
+            net.minecraft.network.codec.StreamCodec.of((buf, recipe) -> {}, buf -> new RemoveCartridgeFactory())));
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MeeCreeps.MODID);
 
     static {
