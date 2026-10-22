@@ -1,5 +1,9 @@
 package mcjty.meecreeps;
 
+import mcjty.lib.McJtyLib;
+import mcjty.lib.network.PacketSendServerCommand;
+import mcjty.lib.typed.TypedMap;
+
 import io.netty.buffer.Unpooled;
 import mcjty.meecreeps.actions.*;
 import mcjty.meecreeps.actions.factories.HarvestActionFactory;
@@ -112,15 +116,17 @@ public class FabricPortTests {
         test.succeed();
     }
     public static void commandPayloadPreservesFieldsAndChecksOwnership(GameTestHelper test) {
-        var buf = new net.minecraft.network.FriendlyByteBuf(Unpooled.buffer());
+        var buf = new RegistryFriendlyByteBuf(Unpooled.buffer(), test.getLevel().registryAccess());
         var position = new BlockPos(2, 70, 4);
         try {
-            var packet = new mcjty.meecreeps.network.PacketServerCommand(CommandHandler.CMD_CANCEL_PORTAL, position);
-            mcjty.meecreeps.network.PacketServerCommand.CODEC.encode(buf, packet);
-            test.assertTrue(packet.equals(mcjty.meecreeps.network.PacketServerCommand.CODEC.decode(buf)), "Command lost portal position");
-            packet = new mcjty.meecreeps.network.PacketServerCommand(CommandHandler.CMD_SET_CURRENT, 2);
-            mcjty.meecreeps.network.PacketServerCommand.CODEC.encode(buf, packet);
-            test.assertTrue(packet.equals(mcjty.meecreeps.network.PacketServerCommand.CODEC.decode(buf)), "Command lost destination index");
+            var packet = PacketSendServerCommand.create(MeeCreeps.MODID, CommandHandler.CMD_CANCEL_PORTAL,
+                    TypedMap.builder().put(CommandHandler.PARAM_POS, position).build());
+            PacketSendServerCommand.CODEC.encode(buf, packet);
+            test.assertTrue(packet.equals(PacketSendServerCommand.CODEC.decode(buf)), "Command lost portal position");
+            packet = PacketSendServerCommand.create(MeeCreeps.MODID, CommandHandler.CMD_SET_CURRENT,
+                    TypedMap.builder().put(CommandHandler.PARAM_ID, 2).build());
+            PacketSendServerCommand.CODEC.encode(buf, packet);
+            test.assertTrue(packet.equals(PacketSendServerCommand.CODEC.decode(buf)), "Command lost destination index");
         } finally {
             buf.release();
         }
@@ -135,19 +141,46 @@ public class FabricPortTests {
         int id = manager.createActionOptions(world, test.absolutePos(BlockPos.ZERO), Direction.UP, owner);
         var options = manager.getOptions(id);
         options.setPaused(true);
-        CommandHandler.handle(stranger, CommandHandler.CMD_RESUME_ACTION, id, null);
+        // Look up the manager using the old 26.2 data type, independent of McJtyLib.
+        var oldType = new net.minecraft.world.level.saveddata.SavedDataType<>(
+                net.minecraft.resources.Identifier.fromNamespaceAndPath(MeeCreeps.MODID, "actions"),
+                ServerActionManager::new, net.minecraft.nbt.CompoundTag.CODEC.xmap(tag -> {
+                    var restored = new ServerActionManager();
+                    restored.readFromNBT(tag, world.registryAccess());
+                    return restored;
+                }, data -> data.save(new net.minecraft.nbt.CompoundTag(), world.registryAccess())), null);
+        test.assertTrue(world.getServer().overworld().getDataStorage().get(oldType) == manager,
+                "McJtyLib changed the saved task identifier");
+        test.assertTrue(ServerActionManager.getManager() == manager, "Task manager was recreated on lookup");
+        var saved = manager.save(new net.minecraft.nbt.CompoundTag(), world.registryAccess());
+        var restored = oldType.codec().parse(net.minecraft.nbt.NbtOps.INSTANCE, saved).getOrThrow();
+        test.assertTrue(restored.getOptions(id) != null && restored.getOptions(id).isPaused(),
+                "Task save lost action state");
+        test.assertTrue(restored.newId() == saved.getIntOr("lastId", 0) + 1, "Task save lost id counter");
+        dispatchCommand(stranger, CommandHandler.CMD_RESUME_ACTION, id, null);
         test.assertTrue(options.isPaused(), "Another player resumed the owner's task");
-        CommandHandler.handle(owner, CommandHandler.CMD_RESUME_ACTION, id, null);
+        dispatchCommand(owner, CommandHandler.CMD_RESUME_ACTION, id, null);
         test.assertTrue(!options.isPaused(), "Owner could not resume task");
         var gun = new ItemStack(Registration.GUN.get());
         owner.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, gun);
         PortalGunItem.addDestination(gun, new TeleportDestination("Home", world.dimension(), position, Direction.NORTH), 2);
-        CommandHandler.handle(owner, CommandHandler.CMD_DELETE_DESTINATION, 8, null);
+        McJtyLib.handleCommand(MeeCreeps.MODID, CommandHandler.CMD_SET_CURRENT, owner, TypedMap.EMPTY);
+        test.assertTrue(PortalGunItem.getCurrentDestination(gun) == 2, "Missing slot changed current destination");
+        dispatchCommand(owner, CommandHandler.CMD_DELETE_DESTINATION, 8, null);
         test.assertTrue(PortalGunItem.getDestinations(gun).get(2) != null, "Invalid slot changed destinations");
-        CommandHandler.handle(owner, CommandHandler.CMD_DELETE_DESTINATION, 2, null);
+        dispatchCommand(owner, CommandHandler.CMD_DELETE_DESTINATION, 2, null);
         test.assertTrue(PortalGunItem.getDestinations(gun).get(2) == null, "Owner could not delete destination");
-        CommandHandler.handle(owner, CommandHandler.CMD_CANCEL_ACTION, id, null);
+        dispatchCommand(owner, CommandHandler.CMD_CANCEL_ACTION, id, null);
         test.succeed();
+    }
+
+    private static void dispatchCommand(net.minecraft.server.level.ServerPlayer player, String command,
+                                        int id, BlockPos pos) {
+        var arguments = TypedMap.builder().put(CommandHandler.PARAM_ID, id);
+        if (pos != null) arguments.put(CommandHandler.PARAM_POS, pos);
+        if (!McJtyLib.handleCommand(MeeCreeps.MODID, command, player, arguments.build())) {
+            throw new AssertionError("McJtyLib command was not registered: " + command);
+        }
     }
 
 }

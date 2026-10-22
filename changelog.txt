@@ -1,9 +1,11 @@
+26.2-4.0.1
+- Restored McJtyLib integration and dependency (Fabric 26.2-10.0.0-fabric.3), using MultiWorkSpace shared build tools.
+
 26.2-4.0.0
 - Ported to Minecraft 26.2 with Fabric and Java 25
 - Disabled Interaction Wheel integration; built-in portal destination screen remains available
 - Temporarily disabled The One Probe integration pending a Fabric release
 - Bundled Team Reborn Energy for portal gun and cartridge charging
-- Removed McJtyLib dependency; commands, networking, sounds, and world data are handled internally
 - Updated rendering, persistence, recipes, item definitions, and transactional energy/inventory APIs
 
 3.0.0 (Minecraft 1.21.1 / NeoForge):
