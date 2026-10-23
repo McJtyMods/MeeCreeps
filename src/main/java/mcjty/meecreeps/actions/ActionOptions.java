@@ -1,7 +1,7 @@
 package mcjty.meecreeps.actions;
 
 import net.minecraft.network.FriendlyByteBuf;
-import mcjty.meecreeps.network.NetworkTools;
+import mcjty.lib.network.NetworkTools;
 import mcjty.meecreeps.varia.SoundTools;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.api.IActionContext;

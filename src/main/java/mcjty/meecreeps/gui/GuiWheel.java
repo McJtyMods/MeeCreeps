@@ -7,7 +7,8 @@ import mcjty.meecreeps.CommandHandler;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.items.PortalGunItem;
 import mcjty.meecreeps.network.MeeCreepsMessages;
-import mcjty.meecreeps.network.PacketServerCommand;
+import mcjty.lib.network.PacketSendServerCommand;
+import mcjty.lib.typed.TypedMap;
 import mcjty.meecreeps.teleport.PacketMakePortals;
 import mcjty.meecreeps.teleport.TeleportDestination;
 import mcjty.meecreeps.teleport.TeleportationTools;
@@ -68,7 +69,8 @@ public class GuiWheel extends Screen {
     }
 
     private void command(String cmd, int index) {
-        MeeCreepsMessages.INSTANCE.sendToServer(new PacketServerCommand(cmd, index));
+        MeeCreepsMessages.INSTANCE.sendToServer(PacketSendServerCommand.create(MeeCreeps.MODID, cmd,
+                TypedMap.builder().put(CommandHandler.PARAM_ID, index).build()));
     }
 
     @Override

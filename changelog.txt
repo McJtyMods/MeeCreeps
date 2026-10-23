@@ -1,3 +1,8 @@
+26.3-5.0.1
+- Use McJtyLib 11.0.0 for typed server commands, network serialization, and saved task storage
+- Preserve task ownership checks, destination validation, and existing saved task data
+- Use the shared MultiWorkSpace Fabric build tools and McJtyLib Jenkins build fabric.1
+
 26.3-5.0.0
 - Port to Minecraft 26.3 with Fabric
 

@@ -19,6 +19,7 @@ public class MeeCreeps implements ModInitializer {
         ConfigRegistry.INSTANCE.register(MODID, ModConfig.Type.COMMON, ConfigSetup.SERVER_CONFIG);
         ConfigRegistry.INSTANCE.register(MODID, ModConfig.Type.CLIENT, ConfigSetup.CLIENT_CONFIG);
         Registration.register();
+        CommandHandler.registerCommands();
         MeeCreepsMessages.registerMessages();
         FabricEventHandlers.register();
         net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> mcjty.meecreeps.commands.ModCommands.register(dispatcher));

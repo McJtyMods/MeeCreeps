@@ -1,7 +1,7 @@
 package mcjty.meecreeps.teleport;
 
 import net.minecraft.network.FriendlyByteBuf;
-import mcjty.meecreeps.network.NetworkTools;
+import mcjty.lib.network.NetworkTools;
 
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.codec.StreamCodec;

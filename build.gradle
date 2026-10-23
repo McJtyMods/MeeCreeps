@@ -17,12 +17,19 @@ plugins {
 }
 
 apply plugin: 'com.hypherionmc.modutils.modpublisher'
-apply from: 'gradletools.gradle'
+def sharedTools = rootProject.file('gradletools.gradle')
+if (rootProject != project && sharedTools.isFile()) {
+    apply from: sharedTools
+} else {
+    apply from: 'https://raw.githubusercontent.com/McJtyMods/MultiWorkSpace/26.3_fabric/gradletools.gradle'
+}
+// Jenkins artifact build only; fabric.mod.json requires the base 11.0.0 release.
+ext.mcjtylib_version = '26.3-11.0.0-fabric.1'
 
 group = 'com.github.mcjty'
 base { archivesName = 'meecreeps-fabric' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
-tasks.named('updateDaemonJvm') {
+tasks.matching { it.name == 'updateDaemonJvm' }.configureEach {
     languageVersion = JavaLanguageVersion.of(25)
     // Use an installed JDK; this project does not configure JDK download repositories.
     toolchainPlatforms = []
@@ -33,17 +40,10 @@ jars()
 sourceSets.main.resources {
     srcDir 'src/generated/resources'
 }
-repositories {
-    maven { url = 'https://raw.githubusercontent.com/Fuzss/modresources/main/maven/' }
-    maven { url = 'https://maven.fabricmc.net' }
-}
-dependencies {
-    minecraft "com.mojang:minecraft:${minecraft_version}"
-    implementation "net.fabricmc:fabric-loader:${loader_version}"
-    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
-    implementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.3.1"
-    implementation include("teamreborn:energy:5.0.0")
-}
+mc()
+config()
+energy()
+mcjtylib()
 loom {
     runs {
         client { client(); runDir 'run-fabric' }
@@ -70,7 +70,7 @@ if (rootProject.findProject(':workspace') != null && project.name != 'workspace'
     loom.runs.remove(loom.runs.getByName('server'))
 }
 
-modpublisher([], ['fabric-api', 'forge-config-api-port'], [], ['fabric-api', 'forge-config-api-port'], [])
+modpublisher([], ['fabric-api', 'forge-config-api-port', 'mcjtylib'], [], ['P7dR8mSH', 'ohNO6lps', 'mcjtylib'], [])
 
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.compilerArgs += ['-Xmaxerrs', '1000'] }
 processResources {
