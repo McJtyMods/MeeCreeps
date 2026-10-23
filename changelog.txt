@@ -1,3 +1,8 @@
+26.3-5.0.1:
+- Use the published MultiWorkspace 26.3 shared Gradle script and McJtyLib build 26.3-11.0.0.3
+- Restore McJtyLib command routing, typed packets, and saved-task support while preserving task identifiers and ownership checks
+- Use recipe packet codecs that support newly decoded cartridge recipe instances
+
 26.3-5.0.0
     - Ported to Minecraft 26.3 with NeoForge and Java 25
 

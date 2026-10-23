@@ -3,8 +3,7 @@ package mcjty.meecreeps.actions;
 import mcjty.meecreeps.setup.Registration;
 import mcjty.meecreeps.varia.SoundTools;
 import mcjty.meecreeps.varia.EntityTeleportation;
-import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.saveddata.SavedDataType;
+import mcjty.lib.worlddata.AbstractWorldData;
 import mcjty.meecreeps.MeeCreeps;
 import mcjty.meecreeps.MeeCreepsApi;
 import mcjty.meecreeps.actions.workers.WorkerHelper;
@@ -34,17 +33,10 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import java.util.*;
 
-public class ServerActionManager extends SavedData {
+public class ServerActionManager extends AbstractWorldData<ServerActionManager> {
 
-    private static final SavedDataType<ServerActionManager> DATA_TYPE = new SavedDataType<>(
-            Identifier.fromNamespaceAndPath(MeeCreeps.MODID, "actions"), ServerActionManager::new,
-            CompoundTag.CODEC.xmap(tag -> {
-                var data = new ServerActionManager();
-                data.readFromNBT(tag, LevelTools.overworld().registryAccess());
-                return data;
-            }, data -> data.save(new CompoundTag(), LevelTools.overworld().registryAccess())));
-
-    public void save() { setDirty(); }
+    // Keep the existing 26.2 saved-data identifier so active tasks remain in the same file.
+    private static final String NAME = "meecreeps:actions";
 
     private List<ActionOptions> options = new ArrayList<>();
     private Map<Integer, ActionOptions> optionMap = new HashMap<>();
@@ -148,7 +140,11 @@ public class ServerActionManager extends SavedData {
 
     @NonNull
     public static ServerActionManager getManager() {
-        return LevelTools.overworld().getDataStorage().computeIfAbsent(DATA_TYPE);
+        return getData(LevelTools.overworld(), tag -> {
+            var data = new ServerActionManager();
+            data.readFromNBT(tag, LevelTools.overworld().registryAccess());
+            return data;
+        }, ServerActionManager::new, NAME);
     }
 
     public int createActionOptions(Level world, BlockPos pos, Direction side, @Nullable Player player) {
@@ -361,6 +357,7 @@ public class ServerActionManager extends SavedData {
         lastId = nbt.getIntOr("lastId", 0);
     }
 
+    @Override
     public CompoundTag save(CompoundTag compound, net.minecraft.core.HolderLookup.Provider registries) {
         ListTag list = new ListTag();
         for (ActionOptions option : options) {

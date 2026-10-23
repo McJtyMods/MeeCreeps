@@ -13,6 +13,13 @@ versionRange="[26.3.0.83,)"
 ordering="NONE"
 side="BOTH"
 [[dependencies.meecreeps]]
+modId="mcjtylib"
+type="required"
+versionRange="[26.3-11.0.0,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.meecreeps]]
 modId="minecraft"
 type="required"
 versionRange="[26.3]"

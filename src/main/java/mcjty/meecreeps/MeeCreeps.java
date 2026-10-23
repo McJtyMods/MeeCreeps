@@ -10,6 +10,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.InterModProcessEvent;
 import mcjty.meecreeps.api.IMeeCreepsApi;
 
@@ -26,6 +27,7 @@ public class MeeCreeps {
         ConfigSetup.init();
         Registration.register(bus);
         bus.addListener(MeeCreepsMessages::registerMessages);
+        bus.addListener((FMLCommonSetupEvent event) -> event.enqueueWork(CommandHandler::registerCommands));
         bus.addListener(this::imc);
         bus.addListener(this::enqueueImc);
         NeoForge.EVENT_BUS.register(new ForgeEventHandlers());

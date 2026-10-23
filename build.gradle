@@ -17,7 +17,15 @@ plugins {
 }
 
 apply plugin: 'com.hypherionmc.modutils.modpublisher'
-apply from: 'gradletools.gradle'
+// Integrated workspaces supply the shared script; standalone builds use the published branch.
+def sharedTools = rootProject.file('gradletools.gradle')
+if (rootProject != project && sharedTools.isFile()) {
+    apply from: sharedTools
+} else {
+    apply from: 'https://raw.githubusercontent.com/McJtyMods/MultiWorkspace/26.3_neo/gradletools.gradle'
+}
+// Maven build number only; the mod dependency requirement stays at 26.3-11.0.0.
+ext.mcjtylib_version = '26.3-11.0.0.3'
 
 group = 'com.github.mcjty'
 base { archivesName = 'meecreeps' }
@@ -63,16 +71,12 @@ neoForge {
     }
 }
 dependencies {
-    def topDependency = findProject(':TheOneProbe') != null
-            ? project(':TheOneProbe')
-            : "mcjty.theoneprobe:theoneprobe:${top_version}"
-    compileOnly(topDependency) { transitive = false }
-    if (project.hasProperty('withOptionalMods')) {
-        runtimeOnly(topDependency) { transitive = false }
-    }
+    mcjtylib()
+    top()
+    jei()
 }
 
-modpublisher(['the-one-probe'], [], ['the-one-probe'], [], [])
+modpublisher(['the-one-probe'], ['mcjtylib'], ['the-one-probe'], ['mcjtylib'], [])
 
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.compilerArgs += ['-Xmaxerrs', '1000'] }
 processResources {
