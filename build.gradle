@@ -12,12 +12,20 @@ buildscript {
 plugins {
     id 'java-library'
     id 'eclipse'
+    id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.146'
+    id 'net.neoforged.gradle.userdev' version '7.1.38'
 }
 
 apply plugin: 'com.hypherionmc.modutils.modpublisher'
-if (project.file('../gradletools.gradle').exists()) {
+
+def sharedTools = rootProject.file('gradletools.gradle')
+if (sharedTools.isFile()) {
+    apply from: sharedTools
+} else if (project.file('gradletools.gradle').isFile()) {
+    // Temporary standalone copy while the 26.2 workspace is unpublished.
+    apply from: 'gradletools.gradle'
+} else if (project.file('../gradletools.gradle').isFile()) {
     apply from: '../gradletools.gradle'
 } else {
     apply from: 'https://raw.githubusercontent.com/McJtyMods/MultiWorkspace/26.2_neo/gradletools.gradle'
@@ -27,6 +35,7 @@ group = 'com.github.mcjty'
 base { archivesName = 'meecreeps' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 repos()
+runs()
 jars()
 
 sourceSets.main.resources {
@@ -38,35 +47,20 @@ sourceSets {
         runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
     }
 }
-neoForge {
-    version = project.neo_version
-    runs {
-        if (rootProject.findProject(':workspace') == null || project.name == 'workspace' || project.hasProperty('enable_individual_runs')) {
-            client { client(); gameDirectory = project.file('run') }
-            server { server(); gameDirectory = project.file('run-server'); programArgument '--nogui' }
-            clientData {
-                clientData()
-                gameDirectory = project.file('run-data')
-                programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources').absolutePath, '--existing', file('src/main/resources').absolutePath
-            }
-            serverData {
-                serverData()
-                gameDirectory = project.file('run-data')
-                programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources').absolutePath, '--existing', file('src/main/resources').absolutePath
-            }
-        }
-        gameTestServer {
-            type = 'gameTestServer'
-            gameDirectory = project.file('run-gametest')
-            programArgument '--test'; programArgument 'meecreeps:*'
-            sourceSet = sourceSets.gametest
-        }
-    }
-    mods {
-        meecreeps { sourceSet sourceSets.main; sourceSet sourceSets.gametest }
-    }
+// Keep integration tests in their own source set and out of release jars.
+extensions.getByName('runs').named('gameTestServer') {
+    modSource sourceSets.gametest
+    workingDirectory = project.file('run-gametest')
+    arguments.addAll '--test', 'meecreeps:*'
 }
+
+// The shared script configures clientData; retain the server data run too.
+extensions.getByName('runs').create('serverData') {
+    arguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources').absolutePath, '--existing', file('src/main/resources').absolutePath
+}
+
 dependencies {
+    mc()
     mcjtylib()
     top()
     jei()
