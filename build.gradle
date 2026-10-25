@@ -27,7 +27,7 @@ if (rootProject != project && sharedTools.isFile()) {
 group = 'com.github.mcjty'
 base { archivesName = 'meecreeps-fabric' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
-tasks.named('updateDaemonJvm') {
+tasks.matching { it.name == 'updateDaemonJvm' }.configureEach {
     languageVersion = JavaLanguageVersion.of(25)
     // Use an installed JDK; this project does not configure JDK download repositories.
     toolchainPlatforms = []
