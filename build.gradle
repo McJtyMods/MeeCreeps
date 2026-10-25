@@ -17,12 +17,7 @@ plugins {
 }
 
 apply plugin: 'com.hypherionmc.modutils.modpublisher'
-def sharedTools = rootProject.file('gradletools.gradle')
-if (rootProject != project && sharedTools.isFile()) {
-    apply from: sharedTools
-} else {
-    apply from: 'https://raw.githubusercontent.com/McJtyMods/MultiWorkSpace/26.2_fabric/gradletools.gradle'
-}
+apply from: 'https://raw.githubusercontent.com/McJtyMods/MultiWorkSpace/26.2_fabric/gradletools.gradle'
 
 group = 'com.github.mcjty'
 base { archivesName = 'meecreeps-fabric' }
