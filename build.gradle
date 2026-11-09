@@ -17,14 +17,13 @@ plugins {
 }
 
 apply plugin: 'com.hypherionmc.modutils.modpublisher'
-def sharedTools = rootProject.file('gradletools.gradle')
-if (rootProject != project && sharedTools.isFile()) {
-    apply from: sharedTools
-} else {
-    apply from: 'https://raw.githubusercontent.com/McJtyMods/MultiWorkSpace/26.3_fabric/gradletools.gradle'
-}
-// Jenkins artifact build only; fabric.mod.json requires the base 11.0.0 release.
-ext.mcjtylib_version = '26.3-11.0.0-fabric.1'
+def localGradleTools = [
+        project.findProperty('gradletools_path') ? file(project.property('gradletools_path')) : null,
+        rootProject.file('gradletools.gradle'),
+        file('../Multi_fabric/gradletools.gradle'),
+        file('gradletools.gradle')
+].find { it != null && it.isFile() }
+apply from: localGradleTools ?: 'https://raw.githubusercontent.com/McJtyMods/MultiWorkSpace/26.3_fabric/gradletools.gradle'
 
 group = 'com.github.mcjty'
 base { archivesName = 'meecreeps-fabric' }
